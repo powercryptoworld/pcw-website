@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-/* ===== Theme tokens ===== */
+/* ===========================
+   THEME TOKENS (light first)
+   =========================== */
 :root {
-  /* LIGHT by default (so text is dark & readable) */
+  /* Base palette (light mode default) */
   --background: #ffffff;
   --foreground: #171717;
 
@@ -10,17 +12,24 @@
   --sol-purple: #9945FF;
   --sol-green:  #14F195;
   --sol-teal:   #00FFA3;
+
+  /* Background ramps used by the Solana radials */
+  --bg-base: #ffffff;
+  --bg-deep: #f9fafb; /* very light gray so cards still pop */
 }
 
-/* Dark mode fallback if user prefers it */
+/* Auto dark-mode override (keeps the same helpers working) */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --bg-base: #08090c; /* deep space */
+    --bg-deep: #05060a;
   }
 }
 
-/* Tailwind design tokens hook */
+/* Tailwind design tokens hook (so you can use bg-background, text-foreground, etc.) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,108 +37,83 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ===== Base ===== */
+/* ==============
+   BASE ELEMENTS
+   ============== */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI,
-    Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
-/* ===== Solana-style backgrounds ===== */
-/* Light-mode Solana glow (soft pastel over white) */
-.solana-radials {
+/* =========================================================
+   SOLANA-STYLE BACKGROUNDS (works in light & dark schemes)
+   ========================================================= */
+
+/* Subtle multi-color fog you can place on any section */
+.gradient-hero {
   position: relative;
   isolation: isolate;
-  background:
-    radial-gradient(60rem 40rem at 15% -10%, rgba(20,241,149,0.16), transparent 60%),
-    radial-gradient(55rem 35rem at 85% 0%,   rgba(153,69,255,0.14), transparent 60%),
-    radial-gradient(50rem 45rem at 50% 100%, rgba(0,255,163,0.10),  transparent 60%),
-    linear-gradient(180deg, #ffffff 0%, #f7f7fb 60%, #f5f7fb 100%);
 }
-
-/* Swap in a punchier dark version only when user prefers dark */
-@media (prefers-color-scheme: dark) {
-  .solana-radials {
-    background:
-      radial-gradient(60rem 40rem at 15% 0%,    rgba(20,241,149,0.18), transparent 60%),
-      radial-gradient(55rem 35rem at 85% 15%,   rgba(0,255,163,0.16),  transparent 60%),
-      radial-gradient(50rem 45rem at 80% 40%,   rgba(153,69,255,0.18), transparent 60%),
-      radial-gradient(70rem 60rem at 0% 60%,    rgba(153,69,255,0.10), transparent 60%),
-      radial-gradient(80rem 70rem at 100% 85%,  rgba(20,241,149,0.10), transparent 60%),
-      linear-gradient(180deg, #0a0a0a 0%, #06060a 60%, #05060a 100%);
-  }
-}
-
-/* Soft fog if you want it on sub-sections */
-.gradient-hero { position: relative; isolation: isolate; }
 .gradient-hero::before {
-  content: ""; position: absolute; inset: -12%;
+  content: "";
+  position: absolute; inset: -12%;
   background:
     radial-gradient(60rem 30rem at 15% -10%, var(--sol-green)/0.16, transparent 60%),
     radial-gradient(50rem 28rem at 85% 0%,   var(--sol-purple)/0.14, transparent 60%),
     radial-gradient(40rem 22rem at 50% 100%, var(--sol-teal)/0.12,   transparent 60%);
-  filter: blur(24px); z-index: -1;
+  filter: blur(24px);
+  z-index: -1;
 }
 
-/* Neon line */
+/* Stronger Solana “neon radials” background for the whole page */
+.solana-radials {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(60rem 40rem at 15% 0%,    color-mix(in oklab, var(--sol-green) 18%, transparent) , transparent 60%),
+    radial-gradient(55rem 35rem at 85% 15%,   color-mix(in oklab, var(--sol-teal) 16%,  transparent) , transparent 60%),
+    radial-gradient(50rem 45rem at 80% 40%,   color-mix(in oklab, var(--sol-purple) 18%, transparent) , transparent 60%),
+    linear-gradient(180deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+}
+
+/* ===========
+   UI HELPERS
+   =========== */
+
+/* Neon line (use as a separator/glow at top of footer etc.) */
 .glow-line {
-  height: 1px; width: 100%;
+  height: 1px;
+  width: 100%;
   background: linear-gradient(90deg, var(--sol-green), transparent, var(--sol-purple));
-  opacity: .7;
+  opacity: .75;
 }
 
-/* Optional glass card look */
+/* Soft outside glow you can apply to buttons/cards */
+.glow-shadow {
+  box-shadow: 0 0 24px rgba(20, 241, 149, 0.25);
+}
+
+/* Footer icon pills hover effect */
+.footer-pill:hover {
+  box-shadow:
+    0 0 0 2px rgba(20, 241, 149, 0.18),
+    0 0 32px rgba(153, 69, 255, 0.18) inset;
+}
+
+/* Optional: subtle card/glass look for panels */
 .card-glass {
-  background: rgba(0,0,0,0.02);
-  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 1rem;
   backdrop-filter: blur(6px);
 }
-@media (prefers-color-scheme: dark) {
-  .card-glass {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.12);
-  }
-}
 
-/* ===== Footer icon buttons ===== */
-/* ring */
-.icon-ring{
-  display:inline-flex; align-items:center; justify-content:center;
-  height:2.25rem; width:2.25rem; border-radius:9999px;
-  background: radial-gradient(120% 120% at 30% 30%, rgba(153,69,255,.18), rgba(20,241,149,.18));
-  border:1px solid rgba(153,69,255,.35);
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
-}
-.icon-ring:hover{
-  transform:translateY(-1px);
-  box-shadow:0 0 14px rgba(20,241,149,.25), 0 0 20px rgba(153,69,255,.25);
-  border-color:var(--sol-green);
-  background: radial-gradient(120% 120% at 30% 30%, rgba(153,69,255,.28), rgba(20,241,149,.28));
-}
-
-/* icon glyphs:
-   - On LIGHT base we keep original (dark) SVGs (no filter)
-   - On DARK base we invert so they stay visible */
-.icon-img{ height:1rem; width:1rem; opacity:.9; }
-.icon-ring:hover .icon-img{ opacity:1; }
-
-@media (prefers-color-scheme: dark) {
-  .icon-img{ filter: invert(1) brightness(1.15) contrast(1.1); }
-}
-
-/* Contact button */
-.btn-ghost{
-  display:inline-block; border:1px solid rgba(0,0,0,.12);
-  padding:.5rem .75rem; border-radius:.5rem; color:rgba(0,0,0,.75);
-  transition:border-color .15s ease,color .15s ease, box-shadow .15s ease;
-}
-.btn-ghost:hover{ color:#000; border-color:var(--sol-green); box-shadow:0 0 12px rgba(20,241,149,.25); }
-@media (prefers-color-scheme: dark){
-  .btn-ghost{ border:1px solid rgba(255,255,255,.18); color:rgba(255,255,255,.8); }
-  .btn-ghost:hover{ color:#fff; }
+/* If you ever need to brighten SVGs used via <img>, add this class */
+.icon-filter {
+  filter: invert(1) brightness(1.2) contrast(1.1);
 }

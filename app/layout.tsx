@@ -10,11 +10,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    // NOTE: do NOT force "dark" here — that was making everything black.
     <html lang="en">
-      {/* DO NOT force dark here; we want light base by default */}
-      <body className="text-text antialiased">
-        {/* Solana glow wrapper applied to the whole page */}
-        <div className="solana-radials min-h-screen flex flex-col">
+      <body className="bg-bg text-text antialiased">
+        {/* Background layers */}
+        <div className="min-h-screen flex flex-col relative">
+          {/* Light-mode pastel fog */}
+          <div className="pointer-events-none absolute inset-0 solana-fog" aria-hidden />
+
+          {/* Dark-mode neon rays (only visible when system is dark) */}
+          <div className="pointer-events-none absolute inset-0 dark:solana-neon" aria-hidden />
+
+          {/* Thin glow line pinned to footer area */}
+          <div className="pointer-events-none absolute left-0 right-0 bottom-[72px] h-px glow-line" aria-hidden />
+
           <Nav />
           <main className="flex-1">{children}</main>
           <Footer />
