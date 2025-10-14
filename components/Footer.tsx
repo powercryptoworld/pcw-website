@@ -1,16 +1,16 @@
 import Link from "next/link";
 
 const socials = [
-  { label: "LinkedIn",      href: "https://www.linkedin.com/in/power-crypto-world-68b863255/" },
-  { label: "Instagram",     href: "https://www.instagram.com/powercryptoworldpcw/" },
-  { label: "TikTok",        href: "https://www.tiktok.com/@powercryptoworld" },
-  { label: "GitHub",        href: "https://github.com/powercryptoworld" },
-  { label: "Discord",       href: "https://discord.com/invite/ffvHRXJkdZ" },
-  { label: "YouTube",       href: "https://www.youtube.com/channel/UC9D0upTQoiawh0JFMLREuIg" },
-  { label: "Telegram",      href: "https://t.me/+A7Fp1xARJVtiZTYx" },
-  { label: "Twitter",       href: "https://x.com/PCWcrypto" },
-  { label: "Facebook",      href: "https://www.facebook.com/people/Power-Crypto/100075237947925/" },
-  { label: "CoinMarketCap", href: "https://coinmarketcap.com/community/profile/PowerCryptoWorld/" },
+  { label: "LinkedIn",     href: "https://www.linkedin.com/in/power-crypto-world-68b863255/", icon: "/linkedin.svg" },
+  { label: "Instagram",    href: "https://www.instagram.com/powercryptoworldpcw/",            icon: "/instagram.svg" },
+  { label: "TikTok",       href: "https://www.tiktok.com/@powercryptoworld",                  icon: "/tiktok.svg" },
+  { label: "GitHub",       href: "https://github.com/powercryptoworld",                       icon: "/github.svg" },
+  { label: "Discord",      href: "https://discord.com/invite/ffvHRXJkdZ",                     icon: "/discord.svg" },
+  { label: "YouTube",      href: "https://www.youtube.com/channel/UC9D0upTQoiawh0JFMLREuIg",  icon: "/youtube.svg" },
+  { label: "Telegram",     href: "https://t.me/+A7Fp1xARJVtiZTYx",                            icon: "/telegram.svg" },
+  { label: "Twitter (X)",  href: "https://x.com/PCWcrypto",                                   icon: "/x.svg" },
+  { label: "Facebook",     href: "https://www.facebook.com/people/Power-Crypto/100075237947925/", icon: "/facebook.svg" },
+  { label: "CoinMarketCap",href: "https://coinmarketcap.com/community/profile/PowerCryptoWorld/", icon: "/cmc.svg" },
 ];
 
 export default function Footer() {
@@ -20,18 +20,23 @@ export default function Footer() {
       <div className="h-px w-full glow-line" />
 
       <div className="mx-auto max-w-6xl px-6 py-8 grid gap-6 md:grid-cols-2">
-        {/* Left: social links */}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+        {/* Left: icons only */}
+        <div className="flex items-center gap-4 flex-wrap">
           {socials.map((s) => (
-            <Link
+            <a
               key={s.label}
               href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted hover:text-text transition hover:glow-shadow"
+              aria-label={s.label}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-elev/60 ring-1 ring-border/40 hover:ring-[var(--sol-green)] transition"
             >
-              {s.label}
-            </Link>
+              <img
+                src={s.icon}
+                alt=""
+                className="h-4 w-4 opacity-80 group-hover:opacity-100"
+              />
+            </a>
           ))}
         </div>
 
@@ -40,8 +45,8 @@ export default function Footer() {
           <h4 className="text-xs uppercase tracking-wider text-muted">Get connected</h4>
           <div className="mt-2">
             <Link
+              className="inline-block rounded-lg border border-border px-3 py-2 text-sm text-muted hover:text-text hover:border-[var(--sol-green)] transition"
               href="/contact"
-              className="inline-block rounded-lg border border-border px-4 py-2 text-sm hover:border-[var(--sol-green)] transition"
             >
               Contact
             </Link>
@@ -50,9 +55,7 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto max-w-6xl px-6 pb-8">
-        <p className="text-xs text-muted">
-          © {new Date().getFullYear()} Power Crypto World. All rights reserved.
-        </p>
+        <p className="text-xs text-muted">© {new Date().getFullYear()} Power Crypto World. All rights reserved.</p>
       </div>
     </footer>
   );
