@@ -15,16 +15,15 @@ const socials = [
 
 export default function Footer() {
   return (
-    // Strong z-index and its own backdrop so it can’t be “lost”
+    // Strong z-index + own background so socials can't get washed out
     <footer className="relative z-20 border-t border-black/10 dark:border-white/10">
-      {/* Dedicated footer background for contrast */}
       <div className="absolute inset-0 -z-10 bg-white/92 dark:bg-neutral-950/70 backdrop-blur-md" />
 
-      {/* thin glow line */}
+      {/* thin neon line */}
       <div className="h-px w-full glow-line" />
 
       <div className="mx-auto max-w-6xl px-6 py-10 grid gap-6 md:grid-cols-2">
-        {/* BIG, CLEAR SOCIALS */}
+        {/* Social icons */}
         <div className="flex items-center gap-3 md:gap-4 flex-wrap">
           {socials.map((s) => (
             <a
@@ -37,7 +36,7 @@ export default function Footer() {
               className="group inline-flex h-12 w-12 items-center justify-center rounded-full
                          bg-white dark:bg-white/12
                          ring-1 ring-black/10 dark:ring-white/20
-                         hover:ring-[var(--sol-green)] transition shadow-sm"
+                         transition hover:ring-[var(--sol-green)] hover:shadow-[0_0_18px_rgba(153,69,255,.2)]"
             >
               <img
                 src={s.icon}
@@ -49,7 +48,7 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Right: contact */}
+        {/* Contact link */}
         <div className="text-left md:text-right">
           <h4 className="text-xs uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
             GET CONNECTED
