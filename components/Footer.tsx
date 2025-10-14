@@ -19,19 +19,19 @@ export default function Footer() {
       {/* thin glow line */}
       <div className="h-px w-full glow-line" />
 
-      <div className="relative mx-auto max-w-6xl px-6 py-10">
-        {/* SOLANA RIBBON behind icons */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-2 right-2 top-8 h-12 rounded-full blur"
-          style={{
-            background:
-              "linear-gradient(90deg, color-mix(in oklab, var(--sol-green) 35%, transparent), transparent 40%, color-mix(in oklab, var(--sol-purple) 35%, transparent))",
-          }}
-        />
-
-        {/* icons row */}
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        {/* ICONS + LOCAL RIBBON (fits content width only) */}
+        <div className="relative inline-flex flex-wrap items-center gap-4">
+          {/* local solana ribbon under icons only */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-2 rounded-full blur-xl"
+            style={{
+              background:
+                "linear-gradient(90deg, color-mix(in oklab, var(--sol-green) 45%, transparent), transparent 35%, color-mix(in oklab, var(--sol-purple) 45%, transparent))",
+              opacity: 0.6,
+            }}
+          />
           {socials.map((s) => (
             <span
               key={s.label}
@@ -44,8 +44,8 @@ export default function Footer() {
                 aria-label={s.label}
                 className="group inline-flex h-10 w-10 items-center justify-center rounded-full
                            bg-white/90 dark:bg-white/12 backdrop-blur-md
-                           ring-1 ring-black/10 dark:ring-white/20
-                           transition shadow-sm hover:shadow-[0_0_24px_rgba(153,69,255,.25)]"
+                           ring-1 ring-black/10 dark:ring-white/20 transition
+                           hover:ring-[var(--sol-green)] hover:shadow-[0_0_18px_rgba(153,69,255,.25)]"
               >
                 <img
                   src={s.icon}
@@ -58,7 +58,7 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* right column: contact */}
+        {/* Right column */}
         <div className="mt-8 flex items-center justify-between gap-6 flex-wrap">
           <div className="text-xs text-neutral-500 dark:text-neutral-400">
             © {new Date().getFullYear()} Power Crypto World. All rights reserved.
