@@ -16,10 +16,10 @@
   --bg-base: #ffffff;
   --bg-deep: #eef2f9;
 
-  /* Strongest yet while staying readable */
-  --fog-alpha: 0.36;      /* pastel fog */
-  --radial-alpha: 0.78;   /* HERO intensity ↑↑ */
-  --grain-alpha: 0.08;    /* anti-banding */
+  /* Strong vivid glow */
+  --fog-alpha: 0.36;
+  --radial-alpha: 0.78;
+  --grain-alpha: 0.08;
 }
 
 /* Respect system dark (no pure black) */
@@ -89,11 +89,9 @@ body {
   position: relative;
   isolation: isolate;
   background:
-    /* vivid radials */
     radial-gradient(120rem 70rem at 8% -12%,  color-mix(in oklab, var(--sol-green) 48%, transparent), transparent 60%),
     radial-gradient(116rem 66rem at 92% -4%,  color-mix(in oklab, var(--sol-teal)  44%, transparent), transparent 62%),
     radial-gradient(112rem 96rem at 78% 44%,  color-mix(in oklab, var(--sol-purple)46%, transparent), transparent 66%),
-    /* hero wash with color tilt */
     linear-gradient(
       180deg,
       color-mix(in oklab, var(--sol-purple) 22%, var(--bg-base)) 0%,
@@ -102,13 +100,20 @@ body {
     );
 }
 
-/* Center clarity mask to keep text 100% readable */
+/* Center clarity mask + diagonal “beams” like Solana hero */
 .solana-radials::before {
   content: "";
   position: absolute; inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(60rem 40rem at 50% 18%, rgba(255,255,255,0.65), transparent 65%);
+    /* bright center clarity so text stays readable */
+    radial-gradient(60rem 40rem at 50% 18%, rgba(255,255,255,0.65), transparent 65%),
+    /* diagonal beams */
+    linear-gradient(60deg, transparent 40%, color-mix(in oklab, var(--sol-teal) 35%, transparent) 45%, transparent 50%),
+    linear-gradient(240deg, transparent 45%, color-mix(in oklab, var(--sol-purple) 35%, transparent) 50%, transparent 55%),
+    linear-gradient(60deg, transparent 60%, color-mix(in oklab, var(--sol-green) 28%, transparent) 64%, transparent 68%);
+  mix-blend-mode: screen; /* brighten without killing contrast */
+  opacity: 0.35;         /* tuned for light theme */
   z-index: 0;
 }
 
