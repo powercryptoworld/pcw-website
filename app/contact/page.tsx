@@ -19,33 +19,17 @@ export default function ContactPage() {
         >
           <label className="grid gap-2">
             <span className="text-sm text-muted">Name</span>
-            <input
-              className="rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-accent"
-              name="name"
-              required
-            />
+            <input className="rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]" name="name" required />
           </label>
           <label className="grid gap-2">
             <span className="text-sm text-muted">Email</span>
-            <input
-              type="email"
-              className="rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-accent"
-              name="email"
-              required
-            />
+            <input type="email" className="rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]" name="email" required />
           </label>
           <label className="grid gap-2">
             <span className="text-sm text-muted">Message</span>
-            <textarea
-              className="min-h-[120px] rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-accent"
-              name="message"
-              required
-            />
+            <textarea className="min-h-[120px] rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]" name="message" required />
           </label>
-          <button
-            className="mt-2 rounded-xl bg-accent px-5 py-3 hover:bg-accent/90 transition shadow-[0_0_20px_var(--color-accent-soft)]"
-            type="submit"
-          >
+          <button className="mt-2 rounded-xl bg-accent px-5 py-3 hover:bg-accent/90 transition glow-shadow" type="submit">
             Send
           </button>
         </form>

@@ -1,37 +1,57 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ===== Dark Theme Palette (CSS variables) ===== */
-:root {
-  --bg: #0b0d12;          /* Near-black base */
-  --elev: #10131a;        /* Elevated surface */
-  --text: #e6e8ef;        /* High-contrast text */
-  --muted: #9aa3b2;       /* Secondary text */
-  --border: #1b2030;      /* Subtle borders */
-  --accent: #14f195;      /* Solana neon green */
-  --accent-2: #6a5cff;    /* Electric indigo/purple */
-  --accent-soft: rgba(20, 241, 149, 0.25);
-}
+@import "tailwindcss";
 
 :root {
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
-  --color-accent-soft: var(--accent-soft);
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
-@layer base {
-  html, body {
-    background-color: var(--bg);
-    color: var(--text);
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
   }
 }
 
-@layer utilities {
-  .bg-bg { background-color: var(--bg); }
-  .bg-elev { background-color: var(--elev); }
-  .text-text { color: var(--text); }
-  .text-muted { color: var(--muted); }
-  .border-border { border-color: var(--border); }
-  .bg-accent { background-color: var(--accent); color: #06110a; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== Solana-style gradient & glow helpers ===== */
+:root {
+  --sol-purple: #9945FF;   /* Solana purple */
+  --sol-green:  #14F195;   /* Solana neon green */
+  --sol-teal:   #00FFA3;   /* bright spring green */
+}
+
+/* Multi-color hero background with subtle fog */
+.gradient-hero {
+  position: relative;
+  isolation: isolate;
+}
+.gradient-hero::before {
+  content: "";
+  position: absolute; inset: -10%;
+  background:
+    radial-gradient(60rem 30rem at 15% -10%, var(--sol-green, #14F195)/0.16, transparent 60%),
+    radial-gradient(50rem 28rem at 85% 0%, var(--sol-purple, #9945FF)/0.14, transparent 60%),
+    radial-gradient(40rem 22rem at 50% 100%, var(--sol-teal, #00FFA3)/0.10, transparent 60%);
+  filter: blur(24px);
+  z-index: -1;
+}
+
+/* Neon border/glow line */
+.glow-line {
+  background: linear-gradient(90deg, var(--sol-green), transparent, var(--sol-purple));
+}
+
+/* Accent ring / button hover glow */
+.glow-shadow { box-shadow: 0 0 24px rgba(20, 241, 149, 0.25); }

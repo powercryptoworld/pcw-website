@@ -10,7 +10,7 @@ export default function BuyPCWPage() {
         <a
           href="#"
           onClick={(e) => e.preventDefault()}
-          className="inline-block rounded-xl bg-accent px-5 py-3 hover:bg-accent/90 transition shadow-[0_0_20px_var(--color-accent-soft)]"
+          className="inline-block rounded-xl bg-accent px-5 py-3 hover:bg-accent/90 transition glow-shadow"
         >
           Launch Buy Flow
         </a>

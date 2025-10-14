@@ -1,46 +1,84 @@
-export default function HomePage() {
-  return (
-    <section className="relative">
-      <div
-        className="absolute inset-0 blur-3xl opacity-50 pointer-events-none"
-        aria-hidden
-        style={{
-          background:
-            "radial-gradient(40rem 20rem at 20% 0%, var(--color-accent)/0.15, transparent 60%), radial-gradient(30rem 18rem at 80% 20%, var(--color-accent-2)/0.12, transparent 60%)",
-        }}
-      />
-      <div className="relative mx-auto max-w-5xl px-6 py-20 md:py-28">
-        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">Power Crypto World</h1>
-        <p className="mt-5 text-lg md:text-xl text-muted">
-          A minimal, fast website inspired by Solana’s clean, dark aesthetic—built with Next.js + Tailwind.
-        </p>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <a
-            href="/buy-pcw"
-            className="rounded-xl px-5 py-3 bg-accent hover:bg-accent/90 transition shadow-[0_0_20px_var(--color-accent-soft)]"
-          >
-            Buy PCW
-          </a>
-          <a
-            href="/contact"
-            className="rounded-xl px-5 py-3 border border-border hover:border-accent hover:text-text transition"
-          >
-            Contact
-          </a>
-        </div>
+"use client";
 
-        <div className="mt-16 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-border p-5 hover:border-accent/60 transition">
-            <h3 className="text-xl font-medium">Fast</h3>
-            <p className="mt-2 text-sm text-muted">Next.js App Router + edge-ready design.</p>
-          </div>
-          <div className="rounded-2xl border border-border p-5 hover:border-accent/60 transition">
-            <h3 className="text-xl font-medium">Minimal</h3>
-            <p className="mt-2 text-sm text-muted">Clean, focused, neon accents.</p>
-          </div>
-          <div className="rounded-2xl border border-border p-5 hover:border-accent/60 transition">
-            <h3 className="text-xl font-medium">Responsive</h3>
-            <p className="mt-2 text-sm text-muted">Looks great on any device.</p>
+export default function SwapHome() {
+  return (
+    <section className="relative gradient-hero">
+      <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-24">
+        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">PCW Swap</h1>
+        <p className="mt-3 text-muted max-w-2xl">
+          Simple, Solana-style swap interface. (Demo UI only — wire up your logic later.)
+        </p>
+
+        <div className="mt-10 grid place-items-center">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-elev/60 backdrop-blur p-6 shadow-xl">
+            {/* Network / Wallet row (placeholder) */}
+            <div className="flex items-center justify-between text-sm text-muted">
+              <span>Network: <strong className="text-text">BNB</strong></span>
+              <button className="rounded-lg border border-border px-3 py-1 hover:border-[var(--sol-green)] transition">Connect</button>
+            </div>
+
+            {/* Pay card */}
+            <div className="mt-5 rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">You pay</span>
+                <button className="text-xs rounded-lg border border-border px-2 py-1 hover:border-[var(--sol-green)] transition">MAX</button>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <select className="rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]">
+                  <option>BNB</option>
+                  <option>SOL</option>
+                  <option>USDC</option>
+                </select>
+                <input
+                  className="flex-1 rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
+                  placeholder="0.0"
+                />
+              </div>
+            </div>
+
+            {/* Swap arrow */}
+            <div className="my-4 grid place-items-center">
+              <div className="h-9 w-9 grid place-items-center rounded-full border border-border">↕</div>
+            </div>
+
+            {/* Receive card */}
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">You receive</span>
+                <span className="text-xs text-muted">est.</span>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <select className="rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]">
+                  <option>USDC</option>
+                  <option>SOL</option>
+                  <option>BNB</option>
+                </select>
+                <input
+                  className="flex-1 rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
+                  placeholder="0.0"
+                />
+              </div>
+            </div>
+
+            {/* Slippage row (display only) */}
+            <div className="mt-4 flex items-center justify-between text-sm text-muted">
+              <span>Slippage</span>
+              <div className="flex gap-2">
+                <span className="rounded-full bg-elev border border-border px-3 py-1">Slow</span>
+                <span className="rounded-full bg-elev border border-border px-3 py-1">Market</span>
+                <span className="rounded-full bg-elev border border-border px-3 py-1">Fast</span>
+                <span className="rounded-full bg-elev border border-border px-3 py-1">0.25%</span>
+              </div>
+            </div>
+
+            {/* Swap button with Solana gradient */}
+            <button
+              className="mt-5 w-full rounded-xl py-3 text-bg font-medium transition glow-shadow"
+              style={{ background: "linear-gradient(90deg, var(--sol-green), var(--sol-purple))" }}
+              onClick={(e) => e.preventDefault()}
+            >
+              Swap
+            </button>
           </div>
         </div>
       </div>
