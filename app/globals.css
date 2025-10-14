@@ -1,135 +1,138 @@
 @import "tailwindcss";
 
-/* ---------- LIGHT (default) ---------- */
-:root{
-  --background:#ffffff;
-  --foreground:#0e1116;
+/* ===========================
+   THEME TOKENS (dark-forward)
+   =========================== */
+:root {
+  /* Dark-first palette (still supports light) */
+  --background: #0b0f14;   /* deep space blue/black */
+  --foreground: #e7f0ff;   /* high-contrast ice */
 
-  /* Solana hues */
-  --sol-purple:#9945FF;   /* 153,69,255 */
-  --sol-green:#14F195;    /* 20,241,149 */
-  --sol-teal:#00FFA3;     /* 0,255,163 */
+  /* Solana tones */
+  --sol-purple: #9945FF;
+  --sol-green:  #14F195;
+  --sol-teal:   #00FFA3;
 
-  /* paper ramp */
-  --bg-base:#ffffff;
-  --bg-deep:#eef3fb;
-
-  /* power dials */
-  --fog: .34;
-  --radial: .90;
-  --beam: .65;
-  --grain: .10;
+  /* Background ramps used by the Solana radials */
+  --bg-base: #0a0e13;
+  --bg-deep: #070b10;
 }
 
-/* ---------- DARK (never pure black) ---------- */
-@media (prefers-color-scheme: dark){
-  :root{
-    --background:#0b0f16;
-    --foreground:#eef2f7;
+/* Light-mode override (if user prefers light) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
 
-    --bg-base:#0b0f16;
-    --bg-deep:#0a0e14;
-
-    --fog:.42;
-    --radial:.96;
-    --beam:.70;
-    --grain:.12;
+    --bg-base: #fbfdff;
+    --bg-deep: #f3f6fb;
   }
 }
 
-/* Tailwind tokens */
-@theme inline{
-  --color-background:var(--background);
-  --color-foreground:var(--foreground);
-  --font-sans:var(--font-geist-sans);
-  --font-mono:var(--font-geist-mono);
+/* Tailwind design tokens hook */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
-/* Base */
-*{box-sizing:border-box;}
-html,body{height:100%;}
-body{
-  background:var(--background);
-  color:var(--foreground);
-  font-family:var(--font-geist-sans),ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-  overflow-x:clip; /* no horizontal scroll */
+/* ==============
+   BASE ELEMENTS
+   ============== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
-/* ================================
-   SOLANA BACKDROP (sharp hero)
-   ================================ */
-.solana-radials{
-  position:relative; isolation:isolate; overflow:hidden;
+/* =========================================================
+   SOLANA-STYLE BACKGROUNDS (dark-forward, light still OK)
+   ========================================================= */
+
+/* Strong Solana “neon radials” for whole page */
+.solana-radials {
+  position: relative;
+  isolation: isolate;
   background:
-    linear-gradient(180deg,
-      rgba(153,69,255,0.20) 0%,
-      rgba(20,241,149,0.12) 36%,
-      var(--bg-deep) 100%
-    );
-  background-attachment:fixed;
+    radial-gradient(70rem 48rem at 12% 0%,   color-mix(in oklab, var(--sol-green) 22%, transparent) , transparent 60%),
+    radial-gradient(65rem 44rem at 85% 20%,  color-mix(in oklab, var(--sol-teal) 20%,  transparent) , transparent 62%),
+    radial-gradient(60rem 56rem at 80% 70%,  color-mix(in oklab, var(--sol-purple) 22%, transparent) , transparent 64%),
+    linear-gradient(180deg, var(--bg-base) 0%, var(--bg-deep) 100%);
 }
 
-/* Layer 1 — soft nebula */
-.solana-fog,
-.solana-neon{position:absolute; inset:0; pointer-events:none; z-index:0;}
-.solana-fog{
-  filter:blur(26px);
+/* Subtle multi-color fog layer (below content) */
+.solana-fog::before,
+.solana-fog {
+  content: "";
+  position: absolute; inset: -12%;
   background:
-    radial-gradient(120rem 60rem at 10% -10%, rgba(20,241,149,calc(var(--fog))) , transparent 60%),
-    radial-gradient(110rem 52rem at 90% -12%, rgba(153,69,255,calc(var(--fog))) , transparent 62%),
-    radial-gradient(90rem  44rem at 50% 112%, rgba(0,255,163,calc(var(--fog)))  , transparent 64%);
+    radial-gradient(60rem 30rem at 15% -10%, var(--sol-green)/0.18, transparent 60%),
+    radial-gradient(50rem 28rem at 85% 0%,   var(--sol-purple)/0.16, transparent 60%),
+    radial-gradient(40rem 22rem at 50% 100%, var(--sol-teal)/0.14,   transparent 60%);
+  filter: blur(28px);
+  z-index: -1;
 }
 
-/* Layer 2 — brighter cores */
-.solana-neon{
+/* Thin neon rays for extra depth (in dark) */
+.solana-neon::before,
+.solana-neon {
+  content: "";
+  position: absolute; inset: -20%;
   background:
-    radial-gradient(150rem 84rem at 12% -12%, rgba(20,241,149,var(--radial)), transparent 60%),
-    radial-gradient(138rem 76rem at 88% -6%,  rgba(0,255,163,var(--radial)),  transparent 62%),
-    radial-gradient(132rem 98rem at 78% 42%,  rgba(153,69,255,var(--radial)), transparent 66%);
+    conic-gradient(from 200deg at 70% 30%, var(--sol-purple)/0.18, transparent 40%),
+    conic-gradient(from 20deg  at 20% 70%, var(--sol-teal)/0.16,    transparent 42%),
+    conic-gradient(from 140deg at 50% 50%, var(--sol-green)/0.14,   transparent 45%);
+  mix-blend-mode: screen;
+  filter: blur(30px) saturate(110%);
+  z-index: -1;
 }
 
-/* Layer 3 — ANGLED BEAMS (like solana.com), readable center & footer-safe */
-.solana-radials::before{
-  content:""; position:absolute; inset:-8% -6% -8% -6%; z-index:0; pointer-events:none;
+/* Soft vignette to keep edges readable */
+.vignette {
+  position: absolute; inset: 0;
+  pointer-events: none;
   background:
-    /* teal beam (upper-left to lower-right) */
-    linear-gradient(-12deg, rgba(0,255,163,var(--beam)) 0 38%, rgba(0,255,163,0) 55%),
-    /* purple beam (upper-right sweep) */
-    linear-gradient(14deg, rgba(153,69,255,var(--beam)) 0 40%, rgba(153,69,255,0) 58%),
-    /* green sweep (mid body) */
-    linear-gradient(-18deg, rgba(20,241,149,calc(var(--beam)*.9)) 0 28%, rgba(20,241,149,0) 48%),
-    /* center clarity so text ALWAYS readable */
-    radial-gradient(62rem 42rem at 50% 20%, rgba(255,255,255,.82), transparent 65%);
-  mix-blend-mode:screen;
-  opacity:.95;
-  /* fade beams before footer to protect icons/content */
-  mask-image: linear-gradient(to bottom,#000 0%,#000 72%,rgba(0,0,0,0) 94%);
+    radial-gradient(120% 90% at 50% 60%, transparent 60%, rgba(0,0,0,0.35));
+  z-index: -1;
 }
 
-/* Optional vignette node (inserted from layout) */
-.vignette{
-  position:absolute; inset:0; pointer-events:none; z-index:0;
-  background:radial-gradient(120rem 80rem at 50% -10%, transparent 60%, rgba(0,0,0,.05) 100%);
+/* Neutral stage behind footer to keep icons/buttons visible */
+.footer-stage {
+  height: 120px;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.35));
 }
 
-/* Layer 4 — anti-banding grain */
-.solana-radials::after{
-  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
-  opacity:var(--grain); mix-blend-mode:overlay;
+/* =============
+   UI HELPERS
+   ============= */
+
+/* Neon line (use as separator/glow) */
+.glow-line {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--sol-green), transparent, var(--sol-purple));
+  opacity: .8;
 }
 
-/* Footer protection stage (neutral zone behind footer) */
-.footer-stage{
-  position:absolute; left:0; right:0; bottom:0; height:260px;
-  pointer-events:none; z-index:0;
-  background:linear-gradient(to bottom, rgba(255,255,255,.86) 0%, rgba(255,255,255,.94) 55%, rgba(255,255,255,1) 100%);
-  box-shadow:0 -1px 0 rgba(0,0,0,.06) inset;
+/* Card / glass panels */
+.card-glass {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 1rem;
+  backdrop-filter: blur(6px);
 }
 
-/* Helpers */
-.glow-line{height:1px;width:100%;background:linear-gradient(90deg, var(--sol-green), transparent, var(--sol-purple));opacity:.95;}
-.footer-pill:hover{box-shadow:0 0 0 2px rgba(20,241,149,.18), inset 0 0 32px rgba(153,69,255,.18);}
-.glow-shadow{box-shadow:0 0 24px rgba(20,241,149,.25);}
-.card-glass{background:rgba(255,255,255,.40); border:1px solid rgba(0,0,0,.08); border-radius:1rem; backdrop-filter:blur(10px);}
-.icon-filter{filter:invert(1) brightness(1.2) contrast(1.1);}
+/* Footer/icon hover */
+.footer-pill:hover {
+  box-shadow:
+    0 0 0 2px rgba(20, 241, 149, 0.18),
+    0 0 32px rgba(153, 69, 255, 0.18) inset;
+}
+
+/* Optional: brighten SVGs used via <img> in dark mode */
+.icon-filter { filter: invert(1) brightness(1.2) contrast(1.1); }
