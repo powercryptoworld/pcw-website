@@ -1,7 +1,6 @@
 export default function Home() {
   return (
     <div className="relative mx-auto max-w-5xl px-6 py-16">
-      {/* Hero */}
       <header className="mb-8">
         <h1 className="text-5xl font-semibold tracking-tight">PCW Swap</h1>
         <p className="mt-2 text-sm opacity-80">
