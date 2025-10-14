@@ -1,39 +1,37 @@
 import Link from "next/link";
 
 const socials = [
-  { label: "LinkedIn", href: "#" },
-  { label: "Instagram", href: "#" },
-  { label: "TikTok", href: "#" },
-  { label: "GitHub", href: "#" },
-  { label: "Discord", href: "#" },
-  { label: "YouTube", href: "#" },
-  { label: "Telegram", href: "#" },
-  { label: "Twitter", href: "#" },
-  { label: "Facebook", href: "#" },
-  { label: "CoinMarketCap", href: "#" },
+  { label: "LinkedIn",      href: "https://www.linkedin.com/in/power-crypto-world-68b863255/" },
+  { label: "Instagram",     href: "https://www.instagram.com/powercryptoworldpcw/" },
+  { label: "TikTok",        href: "https://www.tiktok.com/@powercryptoworld" },
+  { label: "GitHub",        href: "https://github.com/powercryptoworld" },
+  { label: "Discord",       href: "https://discord.com/invite/ffvHRXJkdZ" },
+  { label: "YouTube",       href: "https://www.youtube.com/channel/UC9D0upTQoiawh0JFMLREuIg" },
+  { label: "Telegram",      href: "https://t.me/+A7Fp1xARJVtiZTYx" },
+  { label: "Twitter",       href: "https://x.com/PCWcrypto" },
+  { label: "Facebook",      href: "https://www.facebook.com/people/Power-Crypto/100075237947925/" },
+  { label: "CoinMarketCap", href: "https://coinmarketcap.com/community/profile/PowerCryptoWorld/" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border">
-      {/* Solana-style glow line */}
+    <footer className="border-t border-border/30">
+      {/* glow line */}
       <div className="h-px w-full glow-line" />
 
       <div className="mx-auto max-w-6xl px-6 py-8 grid gap-6 md:grid-cols-2">
-        {/* Left: Logos/Links list */}
+        {/* Left: social links */}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           {socials.map((s) => (
-            <a
+            <Link
               key={s.label}
               href={s.href}
               target="_blank"
-              rel="noreferrer"
-              className="text-sm text-muted hover:text-text hover:glow-shadow transition"
-              aria-label={s.label}
-              title={s.label}
+              rel="noopener noreferrer"
+              className="text-sm text-muted hover:text-text transition hover:glow-shadow"
             >
               {s.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -42,8 +40,8 @@ export default function Footer() {
           <h4 className="text-xs uppercase tracking-wider text-muted">Get connected</h4>
           <div className="mt-2">
             <Link
-              className="inline-block rounded-lg border border-border px-3 py-2 text-sm text-muted hover:text-text hover:border-[var(--sol-green)] transition"
               href="/contact"
+              className="inline-block rounded-lg border border-border px-4 py-2 text-sm hover:border-[var(--sol-green)] transition"
             >
               Contact
             </Link>
@@ -52,7 +50,9 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto max-w-6xl px-6 pb-8">
-        <p className="text-xs text-muted">© {new Date().getFullYear()} Power Crypto World. All rights reserved.</p>
+        <p className="text-xs text-muted">
+          © {new Date().getFullYear()} Power Crypto World. All rights reserved.
+        </p>
       </div>
     </footer>
   );
