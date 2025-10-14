@@ -1,83 +1,241 @@
-@import "tailwindcss";
-
-/* ===========================
-   THEME TOKENS (dark-forward)
-   =========================== */
-:root {
-  --background: #090c11;   /* deep space */
-  --foreground: #e7f0ff;   /* crisp ice text */
-
-  /* Solana tones */
-  --sol-purple: #9945FF;
-  --sol-green:  #14F195;
-  --sol-teal:   #00FFA3;
-
-  /* ramps */
-  --bg-base: #090c11;
-  --bg-deep: #070a0f;
+/* ---------- Base Reset ---------- */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: #e6efff;
+  background: #0b0f15;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  letter-spacing: .1px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #ffffff;
-    --foreground: #171717;
-    --bg-base: #fbfdff;
-    --bg-deep: #f3f6fb;
+/* ---------- Theme tokens ---------- */
+:root{
+  --sol-green: #14f195;
+  --sol-purple: #9945ff;
+
+  --pool-teal: rgba(36, 225, 193, .18);
+  --pool-blue: rgba(76, 201, 255, .16);
+  --pool-violet: rgba(157, 78, 221, .18);
+
+  --glass-a: rgba(20, 24, 33, .62);
+  --glass-b: rgba(12, 16, 28, .50);
+  --stroke: rgba(160, 190, 255, .18);
+  --stroke-strong: rgba(160, 190, 255, .26);
+
+  --shadow-lg: 0 24px 80px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.04) inset;
+  --shadow-md: 0 16px 48px rgba(0,0,0,.45);
+
+  --radius-xl: 18px;
+  --radius-lg: 14px;
+  --radius-md: 12px;
+}
+
+/* ---------- Solana-esque background ---------- */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+}
+body::before {
+  background:
+    radial-gradient(1100px 700px at 16% 0%, var(--pool-violet), transparent 62%),
+    radial-gradient(1000px 620px at 86% 8%, var(--pool-blue), transparent 62%),
+    radial-gradient(1200px 820px at 58% 86%, var(--pool-teal), transparent 64%),
+    linear-gradient(180deg, #0b0f15 0%, #0a0e14 55%, #070a0f 100%);
+  filter: saturate(112%);
+}
+body::after {
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0 2px, transparent 2px 4px);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* top/bottom vignette */
+#pcw-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  box-shadow:
+    inset 0 -220px 260px -120px rgba(0,0,0,.55),
+    inset 0  220px 260px -120px rgba(0,0,0,.38);
+}
+
+/* ---------- Layout helpers ---------- */
+.container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.page-pad { padding: 56px 0 110px; }
+@media (max-width: 1280px){ .container{ max-width: 980px; } .page-pad{ padding: 48px 0 96px; } }
+@media (max-width: 1024px){ .container{ max-width: 820px; } .page-pad{ padding: 40px 0 88px; } }
+@media (max-width: 768px) { .container{ max-width: 640px; } .page-pad{ padding: 32px 0 88px; } }
+@media (max-width: 390px) { .container{ max-width: 92vw; } .page-pad{ padding: 28px 0 88px; } }
+
+/* ---------- Headings ---------- */
+.h1 {
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.15;
+  background: linear-gradient(90deg, #f6f8ff 0%, #cfe1ff 45%, #e6d7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.subtle {
+  margin: 6px 0 0 0;
+  color: #bcd1ff;
+  font-size: 14px;
+  opacity: .92;
+}
+
+/* ---------- Glass card ---------- */
+.glass {
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-lg);
+  padding: 18px;
+  width: min(100%, 1080px);
+}
+@media (max-width: 1280px){ .glass{ width: min(720px, 92vw); } }
+@media (max-width: 1024px){ .glass{ width: min(640px, 94vw); } }
+@media (max-width: 768px) { .glass{ width: min(560px, 94vw); padding: 14px; } }
+@media (max-width: 390px) { .glass{ width: 94vw; border-radius: 16px; padding: 12px; } }
+
+/* ---------- Tabs (pills) ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.pill {
+  padding: .46rem .8rem;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.04);
+  color: #dfe8ff;
+  font-size: .86rem;
+  line-height: 1;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.pill:hover { background: rgba(255,255,255,.07); transform: translateY(-1px); }
+.pill:focus-visible { outline: 2px solid rgba(100,200,255,.55); outline-offset: 2px; }
+.pill-active {
+  border-color: var(--stroke-strong);
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(76,201,255,.20), rgba(157,78,221,.18) 55%, rgba(12,16,30,.40) 100%);
+  color: #ffffff;
+}
+
+/* ---------- Inputs / rows ---------- */
+.row { display: grid; gap: 10px; margin-bottom: 12px; }
+.label { font-size: 12px; color: #a8c3ff; opacity: .95; }
+.input {
+  width: 100%;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.04);
+  color: #fff;
+  padding: 0 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.input::placeholder { color: #9aa3af; }
+.amount { font-size: clamp(18px, 2.1vw, 22px); font-weight: 600; color: #f2f6ff; }
+.sub    { font-size: 12px; color: #9fb8ff; opacity: .9; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  color: #fff;
+  padding: .6rem 1rem;
+  font-weight: 600;
+  transition: transform .1s ease, background .15s ease, box-shadow .15s ease;
+  box-shadow: var(--shadow-md);
+}
+.btn:hover { background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05)); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+/* Swap button — soft neon baseline */
+.btn--swap {
+  position: relative;
+  width: 100%;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(200,230,255,.18);
+  background: linear-gradient(180deg, #c8f6ff 0%, #aef0ff 38%, #89eadf 100%);
+  color: #0b0f15;
+  letter-spacing: .3px;
+}
+.btn--swap::after{
+  content:"";
+  position:absolute; left:10px; right:10px; top:0;
+  height:2px; border-radius:2px;
+  background: linear-gradient(90deg, transparent, #24e1c1, #4cc9ff, #9d4edd, transparent);
+  filter: blur(.6px);
+  opacity: .58;
+}
+
+/* ---------- Bottom docks ---------- */
+.social-dock, .contact-dock { z-index: 3; }
+.social-dock{
+  position: fixed; left: 24px; bottom: 24px;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.contact-dock{
+  position: fixed; right: 24px; bottom: 24px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  text-align: right;
+}
+.contact-dock .label{
+  font-size: 11px; letter-spacing: .18em; color: #a8c3ff; opacity: .9;
+}
+.contact-dock .contact-btn{
+  padding: 8px 12px; border-radius: 999px;
+  border: 1px solid var(--stroke-strong);
+  background: linear-gradient(180deg, rgba(36,225,193,.28), rgba(76,201,255,.24));
+  color: #e5faff; text-decoration: none; font-size: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+
+/* Dock pill look (shared by Social icons) */
+.dock {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--stroke);
+  color: #e5e7eb;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+/* Responsive docking */
+@media (max-width: 768px){
+  .social-dock{ left: 16px; bottom: 16px; max-width: 60vw; }
+  .contact-dock{ right: 16px; bottom: 16px; }
+}
+@media (max-width: 480px){
+  .social-dock{ left: 50%; transform: translateX(-50%); bottom: 14px; justify-content: center; max-width: 92vw; }
+  .contact-dock{
+    left: 50%; right: auto; transform: translateX(-50%);
+    bottom: 62px;
   }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* Base */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-}
-
-/* =========================================================
-   CLEAN SOLANA BACKGROUND (no grain, no banding lines)
-   ========================================================= */
-.solana-hero {
-  position: relative;
-  min-height: 100%;
-  background:
-    /* depth */
-    linear-gradient(180deg, var(--bg-base) 0%, var(--bg-deep) 100%),
-    /* color bursts */
-    radial-gradient(90rem 60rem at 12% -15%, color-mix(in oklab, var(--sol-green) 22%, transparent) 0%, transparent 60%),
-    radial-gradient(80rem 60rem at 88% 10%, color-mix(in oklab, var(--sol-teal) 20%,  transparent) 0%, transparent 62%),
-    radial-gradient(110rem 80rem at 78% 85%, color-mix(in oklab, var(--sol-purple) 22%, transparent) 0%, transparent 64%);
-  background-blend-mode: normal, screen, screen, screen;
-  overflow-x: hidden;
-}
-
-/* Keep content above background */
-.solana-hero > * { position: relative; z-index: 1; }
-
-/* =================
-   UI HELPERS
-   ================= */
-
-.glow-line {
-  display: none; /* removed to avoid the horizontal line */
-}
-
-.card-glass {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 1rem;
-  backdrop-filter: blur(8px);
-}
-
-/* Optional: brighten SVGs in dark */
-.icon-filter { filter: invert(1) brightness(1.2) contrast(1.1); }
+/* ---------- Utilities ---------- */
+.text-xs { font-size: .75rem; }
+.text-sm { font-size: .875rem; }
+.text-base { font-size: 1rem; }
+.text-muted { color: #cbd5e1; }
+.mt-6 { margin-top: 1.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-5 { margin-bottom: 1.25rem; }
+.hidden { display: none !important; }
