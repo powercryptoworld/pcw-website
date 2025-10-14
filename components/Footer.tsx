@@ -16,11 +16,11 @@ const socials = [
 export default function Footer() {
   return (
     <footer className="border-t border-border/30">
-      {/* glow line */}
-      <div className="h-px w-full glow-line" />
+      {/* neon line */}
+      <div className="glow-line" />
 
       <div className="mx-auto max-w-6xl px-6 py-8 grid gap-6 md:grid-cols-2">
-        {/* Left: icons only */}
+        {/* Left: icon buttons */}
         <div className="flex items-center gap-4 flex-wrap">
           {socials.map((s) => (
             <a
@@ -29,13 +29,9 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={s.label}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-elev/60 ring-1 ring-border/40 hover:ring-[var(--sol-green)] transition"
+              className="group icon-ring"
             >
-              <img
-                src={s.icon}
-                alt=""
-                className="h-4 w-4 opacity-80 group-hover:opacity-100"
-              />
+              <img src={s.icon} alt="" className="icon-img" />
             </a>
           ))}
         </div>
@@ -44,10 +40,7 @@ export default function Footer() {
         <div className="text-left md:text-right">
           <h4 className="text-xs uppercase tracking-wider text-muted">Get connected</h4>
           <div className="mt-2">
-            <Link
-              className="inline-block rounded-lg border border-border px-3 py-2 text-sm text-muted hover:text-text hover:border-[var(--sol-green)] transition"
-              href="/contact"
-            >
+            <Link href="/contact" className="btn-ghost">
               Contact
             </Link>
           </div>
