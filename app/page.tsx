@@ -1,87 +1,100 @@
-"use client";
-
-export default function SwapHome() {
+export default function Home() {
   return (
-    <section className="relative gradient-hero">
-      <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-24">
-        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">PCW Swap</h1>
-        <p className="mt-3 text-muted max-w-2xl">
+    <div className="relative mx-auto max-w-5xl px-6 py-16">
+      {/* Hero */}
+      <header className="mb-8">
+        <h1 className="text-5xl font-semibold tracking-tight">PCW Swap</h1>
+        <p className="mt-2 text-sm opacity-80">
           Simple, Solana-style swap interface. (Demo UI only — wire up your logic later.)
         </p>
+      </header>
 
-        <div className="mt-10 grid place-items-center">
-          <div className="w-full max-w-xl rounded-2xl border border-border bg-elev/60 backdrop-blur p-6 shadow-xl">
-            {/* Network / Wallet row (placeholder) */}
-            <div className="flex items-center justify-between text-sm text-muted">
-              <span>Network: <strong className="text-text">BNB</strong></span>
-              <button className="rounded-lg border border-border px-3 py-1 hover:border-[var(--sol-green)] transition">Connect</button>
+      {/* Glass Swap Card */}
+      <section
+        className="relative rounded-2xl overflow-hidden"
+        style={{
+          boxShadow:
+            "0 12px 32px rgba(0,0,0,.10), inset 0 0 0 1px rgba(0,0,0,.08)",
+          backdropFilter: "saturate(120%) blur(12px)",
+          WebkitBackdropFilter: "saturate(120%) blur(12px)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,.70), rgba(255,255,255,.52))",
+        }}
+      >
+        {/* neon edge stroke */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-2xl"
+          style={{
+            padding: 1,
+            background:
+              "linear-gradient(90deg, rgba(20,241,149,.55), rgba(153,69,255,.55))",
+            WebkitMask:
+              "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+            WebkitMaskComposite: "xor",
+            maskComposite: "exclude",
+          }}
+        />
+
+        <div className="relative p-6 md:p-8">
+          {/* Network row */}
+          <div className="mb-5 flex items-center justify-between text-sm">
+            <div>
+              <span className="opacity-60">Network:</span>{" "}
+              <span className="font-medium">BNB</span>
             </div>
-
-            {/* Pay card */}
-            <div className="mt-5 rounded-xl border border-border p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">You pay</span>
-                <button className="text-xs rounded-lg border border-border px-2 py-1 hover:border-[var(--sol-green)] transition">MAX</button>
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <select className="rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]">
-                  <option>BNB</option>
-                  <option>SOL</option>
-                  <option>USDC</option>
-                </select>
-                <input
-                  className="flex-1 rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
-                  placeholder="0.0"
-                />
-              </div>
-            </div>
-
-            {/* Swap arrow */}
-            <div className="my-4 grid place-items-center">
-              <div className="h-9 w-9 grid place-items-center rounded-full border border-border">↕</div>
-            </div>
-
-            {/* Receive card */}
-            <div className="rounded-xl border border-border p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">You receive</span>
-                <span className="text-xs text-muted">est.</span>
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <select className="rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]">
-                  <option>USDC</option>
-                  <option>SOL</option>
-                  <option>BNB</option>
-                </select>
-                <input
-                  className="flex-1 rounded-lg bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
-                  placeholder="0.0"
-                />
-              </div>
-            </div>
-
-            {/* Slippage row (display only) */}
-            <div className="mt-4 flex items-center justify-between text-sm text-muted">
-              <span>Slippage</span>
-              <div className="flex gap-2">
-                <span className="rounded-full bg-elev border border-border px-3 py-1">Slow</span>
-                <span className="rounded-full bg-elev border border-border px-3 py-1">Market</span>
-                <span className="rounded-full bg-elev border border-border px-3 py-1">Fast</span>
-                <span className="rounded-full bg-elev border border-border px-3 py-1">0.25%</span>
-              </div>
-            </div>
-
-            {/* Swap button with Solana gradient */}
-            <button
-              className="mt-5 w-full rounded-xl py-3 text-bg font-medium transition glow-shadow"
-              style={{ background: "linear-gradient(90deg, var(--sol-green), var(--sol-purple))" }}
-              onClick={(e) => e.preventDefault()}
-            >
-              Swap
-            </button>
+            <button className="ui-chip">Connect</button>
           </div>
+
+          {/* You pay */}
+          <div className="rounded-xl border border-black/10 dark:border-white/10 p-3 mb-4 bg-white/70 dark:bg-white/5 backdrop-blur">
+            <div className="mb-2 text-sm opacity-70">You pay</div>
+            <div className="flex items-center gap-3">
+              <select className="ui-input">
+                <option>BNB</option>
+              </select>
+              <input className="ui-input flex-1" placeholder="0.0" />
+              <button className="ui-chip text-xs">MAX</button>
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <div className="mx-auto my-2 flex h-8 w-8 items-center justify-center rounded-full border border-black/10 dark:border-white/10 text-sm opacity-70 bg-white/60 dark:bg-white/5 backdrop-blur">
+            ↑
+          </div>
+
+          {/* You receive */}
+          <div className="rounded-xl border border-black/10 dark:border-white/10 p-3 mb-5 bg-white/70 dark:bg-white/5 backdrop-blur">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="opacity-70">You receive</span>
+              <span className="opacity-50">est.</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <select className="ui-input">
+                <option>USDC</option>
+              </select>
+              <input className="ui-input flex-1" placeholder="0.0" />
+            </div>
+          </div>
+
+          {/* Slippage */}
+          <div className="mb-5">
+            <div className="mb-2 text-sm opacity-70">Slippage</div>
+            <div className="flex items-center gap-2">
+              {["Slow", "Market", "Fast"].map((x) => (
+                <button key={x} className="ui-chip">{x}</button>
+              ))}
+              <button className="ml-auto ui-chip">0.25%</button>
+            </div>
+          </div>
+
+          {/* Swap button */}
+          <button className="w-full btn-neon text-sm font-medium">Swap</button>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Footer spacing on small screens */}
+      <div className="h-16" />
+    </div>
   );
 }

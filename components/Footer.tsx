@@ -71,8 +71,8 @@ export default function Footer() {
             <div className="mt-2">
               <Link
                 href="/contact"
-                className="inline-block rounded-lg border border-border px-3 py-2 text-sm
-                           text-neutral-600 dark:text-neutral-300
+                className="inline-block rounded-lg border border-black/10 dark:border-white/10 px-3 py-2 text-sm
+                           text-neutral-700 dark:text-neutral-300
                            hover:text-foreground hover:border-[var(--sol-green)] transition"
               >
                 Contact
