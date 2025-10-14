@@ -1,3 +1,4 @@
+"use client";
 export default function BuyPCWPage() {
   return (
     <section className="mx-auto max-w-3xl px-6 py-16">

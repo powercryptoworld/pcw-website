@@ -1,3 +1,4 @@
+"use client";
 export default function ContactPage() {
   return (
     <section className="mx-auto max-w-3xl px-6 py-16">
