@@ -1,66 +1,31 @@
+// app/contact/page.tsx
 export default function ContactPage() {
-  const EMAIL = "pcw@powercryptoworld.com";
-
   return (
-    <section className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl md:text-4xl font-semibold">Contact</h1>
-      <p className="mt-2 text-sm text-muted">
-        Prefer email?{" "}
-        <a
-          className="underline hover:glow-shadow"
-          href={`mailto:${EMAIL}`}
-        >
-          {EMAIL}
-        </a>
-      </p>
+    <section className="container pt-12 pb-28">
+      <div className="glass" style={{ width: "min(560px, 94vw)", margin: "0 auto", padding: 24 }}>
+        <h1 className="h1" style={{ marginBottom: 12 }}>Get connected</h1>
+        <p className="subtle mb-4">Send us a message and we’ll get back to you.</p>
 
-      <div className="mt-8 rounded-2xl border border-border p-6 bg-elev/60 backdrop-blur">
         <form
-          className="grid gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const data = new FormData(e.currentTarget as HTMLFormElement);
-            const subject = encodeURIComponent("PCW Website Inquiry");
-            const body = encodeURIComponent(
-              `Name: ${data.get("name")}\nEmail: ${data.get("email")}\nMessage:\n${data.get("message")}`
-            );
-            window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
-          }}
+          action="mailto:pcw@powercryptoworld.com"
+          method="post"
+          encType="text/plain"
+          style={{ display: "grid", gap: 12 }}
         >
-          <label className="grid gap-2">
-            <span className="text-sm text-muted">Name</span>
-            <input
-              className="rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
-              name="name"
-              required
-            />
-          </label>
-
-          <label className="grid gap-2">
-            <span className="text-sm text-muted">Email</span>
-            <input
-              className="rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
-              type="email"
-              name="email"
-              required
-            />
-          </label>
-
-          <label className="grid gap-2">
-            <span className="text-sm text-muted">Message</span>
-            <textarea
-              className="min-h-[140px] rounded-xl bg-elev border border-border px-3 py-2 outline-none focus:border-[var(--sol-green)]"
-              name="message"
-              required
-            />
-          </label>
-
-          <button
-            className="mt-2 rounded-xl bg-accent px-5 py-3 hover:bg-accent/90 transition glow-shadow"
-            type="submit"
-          >
-            Send
-          </button>
+          <input className="input" name="name" placeholder="Your name" required />
+          <input className="input" name="email" type="email" placeholder="Your email" required />
+          <textarea
+            className="input"
+            name="message"
+            placeholder="Your message"
+            style={{ height: 120, alignItems: "start", paddingTop: 10 }}
+            required
+          />
+          <div className="swap-bar">
+            <button className="btn btn--swap" style={{ width: "100%", padding: "14px 16px", fontWeight: 700 }}>
+              Send
+            </button>
+          </div>
         </form>
       </div>
     </section>

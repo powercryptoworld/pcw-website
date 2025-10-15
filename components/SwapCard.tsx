@@ -1,167 +1,88 @@
+// components/SwapCard.tsx
 "use client";
 
-import { useState } from "react";
-
-const TOKENS = ["BNB", "USDC", "USDT", "ETH", "SOL"];
-
 export default function SwapCard() {
-  const [pay, setPay] = useState("BNB");
-  const [receive, setReceive] = useState("USDC");
-  const [slip, setSlip] = useState<"slow" | "mkt" | "fast">("mkt");
-
   return (
-    <div style={{ padding: 18 }}>
-      {/* top row */}
+    <section className="container pt-12 pb-28">
       <div
-        className="mb-5"
+        className="glass"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
+          width: "min(520px, 92vw)",      // Shiba-like proportion
+          margin: "0 auto",
+          padding: 20,
         }}
       >
-        <div className="text-sm" style={{ color: "#b7c5e3" }}>
-          <span style={{ color: "#9fb0cc" }}>Network: </span>
-          <span style={{ color: "#ffffff", fontWeight: 600 }}>BNB</span>
+        {/* Network / small label */}
+        <p className="label mb-4">Network: <strong>BNB</strong></p>
+
+        {/* You pay */}
+        <div className="row">
+          <label className="label" htmlFor="pay">You pay</label>
+          <div className="input">
+            <span style={{ marginRight: 12 }}>BNB</span>
+            <input
+              id="pay"
+              type="number"
+              placeholder="0.0"
+              style={{
+                background: "transparent",
+                border: 0,
+                outline: "none",
+                color: "white",
+                width: "100%",
+              }}
+            />
+          </div>
         </div>
 
-        {/* local tabs (visual only) */}
-        <nav
-          aria-label="Swap tabs"
-          className="tabs"
-          style={{ display: "flex", gap: 8 }}
-        >
-          {["Swap", "Buy PCW", "NFTs", "Giveaway", "Token Burning"].map(
-            (x) => (
-              <span
-                key={x}
-                className={`pill ${x === "Swap" ? "pill-active" : ""}`}
-                aria-current={x === "Swap" ? "page" : undefined}
-              >
-                {x}
-              </span>
-            )
-          )}
-        </nav>
-      </div>
-
-      {/* You pay */}
-      <div className="row" role="group" aria-labelledby="label-pay">
-        <label id="label-pay" className="label">
-          You pay
-        </label>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "140px 1fr",
-            gap: 12,
-          }}
-        >
-          <select
-            className="input"
-            value={pay}
-            onChange={(e) => setPay(e.target.value)}
-            aria-label="Select pay token"
-          >
-            {TOKENS.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-          <input
-            className="input"
-            inputMode="decimal"
-            placeholder="0.0"
-            aria-label="Pay amount"
-          />
-        </div>
-      </div>
-
-      {/* flip */}
-      <div className="mb-4" style={{ display: "flex", justifyContent: "center" }}>
-        <div className="pill" aria-hidden>
-          ↑
-        </div>
-      </div>
-
-      {/* You receive */}
-      <div className="row" role="group" aria-labelledby="label-receive">
-        <label id="label-receive" className="label">
-          You receive
-        </label>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "140px 1fr",
-            gap: 12,
-          }}
-        >
-          <select
-            className="input"
-            value={receive}
-            onChange={(e) => setReceive(e.target.value)}
-            aria-label="Select receive token"
-          >
-            {TOKENS.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-          <input
-            className="input"
-            inputMode="decimal"
-            placeholder="0.0"
-            aria-label="Receive amount"
-          />
-        </div>
-      </div>
-
-      {/* slippage + fee */}
-      <div
-        className="mb-5"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="text-xs" style={{ color: "#a8c3ff", marginRight: 4 }}>
-            Slippage
-          </span>
+        {/* Switch */}
+        <div style={{ display: "grid", placeItems: "center", margin: "10px 0" }}>
           <button
-            onClick={() => setSlip("slow")}
-            className={`pill ${slip === "slow" ? "pill-active" : ""}`}
-            aria-pressed={slip === "slow"}
+            aria-label="Flip tokens"
+            className="pill"
+            style={{ width: 36, height: 36, display: "grid", placeItems: "center" }}
           >
-            Slow
-          </button>
-          <button
-            onClick={() => setSlip("mkt")}
-            className={`pill ${slip === "mkt" ? "pill-active" : ""}`}
-            aria-pressed={slip === "mkt"}
-          >
-            Market
-          </button>
-          <button
-            onClick={() => setSlip("fast")}
-            className={`pill ${slip === "fast" ? "pill-active" : ""}`}
-            aria-pressed={slip === "fast"}
-          >
-            Fast
+            ↑
           </button>
         </div>
-        <div className="text-xs" style={{ color: "#9fb8ff", opacity: 0.9 }}>
-          0.25%
+
+        {/* You receive */}
+        <div className="row">
+          <label className="label" htmlFor="receive">You receive</label>
+          <div className="input">
+            <span style={{ marginRight: 12 }}>USDC</span>
+            <input
+              id="receive"
+              type="number"
+              placeholder="0.0"
+              style={{
+                background: "transparent",
+                border: 0,
+                outline: "none",
+                color: "white",
+                width: "100%",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Slippage pills (no extra nav tabs here) */}
+        <div className="mb-4">
+          <p className="label mb-2">Slippage</p>
+          <ul className="tabs">
+            <li><button className="pill">Slow</button></li>
+            <li><button className="pill pill-active">Market</button></li>
+            <li><button className="pill">Fast</button></li>
+          </ul>
+        </div>
+
+        {/* Swap CTA + neon bar */}
+        <div className="swap-bar">
+          <button className="btn btn--swap" style={{ width: "100%", padding: "14px 16px", fontWeight: 700 }}>
+            Swap
+          </button>
         </div>
       </div>
-
-      {/* swap */}
-      <div className="swap-bar">
-        <button className="btn btn--swap" aria-label="Execute swap">
-          Swap
-        </button>
-      </div>
-    </div>
+    </section>
   );
 }

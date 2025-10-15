@@ -1,105 +1,116 @@
-"use client";
-
+// components/Nav.tsx
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import Image from "next/image";
 
-type Item = { href: string; label: string };
+const LOGO_SIZE = 34; // Solana-like brand size (try 34–38 if you want bigger)
 
-const NAV: Item[] = [
+const links = [
   { href: "/", label: "Swap" },
   { href: "/buy-pcw", label: "Buy PCW" },
   { href: "/nfts", label: "NFTs" },
-  { href: "/giveaway", label: "Giveaway" },
+  { href: "/giveaway", label: "Giveaways" },
   { href: "/token-burning", label: "Token Burning" },
 ];
 
 export default function Nav() {
-  const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <header
       style={{
         position: "sticky",
         top: 0,
         zIndex: 50,
-        paddingTop: 10,
+        borderBottom: "1px solid rgba(255,255,255,.06)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        background: "linear-gradient(180deg, rgba(12,16,24,.72), rgba(12,16,24,.45))",
       }}
     >
-      {/* pill group on the top-right */}
-      <nav
-        aria-label="Primary"
+      <div
         style={{
-          margin: "0 auto",
-          maxWidth: 1200,
-          padding: "0 16px",
           display: "flex",
-          justifyContent: "flex-end",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 10px",
+          width: "100%",
         }}
       >
-        <div
+        {/* LEFT: Solana-style brand (no pill, larger mark + uppercase wordmark) */}
+        <Link
+          href="/"
+          aria-label="Power Crypto World — Home"
           style={{
-            display: "flex",
-            gap: 6,
-            padding: 6,
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,.12)",
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03))",
-            backdropFilter: "saturate(125%) blur(10px)",
-            WebkitBackdropFilter: "saturate(125%) blur(10px)",
-            boxShadow: scrolled
-              ? "0 6px 24px rgba(0,0,0,.32)"
-              : "0 10px 30px rgba(0,0,0,.22)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 12,
+            color: "white",
+            textDecoration: "none",
+            lineHeight: 1,
           }}
         >
-          {NAV.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  position: "relative",
-                  padding: "8px 14px",
-                  borderRadius: 999,
-                  fontSize: 13.5,
-                  letterSpacing: 0.1,
-                  color: "#e6f0ff",
-                  textDecoration: "none",
-                  border: "1px solid rgba(255,255,255,.10)",
-                  background: active
-                    ? "linear-gradient(180deg, rgba(153,69,255,.22), rgba(20,241,149,.18))"
-                    : "rgba(255,255,255,.04)",
-                }}
-              >
-                {item.label}
-                <span
-                  aria-hidden
+          <span
+            style={{
+              position: "relative",
+              width: LOGO_SIZE,
+              height: LOGO_SIZE,
+              display: "inline-block",
+              borderRadius: 8,
+              overflow: "hidden",
+              filter: "drop-shadow(0 0 10px rgba(153,69,255,.45))",
+            }}
+          >
+            <Image
+              src="/pcw-logo.png" // change to .jpg if needed
+              alt="PCW logo"
+              fill
+              sizes={`${LOGO_SIZE}px`}
+              style={{ objectFit: "contain" }}
+              priority
+            />
+          </span>
+
+          <span
+            style={{
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: ".08em",
+              fontSize: 18,
+              opacity: 0.96,
+            }}
+          >
+            Power Crypto World
+          </span>
+        </Link>
+
+        {/* RIGHT: tabs (unchanged) */}
+        <nav aria-label="Primary">
+          <ul
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+            }}
+          >
+            {links.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className="pill"
                   style={{
-                    position: "absolute",
-                    left: 10,
-                    right: 10,
-                    bottom: 6,
-                    height: 2,
-                    borderRadius: 2,
-                    background: active ? "#9b5cff" : "transparent",
-                    boxShadow: active ? "0 0 10px rgba(155,92,255,.7)" : "none",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    padding: ".5rem .9rem",
                   }}
-                />
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </header>
   );
 }

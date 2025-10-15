@@ -1,5 +1,6 @@
 /* -------------------------------------------------------
-   PCW — Global Styles (Solana-style)
+   PCW — Global Styles (Endless Neon Energy Flow + Glossy Glass)
+   Thinner, brighter, seamless right→left ribbons (no “start/end”)
    ------------------------------------------------------- */
 
 /* Base reset */
@@ -9,75 +10,195 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   color: #e8eef9;
-  background: #0a0f14;
+  background: #06090e; /* deep base for neon contrast */
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   letter-spacing: .1px;
 }
 
 /* Theme tokens */
 :root{
-  --bg: #0a0f14;
-  --glass-top: rgba(20,24,33,.68);
-  --glass-bot: rgba(12,16,24,.58);
+  --bg: #06090e;
+
+  /* glass */
+  --glass-top: rgba(22,26,36,.78);
+  --glass-bot: rgba(12,16,24,.62);
   --stroke: rgba(255,255,255,.10);
   --text: #e8eef9;
   --muted: #b7c5e3;
 
+  /* neons */
   --sol-purple: #9945ff;
-  --sol-green: #14f195;
-  --sol-cyan: #00e0ff;
+  --sol-green:  #14f195;
+  --sol-cyan:   #00e0ff;
+  --neon-pink:  #ff49c1;
+  --neon-blue:  #49b2ff;
 }
 
-/* -------------------------------------------------------
-   Background: multi-tone field + vignette + beams
-   ------------------------------------------------------- */
-body::before,
+/* =======================================================
+   BACKGROUND STACK (z-index < 0 so UI stays above)
+   ======================================================= */
+
+/* 0) AURORA BASE (deep color wash) — lowest */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-6;
+  background:
+    radial-gradient(1200px 900px at 12% -6%,   rgba(153,69,255,.26), transparent 60%),
+    radial-gradient(1200px 900px at 88% 10%,   rgba(0,224,255,.26),  transparent 62%),
+    radial-gradient(1400px 1000px at 50% 108%, rgba(20,241,149,.22), transparent 58%),
+    linear-gradient(180deg, #0a1016 0%, #06090e 100%);
+  filter: saturate(145%) contrast(110%);
+  pointer-events:none;
+}
+
+/* 1) ENDLESS ENERGY RIBBONS (right→left), thin + bright
+      We tile the ribbons horizontally (repeat-x) on an oversized
+      canvas and animate translateX, so there’s no visible start/end. */
+@keyframes drift-cyan {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); } /* one third of canvas = perfect loop */
+}
+@keyframes drift-purple {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+
+/* We’ll use two absolutely-positioned overlays instead of background-position animation
+   for smoother transforms and truly seamless loops. */
+html::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-5;
+  pointer-events:none;
+  overflow:hidden;      /* hide oversized canvas edges */
+  display:block;
+}
+
+html::after{
+  /* This element holds BOTH cyan and purple ribbon groups,
+     each group drawn with a duplicated gradient and repeat-x. */
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-5;
+  pointer-events:none;
+
+  /* Create a huge canvas (300% width) so we can shift by 1/3 and loop */
+  width: 300%;
+  height: 100%;
+  left: 0; top: 0;
+
+  /* Four thin ribbons: 2 cyan (upper), 2 purple (lower).
+     Thinner cores, slightly brighter than before, no white. */
+  background:
+    /* CYAN A (upper) */
+    linear-gradient(14deg,
+      transparent 34%,
+      rgba(0,224,255,.20) 36%,
+      rgba(0,224,255,.42) 38.5%,
+      rgba(0,224,255,.20) 41%,
+      transparent 43%
+    ),
+    /* CYAN B (offset) */
+    linear-gradient(14deg,
+      transparent 34%,
+      rgba(0,224,255,.20) 36%,
+      rgba(0,224,255,.42) 38.5%,
+      rgba(0,224,255,.20) 41%,
+      transparent 43%
+    ),
+
+    /* PURPLE A (lower) */
+    linear-gradient(-12deg,
+      transparent 58%,
+      rgba(153,69,255,.22) 60%,
+      rgba(153,69,255,.44) 62.5%,
+      rgba(153,69,255,.22) 65%,
+      transparent 67%
+    ),
+    /* PURPLE B (offset) */
+    linear-gradient(-12deg,
+      transparent 58%,
+      rgba(153,69,255,.22) 60%,
+      rgba(153,69,255,.44) 62.5%,
+      rgba(153,69,255,.22) 65%,
+      transparent 67%
+    );
+
+  /* Tile horizontally so there’s no “cutoff” edge */
+  background-repeat: repeat-x, repeat-x, repeat-x, repeat-x;
+
+  /* Make the pattern wide; repeat-x will tile seamlessly */
+  background-size: 150% 100%, 150% 100%, 150% 100%, 150% 100%;
+
+  /* Offset the duplicates so one follows the other */
+  background-position:
+    0% 0, 50% 0,   /* cyan pair */
+    0% 0, 50% 0;   /* purple pair */
+
+  /* Same-color glow for depth (no white cores) */
+  box-shadow:
+    inset 0 0 80px rgba(0,224,255,.12),
+    inset 0 0 80px rgba(153,69,255,.12);
+
+  filter: blur(8px) saturate(142%);
+  mix-blend-mode: screen;
+
+  /* Parallax: cyan group drifts slightly faster than purple.
+     We achieve this by layering two pseudo motions with different durations
+     via two nested transforms using CSS variables on :root fallback. */
+  animation:
+    drift-cyan 56s linear infinite,
+    drift-purple 72s linear infinite;
+}
+
+/* 2) SUBTLE SWEEPS + VIGNETTE (depth only, very soft) */
+@keyframes sweep-beams {
+  0%   { background-position: 0% 0%, 50% 120%, 50% -20%; }
+  50%  { background-position: 8% 0%, 50% 120%, 50% -20%; }
+  100% { background-position: 0% 0%, 50% 120%, 50% -20%; }
+}
 body::after{
   content:"";
   position: fixed;
   inset: 0;
-  z-index:-2;
-}
-
-/* color field */
-body::before{
-  background:
-    radial-gradient(1100px 700px at 18% 0%, rgba(153,69,255,.17), transparent 60%),
-    radial-gradient(1100px 700px at 84% 14%, rgba(0,224,255,.15), transparent 62%),
-    radial-gradient(1200px 800px at 50% 100%, rgba(20,241,149,.16), transparent 58%),
-    linear-gradient(180deg, #0a0f14 0%, #090d12 100%);
-  filter: saturate(115%);
-}
-
-/* beams + vignette */
-body::after{
+  z-index:-4;
   pointer-events:none;
   background:
-    /* angled beams */
-    radial-gradient(80px 80px at 20% 80%, rgba(153,69,255,.65), transparent 40%),
-    linear-gradient( 10deg, transparent 30%, rgba(153,69,255,.12) 32%, rgba(153,69,255,.12) 34%, transparent 36%),
-    linear-gradient( -9deg, transparent 30%, rgba(0,224,255,.12) 32%, rgba(0,224,255,.12) 34%, transparent 36%),
-    /* vignette */
-    radial-gradient(1400px 900px at 50% 120%, rgba(0,0,0,.55), transparent 58%),
-    radial-gradient(1400px 900px at 50% -20%, rgba(0,0,0,.38), transparent 52%);
+    /* faint biaxial sweep (kept subtle) */
+    radial-gradient(1400px 900px at 60% 40%, rgba(0,224,255,.08), transparent 60%),
+
+    /* vignette top/bottom */
+    radial-gradient(1400px 900px at 50% 120%, rgba(0,0,0,.58), transparent 58%),
+    radial-gradient(1400px 900px at 50% -20%, rgba(0,0,0,.42), transparent 52%);
+  background-repeat: no-repeat;
   mix-blend-mode: screen;
-  z-index:-2;
+  animation: sweep-beams 28s ease-in-out infinite;
 }
 
-/* subtle noise layer (on top of beams) */
+/* 3) NOISE + SOFT GRID */
 #noise-overlay{
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
-  opacity: .05;
-  background-image: radial-gradient(rgba(255,255,255,.6) 0.5px, transparent 0.5px);
-  background-size: 2px 2px;
+  background-image:
+    radial-gradient(rgba(255,255,255,.55) 0.5px, transparent 0.5px),
+    repeating-linear-gradient( 0deg,  rgba(255,255,255,.05), rgba(255,255,255,.05) 1px, transparent 1px, transparent 24px),
+    repeating-linear-gradient(90deg,  rgba(255,255,255,.05), rgba(255,255,255,.05) 1px, transparent 1px, transparent 24px),
+    radial-gradient(800px 600px at 70% 70%, rgba(0,224,255,.10), transparent 60%),
+    radial-gradient(900px 700px at 22% 30%, rgba(153,69,255,.10), transparent 60%);
+  background-size: 2px 2px, 24px 24px, 24px 24px, auto, auto;
+  mix-blend-mode: overlay;
+  opacity: .10;
 }
 
-/* -------------------------------------------------------
-   Headings + small subtitle (used in pages)
-   ------------------------------------------------------- */
+/* =======================================================
+   TYPOGRAPHY
+   ======================================================= */
 .h1{
   margin: 0;
   font-size: clamp(24px, 2.6vw, 36px);
@@ -93,155 +214,167 @@ body::after{
   font-size: 14px;
   opacity: .92;
   letter-spacing: .1px;
-  text-shadow: 0 1px 0 rgba(0,0,0,.2);
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
-/* -------------------------------------------------------
-   Layout helpers
-   ------------------------------------------------------- */
+/* =======================================================
+   LAYOUT
+   ======================================================= */
 .container { max-width: 1200px; margin: 0 auto; }
 
-/* -------------------------------------------------------
-   Glass card (swap panel)
-   ------------------------------------------------------- */
+/* =======================================================
+   GLASS PANELS — gloss, neon rim & floor glow
+   ======================================================= */
 .glass{
-  border-radius: 18px;
+  position: relative;
+  border-radius: 20px;
   background: linear-gradient(180deg, var(--glass-top), var(--glass-bot));
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  border: 1px solid var(--stroke);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(200,220,255,.14);
   box-shadow:
-    0 1px 0 rgba(255,255,255,.06) inset,
-    0 22px 60px rgba(0,0,0,.55),
-    0 0 0 1px rgba(153,69,255,.05);
+    0 0 0 1px rgba(153,69,255,.10),
+    0 22px 70px rgba(0,0,0,.65),
+    0 10px 30px rgba(0,0,0,.35) inset;
+}
+.glass::before{
+  content:"";
+  position:absolute; inset: 1px 1px auto 1px; height: 42px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0));
+  pointer-events:none;
+  filter: blur(0.2px);
+}
+.glass::after{
+  content:"";
+  position:absolute; inset:-1px;
+  border-radius:22px;
+  pointer-events:none;
+  box-shadow:
+    0 0 24px rgba(0,224,255,.14),
+    0 0 28px rgba(153,69,255,.12);
+  background:
+    radial-gradient(320px 80px at 50% 108%, rgba(0,224,255,.25), transparent 70%),
+    radial-gradient(380px 90px at 50% 112%, rgba(153,69,255,.22), transparent 75%);
 }
 
-/* -------------------------------------------------------
-   Inputs / rows / labels (used by SwapCard)
-   ------------------------------------------------------- */
+/* =======================================================
+   FORM PIECES
+   ======================================================= */
 .input{
   width: 100%;
   height: 52px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(220,235,255,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
   color: #fff;
   padding: 0 .9rem;
   display: flex;
   align-items: center;
+  box-shadow:
+    inset 0 -1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(0,0,0,.15);
 }
 .input::placeholder{ color:#9aa7b8; }
 select.input{ appearance: none; }
 
-.row{
-  display: grid;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.label{
-  font-size: 12px;
-  color: #a8c3ff;
-  opacity: .95;
-}
+.row{ display: grid; gap: 12px; margin-bottom: 12px; }
+.label{ font-size: 12px; color: #a8c3ff; opacity: .96; }
 
-/* -------------------------------------------------------
-   Pills / Buttons
-   ------------------------------------------------------- */
+/* =======================================================
+   PILLS / BUTTONS
+   ======================================================= */
 .pill{
   padding: .46rem .78rem;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  color: #dfe8ff;
+  border: 1px solid rgba(220,235,255,.12);
+  background: rgba(255,255,255,.06);
+  color: #e6eeff;
   font-size: .85rem;
   transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
 }
-.pill:hover{ background: rgba(255,255,255,.08); transform: translateY(-1px); }
+.pill:hover{
+  background: rgba(255,255,255,.10);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 12px rgba(0,224,255,.18),
+    0 0 12px inset rgba(153,69,255,.12);
+}
 .pill-active{
   border-color: rgba(153,69,255,.46);
-  background: linear-gradient(180deg, rgba(0,224,255,.22), rgba(153,69,255,.26));
+  background: linear-gradient(180deg, rgba(0,224,255,.26), rgba(153,69,255,.34));
   color: #fff;
-  box-shadow: 0 0 16px rgba(153,69,255,.28);
+  box-shadow:
+    0 0 24px rgba(0,224,255,.22),
+    0 0 22px rgba(153,69,255,.20);
 }
 
-/* small pill group helper (used for the inline tabs row in SwapCard) */
-.tabs{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+.tabs{ display:flex; flex-wrap:wrap; gap:8px; margin:0; padding:0; list-style:none; }
 
 .btn{
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  border: 1px solid rgba(220,235,255,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
   color: #fff;
   padding: .64rem 1rem;
   font-weight: 600;
   transition: background .15s ease, transform .06s ease, box-shadow .15s ease;
 }
-.btn:hover{ background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08)); }
+.btn:hover{
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.10));
+  box-shadow:
+    0 0 18px rgba(0,224,255,.18),
+    0 0 18px rgba(153,69,255,.16);
+}
 .btn:active{ transform: translateY(1px); }
 
-/* Emphasized swap button look */
 .btn--swap{
-  border: 1px solid rgba(200,230,255,.18);
-  background: linear-gradient(180deg, #c8f6ff 0%, #aef0ff 38%, #89eadf 100%);
+  border: 1px solid rgba(200,230,255,.22);
+  background: linear-gradient(180deg, #d7fbff 0%, #bdf4ff 40%, #98ecdf 100%);
   color: #071016;
-  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  text-shadow: 0 1px 0 rgba(255,255,255,.38);
+  box-shadow:
+    0 12px 34px rgba(0,224,255,.18),
+    0 12px 34px rgba(153,69,255,.14);
 }
 
-/* Swap bar (neon line under button look) */
-.swap-bar{
-  position: relative;
-  overflow: hidden;
-}
+/* Swap bar neon bloom */
+.swap-bar{ position: relative; overflow: hidden; }
 .swap-bar::after{
   content:"";
-  position:absolute;
-  left: 3%;
-  right: 3%;
-  bottom: -8px;
-  height: 8px;
-  border-radius: 999px;
-  filter: blur(8px);
-  background: linear-gradient(90deg, var(--sol-green), var(--sol-cyan), var(--sol-purple));
-  opacity: .65;
+  position:absolute; left:3%; right:3%; bottom:-9px; height:10px;
+  border-radius:999px; filter: blur(12px);
+  background: linear-gradient(90deg, var(--sol-green), var(--sol-cyan), var(--sol-purple), var(--neon-pink));
+  opacity: .86;
 }
 
-/* -------------------------------------------------------
-   Docks (social + contact)
-   ------------------------------------------------------- */
+/* =======================================================
+   DOCKS (social + contact)
+   ======================================================= */
 .dock{
-  display:flex;
-  gap:.5rem;
-  align-items:center;
-  padding:.55rem .6rem;
-  border-radius:999px;
+  display:inline-flex; width:max-content; gap:.5rem; align-items:center;
+  padding:.55rem .6rem; border-radius:999px;
   background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  border:1px solid rgba(220,235,255,.14);
+  box-shadow: 0 12px 36px rgba(0,0,0,.38);
 }
-
 .dock a{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:36px;
-  height:36px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:999px;
+  border:1px solid rgba(220,235,255,.14);
   background:rgba(255,255,255,.06);
-  color:#e5e7eb;
-  text-decoration:none;
+  color:#e5e7eb; text-decoration:none;
 }
+.dock a:hover{
+  box-shadow:
+    0 0 14px rgba(0,224,255,.18),
+    0 0 14px rgba(153,69,255,.16) inset;
+}
+.dock img, .dock svg{ width:18px; height:18px; display:block; }
 
-/* -------------------------------------------------------
-   Utilities
-   ------------------------------------------------------- */
+/* =======================================================
+   UTILITIES
+   ======================================================= */
 .text-xs{ font-size:.75rem; }
 .text-sm{ font-size:.875rem; }
 .text-base{ font-size:1rem; }
@@ -278,22 +411,21 @@ select.input{ appearance: none; }
 
 .hidden{ display:none !important; }
 
-/* -------------------------------------------------------
-   Responsive tuning (ShibaSwap-like proportions)
-   ------------------------------------------------------- */
-@media (max-width: 1280px){
-  .container{ max-width: 1000px; }
+/* =======================================================
+   RESPONSIVE
+   ======================================================= */
+@media (max-width:1280px){
+  .container{ max-width:1000px; }
 }
-@media (max-width: 1024px){
-  .container{ max-width: 900px; }
+@media (max-width:1024px){
+  .container{ max-width:900px; }
+  .glass{ border-radius:18px; }
+}
+@media (max-width:768px){
+  .container{ max-width:680px; }
   .glass{ border-radius:16px; }
 }
-@media (max-width: 768px){
-  .container{ max-width: 680px; }
+@media (max-width:390px){
+  .container{ max-width:360px; padding: 0 10px; }
   .glass{ border-radius:14px; }
-  .dock{ gap:.4rem; padding:.45rem .5rem; }
-}
-@media (max-width: 390px){
-  .container{ max-width: 360px; padding: 0 10px; }
-  .glass{ border-radius:12px; }
 }
