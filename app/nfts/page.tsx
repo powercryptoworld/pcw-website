@@ -1,12 +1,26 @@
+// app/nfts/page.tsx
+import React from "react";
+
 export default function NFTsPage() {
   return (
-    <section className="mx-auto max-w-4xl px-6 py-16">
-      <h1 className="text-3xl md:text-4xl font-semibold">NFTs</h1>
-      <p className="mt-4 text-muted">
-        Showcase your collections, mint links, and marketplaces here.
-      </p>
-      <div className="mt-8 rounded-2xl border border-border p-6">
-        <p className="text-sm text-muted">Coming soon.</p>
+    <section className="container pt-12 pb-28" aria-labelledby="nfts-title">
+      <header style={{ textAlign: "center", marginBottom: 24 }}>
+        <h1 id="nfts-title" className="h1">NFTs</h1>
+        <p className="subtle">Showcase and mint PCW NFTs — coming soon.</p>
+      </header>
+
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div
+          className="glass"
+          role="region"
+          aria-label="NFTs panel"
+          style={{ width: "min(960px, 92vw)", padding: 18 }}
+        >
+          <p style={{ margin: 0, color: "#cfe0ff" }}>
+            We’re preparing a curated NFT experience with a Solana-style gallery and mint flow.
+            Stay tuned.
+          </p>
+        </div>
       </div>
     </section>
   );

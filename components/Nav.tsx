@@ -25,123 +25,81 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const headerStyle: React.CSSProperties = {
-    position: "sticky",
-    top: 0,
-    zIndex: 40,
-    boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,.08)" : "none",
-  };
-
-  const washStyle: React.CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    pointerEvents: "none",
-    background:
-      "linear-gradient(90deg, rgba(20,241,149,0.18), transparent 30%, rgba(153,69,255,0.18))",
-    opacity: 0.25,
-  };
-
-  const shellStyle: React.CSSProperties = {
-    position: "relative",
-    maxWidth: "1080px",
-    margin: "0 auto",
-    padding: "0 20px",
-    backdropFilter: "saturate(120%) blur(12px)",
-    WebkitBackdropFilter: "saturate(120%) blur(12px)",
-  };
-
-  const navStyle: React.CSSProperties = {
-    height: 56,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    border: "1px solid var(--stroke)",
-    borderTop: "none",
-    borderLeft: "1px solid var(--stroke)",
-    borderRight: "1px solid var(--stroke)",
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03))",
-  };
-
-  const brandStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "0 12px",
-    color: "#e6efff",
-    textDecoration: "none",
-  };
-
-  const dotStyle: React.CSSProperties = {
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    background: "#14f195",
-    boxShadow: "0 0 8px rgba(20,241,149,0.6)",
-  };
-
-  const linksStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 2,
-  };
-
   return (
-    <header style={headerStyle}>
-      <div style={washStyle} aria-hidden />
-      <div style={shellStyle}>
-        <nav style={navStyle} aria-label="Primary">
-          {/* Left: logo */}
-          <Link href="/" style={brandStyle}>
-            <span style={dotStyle} />
-            <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: -0.2 }}>
-              PCW
-            </span>
-          </Link>
-
-          {/* Right: links */}
-          <div style={linksStyle}>
-            {NAV.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        paddingTop: 10,
+      }}
+    >
+      {/* pill group on the top-right */}
+      <nav
+        aria-label="Primary"
+        style={{
+          margin: "0 auto",
+          maxWidth: 1200,
+          padding: "0 16px",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            padding: 6,
+            borderRadius: 999,
+            border: "1px solid rgba(255,255,255,.12)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03))",
+            backdropFilter: "saturate(125%) blur(10px)",
+            WebkitBackdropFilter: "saturate(125%) blur(10px)",
+            boxShadow: scrolled
+              ? "0 6px 24px rgba(0,0,0,.32)"
+              : "0 10px 30px rgba(0,0,0,.22)",
+          }}
+        >
+          {NAV.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  position: "relative",
+                  padding: "8px 14px",
+                  borderRadius: 999,
+                  fontSize: 13.5,
+                  letterSpacing: 0.1,
+                  color: "#e6f0ff",
+                  textDecoration: "none",
+                  border: "1px solid rgba(255,255,255,.10)",
+                  background: active
+                    ? "linear-gradient(180deg, rgba(153,69,255,.22), rgba(20,241,149,.18))"
+                    : "rgba(255,255,255,.04)",
+                }}
+              >
+                {item.label}
+                <span
+                  aria-hidden
                   style={{
-                    position: "relative",
-                    padding: "8px 12px",
-                    fontSize: 14,
-                    color: "#dfe8ff",
-                    opacity: active ? 1 : 0.85,
-                    textDecoration: "none",
+                    position: "absolute",
+                    left: 10,
+                    right: 10,
+                    bottom: 6,
+                    height: 2,
+                    borderRadius: 2,
+                    background: active ? "#9b5cff" : "transparent",
+                    boxShadow: active ? "0 0 10px rgba(155,92,255,.7)" : "none",
                   }}
-                >
-                  <span>{item.label}</span>
-                  {/* active underline */}
-                  <span
-                    aria-hidden
-                    style={{
-                      position: "absolute",
-                      left: 12,
-                      right: 12,
-                      bottom: 4,
-                      height: 2,
-                      borderRadius: 2,
-                      background: active ? "#9945ff" : "transparent",
-                      boxShadow: active
-                        ? "0 0 10px rgba(153,69,255,0.6)"
-                        : "none",
-                      transition: "background .15s ease, box-shadow .15s ease",
-                    }}
-                  />
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-      </div>
+                />
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </header>
   );
 }

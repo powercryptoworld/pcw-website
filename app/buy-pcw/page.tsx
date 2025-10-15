@@ -1,23 +1,20 @@
-"use client";
+// app/buy-pcw/page.tsx
+import React from "react";
+
 export default function BuyPCWPage() {
   return (
-    <section className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl md:text-4xl font-semibold">Buy PCW</h1>
-      <p className="mt-4 text-muted">
-        This is a placeholder page. Link this button to your preferred on-ramp or swap once ready.
-      </p>
+    <section className="container pt-12 pb-28" aria-labelledby="buypcw-title">
+      <header style={{ textAlign: "center", marginBottom: 24 }}>
+        <h1 id="buypcw-title" className="h1">Buy PCW</h1>
+        <p className="subtle">Purchase PCW tokens — secure and fast.</p>
+      </header>
 
-      <div className="mt-8 rounded-2xl border border-border p-6">
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="inline-block rounded-xl bg-accent px-5 py-3 hover:bg-accent/90 transition glow-shadow"
-        >
-          Launch Buy Flow
-        </a>
-        <p className="mt-3 text-sm text-muted">
-          Keep this site separate from your swap codebase. This repo deploys to Vercel independently.
-        </p>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div className="glass" role="region" aria-label="Buy PCW panel" style={{ width: "min(960px, 92vw)", padding: 18 }}>
+          <p style={{ margin: 0, color: "#cfe0ff" }}>
+            Coming soon. You’ll be able to buy PCW directly here.
+          </p>
+        </div>
       </div>
     </section>
   );
