@@ -66,7 +66,7 @@ export default function SwapCard() {
           </div>
         </div>
 
-        {/* Slippage pills (no extra nav tabs here) */}
+        {/* Slippage pills */}
         <div className="mb-4">
           <p className="label mb-2">Slippage</p>
           <ul className="tabs">

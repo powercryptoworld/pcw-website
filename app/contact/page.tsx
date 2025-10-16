@@ -22,13 +22,13 @@ export default function ContactPage() {
       <div className="contact-vfx" aria-hidden />
 
       <section className="container pt-12 pb-28" style={{ position: "relative" }}>
-        {/* ↓ Smaller card: narrower max width + tighter padding */}
+        {/* Make this card solid/opaque by using the new .contact-card class */}
         <div
-          className="glass"
+          className="glass contact-card"
           style={{
-            width: "min(560px, 92vw)",   // was 720px
+            width: "min(560px, 92vw)",
             margin: "0 auto",
-            padding: 20,                  // was 24
+            padding: 20,
           }}
         >
           <h1 className="h1" style={{ marginBottom: 8, fontSize: "clamp(22px, 2.2vw, 30px)" }}>
