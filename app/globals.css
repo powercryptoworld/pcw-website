@@ -2,7 +2,6 @@
 
 /* -------------------------------------------------------
    PCW — Global Styles (Endless Neon Energy Flow + Glossy Glass)
-   Thinner, brighter, seamless right→left ribbons (no “start/end”)
    ------------------------------------------------------- */
 
 /* Base reset */
@@ -12,7 +11,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   color: #e8eef9;
-  background: #06090e; /* deep base for neon contrast */
+  background: #06090e;
   font-family: "Sora", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   letter-spacing: .1px;
 }
@@ -40,7 +39,7 @@ body {
    BACKGROUND STACK (z-index < 0 so UI stays above)
    ======================================================= */
 
-/* 0) AURORA BASE (deep color wash) — lowest */
+/* 0) AURORA BASE */
 body::before{
   content:"";
   position: fixed;
@@ -55,7 +54,7 @@ body::before{
   pointer-events:none;
 }
 
-/* 1) ENDLESS ENERGY RIBBONS (right→left), thin + bright */
+/* 1) ENDLESS ENERGY RIBBONS */
 @keyframes drift-cyan {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-33.333%); }
@@ -202,7 +201,7 @@ body::after{
 .container { max-width: 1200px; margin: 0 auto; }
 
 /* =======================================================
-   GLASS PANELS — gloss, neon rim & floor glow
+   GLASS PANELS
    ======================================================= */
 .glass{
   position: relative;
@@ -350,6 +349,62 @@ select.input{ appearance: none; }
     0 0 14px rgba(153,69,255,.16) inset;
 }
 .dock img, .dock svg{ width:18px; height:18px; display:block; }
+
+/* =======================================================
+   CONTACT PAGE V-BEAM OVERLAY
+   ======================================================= */
+.contact-vfx{
+  position: fixed;
+  inset: 0;
+  z-index: -3;            /* above html::after (-5) & body::after (-4) */
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: .85;
+
+  background:
+    /* Outer aqua/blue arms */
+    linear-gradient(135deg, rgba(0,240,255,.26) 0%, rgba(0,240,255,.42) 14%, rgba(0,240,255,0) 22%) left / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(61,169,255,.26) 0%, rgba(61,169,255,.42) 14%, rgba(61,169,255,0) 22%) right / 50% 100% no-repeat,
+
+    /* Inner magenta/pink arms */
+    linear-gradient(135deg, rgba(255,80,200,.28) 0%, rgba(255,80,200,.45) 10%, rgba(255,80,200,0) 18%) left / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(255,120,255,.26) 0%, rgba(255,120,255,.42) 10%, rgba(255,120,255,0) 18%) right / 50% 100% no-repeat;
+  filter: blur(0.6px) saturate(140%);
+}
+
+.contact-vfx::after{
+  content:"";
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  bottom:14%;
+  width: 62vw;  height: 9vw;
+  border-radius: 999px;
+  background:
+    radial-gradient(60% 160% at 50% 42%,
+      rgba(255,255,255,.70),
+      rgba(0,240,255,.50) 35%,
+      rgba(255,80,200,.42) 60%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  opacity: .9;
+}
+
+@keyframes vfx-breathe {
+  0%, 100% { filter: blur(0.6px) saturate(140%); opacity:.85; }
+  50%      { filter: blur(1px)   saturate(165%); opacity:.92; }
+}
+.contact-vfx{
+  animation: vfx-breathe 10s ease-in-out infinite;
+}
+
+@media (max-width: 768px){
+  .contact-vfx::after{
+    width: 82vw; height: 12vw; bottom: 18%;
+    filter: blur(20px);
+    opacity: .85;
+  }
+}
 
 /* =======================================================
    UTILITIES
