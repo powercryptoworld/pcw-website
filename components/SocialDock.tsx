@@ -1,7 +1,7 @@
-// components/SocialDock.tsx
 "use client";
 
 import { useState } from "react";
+import styles from "./DockGlow.module.css";
 
 type Social = { label: string; href: string; icon: string };
 
@@ -19,23 +19,32 @@ const socials: Social[] = [
 ];
 
 const row1 = socials.slice(0, 5);
-const row2 = socials.slice(5); // rest
+const row2 = socials.slice(5);
 
 export default function SocialDock() {
   const [expanded, setExpanded] = useState(false);
 
+  // cursor hotspot so the glow follows the mouse
+  const onMoveAnchor = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    el.style.setProperty("--my", `${e.clientY - r.top}px`);
+  };
+  const onMoveButton = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    el.style.setProperty("--my", `${e.clientY - r.top}px`);
+  };
+
   return (
     <aside
       aria-label="PCW social links"
-      style={{
-        position: "fixed",
-        left: 24,
-        bottom: 24,
-        zIndex: 40,
-      }}
+      style={{ position: "fixed", left: 24, bottom: 24, zIndex: 40 }}
     >
       <div style={{ display: "grid", gap: 8 }}>
-        {/* Row 1 — always visible, plus/minus toggle at the end */}
+        {/* Row 1 — always visible */}
         <nav className="dock" aria-label="Social links main row" style={{ width: "max-content" }}>
           {row1.map((s) => (
             <a
@@ -45,29 +54,22 @@ export default function SocialDock() {
               rel="noopener noreferrer"
               aria-label={s.label}
               title={s.label}
+              onMouseMove={onMoveAnchor}
+              className={`${styles.icon} ${styles.glassBase} ${styles.glow}`}
             >
               <img src={s.icon} alt={s.label} width={18} height={18} />
             </a>
           ))}
 
-          {/* Toggle button */}
+          {/* Toggle (+/−) gets the same glow */}
           <button
             onClick={() => setExpanded((v) => !v)}
+            onMouseMove={onMoveButton}
             aria-expanded={expanded}
             aria-label={expanded ? "Hide more socials" : "Show more socials"}
             title={expanded ? "Hide" : "More"}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,.12)",
-              background: "rgba(255,255,255,.06)",
-              color: "#e5e7eb",
-              cursor: "pointer",
-            }}
+            className={`${styles.icon} ${styles.glassBase} ${styles.glow}`}
+            style={{ color: "#e5e7eb" }}
           >
             <span style={{ fontSize: 20, lineHeight: 1, marginTop: -2 }}>
               {expanded ? "−" : "+"}
@@ -75,7 +77,7 @@ export default function SocialDock() {
           </button>
         </nav>
 
-        {/* Row 2 — only shows when expanded */}
+        {/* Row 2 — expanded */}
         {expanded && row2.length > 0 && (
           <nav className="dock" aria-label="Social links more row" style={{ width: "max-content" }}>
             {row2.map((s) => (
@@ -86,7 +88,9 @@ export default function SocialDock() {
                 rel="noopener noreferrer"
                 aria-label={s.label}
                 title={s.label}
-              >
+                onMouseMove={onMoveAnchor}
+                className={`${styles.icon} ${styles.glassBase} ${styles.glow}`}
+            >
                 <img src={s.icon} alt={s.label} width={18} height={18} />
               </a>
             ))}

@@ -1,8 +1,11 @@
-// components/Nav.tsx
-import Link from "next/link";
-import Image from "next/image";
+"use client";
 
-const LOGO_SIZE = 34; // Solana-like brand size (try 34–38 if you want bigger)
+import React from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import styles from "./NavTabs.module.css";
+
+const LOGO_SIZE = 28;
 
 const links = [
   { href: "/", label: "Swap" },
@@ -13,6 +16,18 @@ const links = [
 ];
 
 export default function Nav() {
+  const router = useRouter();
+  const [path, setPath] = React.useState<string>("/");
+  React.useEffect(() => setPath(window.location.pathname || "/"), []);
+
+  // Cursor hotspot for glow
+  const handleMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = e.currentTarget as HTMLElement;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    el.style.setProperty("--my", `${e.clientY - r.top}px`);
+  };
+
   return (
     <header
       style={{
@@ -34,17 +49,21 @@ export default function Nav() {
           width: "100%",
         }}
       >
-        {/* LEFT: Solana-style brand (no pill, larger mark + uppercase wordmark) */}
-        <Link
-          href="/"
+        {/* Brand: logo + wordmark (not a pill, not colored) */}
+        <button
+          type="button"
+          onClick={() => router.push("/")}
           aria-label="Power Crypto World — Home"
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 12,
-            color: "white",
-            textDecoration: "none",
-            lineHeight: 1,
+            gap: 10,
+            background: "transparent",
+            border: "none",
+            padding: 0,
+            margin: 0,
+            cursor: "pointer",
+            color: "#e8eef9",
           }}
         >
           <span
@@ -53,13 +72,10 @@ export default function Nav() {
               width: LOGO_SIZE,
               height: LOGO_SIZE,
               display: "inline-block",
-              borderRadius: 8,
-              overflow: "hidden",
-              filter: "drop-shadow(0 0 10px rgba(153,69,255,.45))",
             }}
           >
             <Image
-              src="/pcw-logo.png" // change to .jpg if needed
+              src="/pcw-logo.png"
               alt="PCW logo"
               fill
               sizes={`${LOGO_SIZE}px`}
@@ -67,48 +83,39 @@ export default function Nav() {
               priority
             />
           </span>
-
           <span
             style={{
+              fontFamily: "Sora, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial",
               fontWeight: 800,
               textTransform: "uppercase",
               letterSpacing: ".08em",
-              fontSize: 18,
-              opacity: 0.96,
+              fontSize: 16.5,
+              opacity: 0.98,
             }}
           >
             Power Crypto World
           </span>
-        </Link>
+        </button>
 
-        {/* RIGHT: tabs (unchanged) */}
+        {/* Tabs: neutral until hover (then neon) */}
         <nav aria-label="Primary">
-          <ul
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-            }}
-          >
-            {links.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="pill"
-                  style={{
-                    textDecoration: "none",
-                    fontWeight: 600,
-                    padding: ".5rem .9rem",
-                  }}
+          <div className={styles.row}>
+            {links.map((l) => {
+              const active =
+                path === l.href || (l.href !== "/" && path.startsWith(l.href));
+              return (
+                <button
+                  key={l.href}
+                  type="button"
+                  onClick={() => router.push(l.href)}
+                  onMouseMove={handleMove}
+                  className={[styles.tab, active ? styles.active : ""].join(" ")}
                 >
                   {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+                </button>
+              );
+            })}
+          </div>
         </nav>
       </div>
     </header>

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+
 /* -------------------------------------------------------
    PCW — Global Styles (Endless Neon Energy Flow + Glossy Glass)
    Thinner, brighter, seamless right→left ribbons (no “start/end”)
@@ -11,7 +13,7 @@ body {
   margin: 0;
   color: #e8eef9;
   background: #06090e; /* deep base for neon contrast */
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: "Sora", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   letter-spacing: .1px;
 }
 
@@ -53,46 +55,37 @@ body::before{
   pointer-events:none;
 }
 
-/* 1) ENDLESS ENERGY RIBBONS (right→left), thin + bright
-      We tile the ribbons horizontally (repeat-x) on an oversized
-      canvas and animate translateX, so there’s no visible start/end. */
+/* 1) ENDLESS ENERGY RIBBONS (right→left), thin + bright */
 @keyframes drift-cyan {
   0%   { transform: translateX(0); }
-  100% { transform: translateX(-33.333%); } /* one third of canvas = perfect loop */
+  100% { transform: translateX(-33.333%); }
 }
 @keyframes drift-purple {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-33.333%); }
 }
 
-/* We’ll use two absolutely-positioned overlays instead of background-position animation
-   for smoother transforms and truly seamless loops. */
 html::before{
   content:"";
   position: fixed;
   inset: 0;
   z-index:-5;
   pointer-events:none;
-  overflow:hidden;      /* hide oversized canvas edges */
+  overflow:hidden;
   display:block;
 }
 
 html::after{
-  /* This element holds BOTH cyan and purple ribbon groups,
-     each group drawn with a duplicated gradient and repeat-x. */
   content:"";
   position: fixed;
   inset: 0;
   z-index:-5;
   pointer-events:none;
 
-  /* Create a huge canvas (300% width) so we can shift by 1/3 and loop */
   width: 300%;
   height: 100%;
   left: 0; top: 0;
 
-  /* Four thin ribbons: 2 cyan (upper), 2 purple (lower).
-     Thinner cores, slightly brighter than before, no white. */
   background:
     /* CYAN A (upper) */
     linear-gradient(14deg,
@@ -128,18 +121,10 @@ html::after{
       transparent 67%
     );
 
-  /* Tile horizontally so there’s no “cutoff” edge */
   background-repeat: repeat-x, repeat-x, repeat-x, repeat-x;
-
-  /* Make the pattern wide; repeat-x will tile seamlessly */
   background-size: 150% 100%, 150% 100%, 150% 100%, 150% 100%;
+  background-position: 0% 0, 50% 0, 0% 0, 50% 0;
 
-  /* Offset the duplicates so one follows the other */
-  background-position:
-    0% 0, 50% 0,   /* cyan pair */
-    0% 0, 50% 0;   /* purple pair */
-
-  /* Same-color glow for depth (no white cores) */
   box-shadow:
     inset 0 0 80px rgba(0,224,255,.12),
     inset 0 0 80px rgba(153,69,255,.12);
@@ -147,15 +132,12 @@ html::after{
   filter: blur(8px) saturate(142%);
   mix-blend-mode: screen;
 
-  /* Parallax: cyan group drifts slightly faster than purple.
-     We achieve this by layering two pseudo motions with different durations
-     via two nested transforms using CSS variables on :root fallback. */
   animation:
     drift-cyan 56s linear infinite,
     drift-purple 72s linear infinite;
 }
 
-/* 2) SUBTLE SWEEPS + VIGNETTE (depth only, very soft) */
+/* 2) SUBTLE SWEEPS + VIGNETTE */
 @keyframes sweep-beams {
   0%   { background-position: 0% 0%, 50% 120%, 50% -20%; }
   50%  { background-position: 8% 0%, 50% 120%, 50% -20%; }
@@ -168,10 +150,7 @@ body::after{
   z-index:-4;
   pointer-events:none;
   background:
-    /* faint biaxial sweep (kept subtle) */
     radial-gradient(1400px 900px at 60% 40%, rgba(0,224,255,.08), transparent 60%),
-
-    /* vignette top/bottom */
     radial-gradient(1400px 900px at 50% 120%, rgba(0,0,0,.58), transparent 58%),
     radial-gradient(1400px 900px at 50% -20%, rgba(0,0,0,.42), transparent 52%);
   background-repeat: no-repeat;
