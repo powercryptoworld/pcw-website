@@ -10,7 +10,7 @@ const LOGO_SIZE = 28;
 const links = [
   { href: "/", label: "Swap" },
   { href: "/buy-pcw", label: "Buy PCW" },
-  { href: "/nfts", label: "NFTs" },
+  { href: "/roadmap", label: "Roadmap" }, // <— renamed from NFTs
   { href: "/giveaway", label: "Giveaways" },
   { href: "/token-burning", label: "Token Burning" },
 ];
@@ -20,7 +20,6 @@ export default function Nav() {
   const [path, setPath] = React.useState<string>("/");
   React.useEffect(() => setPath(window.location.pathname || "/"), []);
 
-  // Cursor hotspot for glow
   const handleMove = (e: React.MouseEvent<HTMLElement>) => {
     const el = e.currentTarget as HTMLElement;
     const r = el.getBoundingClientRect();
@@ -49,7 +48,7 @@ export default function Nav() {
           width: "100%",
         }}
       >
-        {/* Brand: logo + wordmark (not a pill, not colored) */}
+        {/* Brand */}
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -97,7 +96,7 @@ export default function Nav() {
           </span>
         </button>
 
-        {/* Tabs: neutral until hover (then neon) */}
+        {/* Tabs */}
         <nav aria-label="Primary">
           <div className={styles.row}>
             {links.map((l) => {

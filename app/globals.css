@@ -55,14 +55,8 @@ body::before{
 }
 
 /* 1) ENDLESS ENERGY RIBBONS */
-@keyframes drift-cyan {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-33.333%); }
-}
-@keyframes drift-purple {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-33.333%); }
-}
+@keyframes drift-cyan { 0% { transform: translateX(0); } 100% { transform: translateX(-33.333%); } }
+@keyframes drift-purple { 0% { transform: translateX(0); } 100% { transform: translateX(-33.333%); } }
 
 html::before{
   content:"";
@@ -401,8 +395,36 @@ select.input{ appearance: none; }
   }
 }
 
+/* ===== CONTACT FORM GLOW (halo around the card) ===== */
+.contact-glow{
+  position: relative;
+  z-index: 0;
+}
+.contact-glow::after{
+  content:"";
+  position:absolute;
+  inset:-28px;
+  border-radius: 26px;
+  pointer-events:none;
+  z-index:-1;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(60% 100% at 50% 40%,
+      rgba(255,255,255,.55),
+      rgba(0,224,255,.40) 35%,
+      rgba(153,69,255,.36) 62%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(28px) saturate(145%);
+  opacity:.9;
+  animation: contactGlowPulse 7s ease-in-out infinite;
+}
+@keyframes contactGlowPulse{
+  0%,100%{ filter: blur(26px) saturate(145%); opacity:.85; }
+  50%   { filter: blur(34px) saturate(165%); opacity:.98; }
+}
+
 /* =======================================================
-   SWAP PAGE V-BEAM OVERLAY (mirrors contact vibe)
+   SWAP PAGE V-BEAM OVERLAY
    ======================================================= */
 .swap-vfx{
   position: fixed;
@@ -451,7 +473,7 @@ select.input{ appearance: none; }
 }
 
 /* =======================================================
-   BUY PCW PAGE V-BEAM OVERLAY
+   BUY PCW V-BEAM OVERLAY
    ======================================================= */
 .buy-vfx{
   position: fixed;
@@ -500,6 +522,44 @@ select.input{ appearance: none; }
 }
 
 /* =======================================================
+   BUY PCW — COIN GLOW
+   ======================================================= */
+.coin-wrap{
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(460px, 80vw);
+  aspect-ratio: 1 / 1;
+}
+.coin-wrap::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side,
+      rgba(255,255,255,.75),
+      rgba(0,224,255,.45) 38%,
+      rgba(153,69,255,.35) 62%,
+      rgba(255,73,193,.28) 78%,
+      transparent 82%);
+  filter: blur(26px);
+  opacity: .95;
+  mix-blend-mode: screen;
+  animation: coin-breathe 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes coin-breathe{
+  0%,100% { transform: scale(1);   filter: blur(24px); opacity:.95; }
+  50%     { transform: scale(1.05); filter: blur(28px); opacity:1; }
+}
+.coin-img{
+  filter:
+    drop-shadow(0 0 14px rgba(0,224,255,.35))
+    drop-shadow(0 0 22px rgba(153,69,255,.28));
+}
+
+/* =======================================================
    UTILITIES
    ======================================================= */
 .text-xs{ font-size:.75rem; }
@@ -539,9 +599,10 @@ select.input{ appearance: none; }
 .hidden{ display:none !important; }
 
 /* =======================================================
-   CONTACT: Solid card + inputs (ONLY affects .contact-card)
+   CONTACT: Solid card + inputs  (OPT-IN VARIANT)
+   Use class 'contact-card--solid' on a wrapper if you want the solid look.
    ======================================================= */
-.contact-card{
+.contact-card--solid{
   background: #0f141d !important;            /* solid */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -551,19 +612,19 @@ select.input{ appearance: none; }
     0 20px 60px rgba(0,0,0,.70),
     0 2px 0 rgba(255,255,255,.04) inset;
 }
-.contact-card::before{
+.contact-card--solid::before{
   height: 36px;
   background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
 }
-.contact-card .input{
+.contact-card--solid .input{
   background: #131a24 !important;
   border-color: rgba(210,230,255,.18);
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.35),
     0 0 0 0 transparent;
 }
-.contact-card .input::placeholder{ color:#a6b4c7; }
-.contact-card textarea.input{ height: 120px; padding-top: 10px; }
+.contact-card--solid .input::placeholder{ color:#a6b4c7; }
+.contact-card--solid textarea.input{ height: 120px; padding-top: 10px; }
 
 /* =======================================================
    RESPONSIVE

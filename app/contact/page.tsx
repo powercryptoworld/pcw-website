@@ -22,15 +22,9 @@ export default function ContactPage() {
       <div className="contact-vfx" aria-hidden />
 
       <section className="container pt-12 pb-28" style={{ position: "relative" }}>
-        {/* Make this card solid/opaque by using the new .contact-card class */}
-        <div
-          className="glass contact-card"
-          style={{
-            width: "min(560px, 92vw)",
-            margin: "0 auto",
-            padding: 20,
-          }}
-        >
+        {/* Glassy card with neon halo (same vibe as roadmap) */}
+        <div className="glass contact-glow"
+             style={{ width: "min(560px, 92vw)", margin: "0 auto", padding: 20 }}>
           <h1 className="h1" style={{ marginBottom: 8, fontSize: "clamp(22px, 2.2vw, 30px)" }}>
             Contact Power Crypto World
           </h1>
@@ -43,23 +37,24 @@ export default function ContactPage() {
             style={{ display: "grid", gap: 10 }}
           >
             <div className="row" style={{ gap: 6, marginBottom: 10 }}>
-              <label className="label">Your name</label>
-              <input className="input" name="name" placeholder="Satoshi Nakamoto" required />
+              <label className="label" htmlFor="name">Your name</label>
+              <input id="name" className="input" name="name" placeholder="Satoshi Nakamoto" required />
             </div>
 
             <div className="row" style={{ gap: 6, marginBottom: 10 }}>
-              <label className="label">Your email</label>
-              <input className="input" name="email" type="email" placeholder="you@example.com" required />
+              <label className="label" htmlFor="email">Your email</label>
+              <input id="email" className="input" name="email" type="email" placeholder="you@example.com" required />
             </div>
 
             <div className="row" style={{ gap: 6, marginBottom: 10 }}>
-              <label className="label">Subject</label>
-              <input className="input" name="subject" placeholder="Let’s talk" required />
+              <label className="label" htmlFor="subject">Subject</label>
+              <input id="subject" className="input" name="subject" placeholder="Let’s talk" required />
             </div>
 
             <div className="row" style={{ gap: 6, marginBottom: 12 }}>
-              <label className="label">Message</label>
+              <label className="label" htmlFor="message">Message</label>
               <textarea
+                id="message"
                 className="input"
                 name="message"
                 placeholder="Tell us how we can help…"

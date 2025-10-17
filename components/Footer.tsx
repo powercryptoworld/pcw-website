@@ -1,23 +1,25 @@
+// components/Footer.tsx
 export default function Footer() {
   return (
     <footer
       style={{
-        margin: "0 auto",
-        maxWidth: 1200,
-        padding: "28px 20px 40px",
-        textAlign: "center",
+        position: "fixed",
+        right: 10,
+        bottom: 8,
+        zIndex: 10,
+        pointerEvents: "none",
       }}
     >
-      <p
+      <span
         style={{
-          margin: 0,
-          fontSize: 12,
-          color: "rgba(230, 240, 255, 0.55)",
+          fontSize: 11,
+          color: "rgba(230,240,255,0.45)",
           letterSpacing: ".2px",
+          userSelect: "none",
         }}
       >
-        © {new Date().getFullYear()} Power Crypto World. All rights reserved.
-      </p>
+        © {new Date().getFullYear()} Power Crypto World Foundation. All rights reserved
+      </span>
     </footer>
   );
 }
