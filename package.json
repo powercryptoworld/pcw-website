@@ -9,10 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.5",
+    "@web3modal/polyfills": "^5.1.11",
+    "@web3modal/wagmi": "^5.1.11",
     "lucide-react": "^0.545.0",
     "next": "15.5.5",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "viem": "^2.38.3",
+    "wagmi": "^2.18.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

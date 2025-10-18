@@ -4,13 +4,14 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./NavTabs.module.css";
+import ConnectWallet from "./ConnectWallet";
 
 const LOGO_SIZE = 28;
 
 const links = [
   { href: "/", label: "Swap" },
   { href: "/buy-pcw", label: "Buy PCW" },
-  { href: "/roadmap", label: "Roadmap" }, // <— renamed from NFTs
+  { href: "/roadmap", label: "Roadmap" },
   { href: "/giveaway", label: "Giveaways" },
   { href: "/token-burning", label: "Token Burning" },
 ];
@@ -114,6 +115,15 @@ export default function Nav() {
                 </button>
               );
             })}
+
+            {/* Connect inside the same pill style */}
+            <div
+              onMouseMove={handleMove}
+              className={styles.tab}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <ConnectWallet compact />
+            </div>
           </div>
         </nav>
       </div>
