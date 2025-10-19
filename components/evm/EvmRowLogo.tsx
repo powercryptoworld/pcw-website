@@ -2,10 +2,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 
 /**
- * Stable inline token logo with prioritized sources:
- * 1) /token-logos/{chainId}/{address}.svg
- * 2) /token-logos/{chainId}/{address}.png
- * 3) /api/evm-logo?chainId=..&address=..
+ * Inline EVM token logo with prioritized sources:
+ * 1) Local: /token-logos/{chainId}/{address}.svg
+ * 2) Local: /token-logos/{chainId}/{address}.png
+ * 3) CDN:   https://tokens.1inch.io/{address}.png
+ * 4) CDN:   TrustWallet assets (e.g., smartchain for BSC)
+ * 5) API:   /api/evm-logo?chainId=..&address=..
  */
 export default function EvmRowLogo({
   chainId,
@@ -19,18 +21,33 @@ export default function EvmRowLogo({
   size?: number;
 }) {
   const c = String(chainId).trim();
-  const a = String(address).trim().toLowerCase();
+  const addr = String(address).trim().toLowerCase();
+
+  // Map chainId -> TrustWallet chain folder
+  const trustFolder =
+    c === "56" || c === "0x38" ? "smartchain" :
+    c === "1"  || c === "0x1"  ? "ethereum"  :
+    c === "137"|| c === "0x89" ? "polygon"   :
+    c === "10" || c === "0xa"  ? "optimism"  :
+    c === "42161"|| c === "0xa4b1" ? "arbitrum" : null;
 
   const fallbacks = useMemo(() => {
     const first: string[] = [];
     if (logoURI && logoURI.trim()) first.push(logoURI.trim());
-    return [
+    const arr = [
       ...first,
-      `/token-logos/${c}/${a}.svg`,
-      `/token-logos/${c}/${a}.png`,
-      `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}`,
+      `/token-logos/${c}/${addr}.svg`,
+      `/token-logos/${c}/${addr}.png`,
+      `https://tokens.1inch.io/${addr}.png`,
     ];
-  }, [c, a, logoURI]);
+    if (trustFolder) {
+      arr.push(
+        `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${trustFolder}/assets/${addr}/logo.png`
+      );
+    }
+    arr.push(`/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(addr)}`);
+    return arr;
+  }, [c, addr, logoURI, trustFolder]);
 
   const [idx, setIdx] = useState(0);
   const [src, setSrc] = useState(fallbacks[0]);
