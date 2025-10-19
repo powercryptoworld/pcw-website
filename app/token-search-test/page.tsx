@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { ChainSelect } from "@/components/ChainSelect";
 import { EVM_CHAINS } from "@/lib/chains";
-import EvmRowLogo from "@/components/evm/EvmRowLogo";
+import EvmAddrResultRow from "@/components/evm/EvmAddrResultRow";
 
 export default function Page() {
   const [family, setFamily] = useState<"evm" | "sol">("evm");
@@ -50,15 +50,12 @@ export default function Page() {
       </div>
 
       {resultAddr && (
-        <div className="mt-2">
-          <div className="text-lg truncate" data-chain-id={chainId} data-address={resultAddr}>
-            <EvmRowLogo chainId={chainId} address={resultAddr} logoURI={null} />
-            XPIN — XPIN Token
-          </div>
-          <div className="text-sm opacity-80">ChainId: {chainId}</div>
-          <div className="text-sm opacity-80">{resultAddr}</div>
-          <div className="text-sm opacity-80">decimals: 18</div>
-        </div>
+        <EvmAddrResultRow
+          chainId={chainId}
+          address={resultAddr}
+          symbol={"XPIN"}
+          name={"XPIN Token"}
+        />
       )}
     </div>
   );
