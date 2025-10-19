@@ -1,10 +1,11 @@
 import React from "react";
 import ToastClient from "@/components/providers/ToastClient";
+import EnrichInterceptor from "@/components/tokenSearch/EnrichInterceptor";
 
 export default function TokenSearchTestLayout({ children }: { children: React.ReactNode }) {
-  // Add a scoped wrapper so we can improve readability without touching other pages.
   return (
     <ToastClient>
+      <EnrichInterceptor />
       <div className="pcw-tscope">{children}</div>
     </ToastClient>
   );
