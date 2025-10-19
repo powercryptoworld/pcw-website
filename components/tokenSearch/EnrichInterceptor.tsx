@@ -13,38 +13,31 @@ function inferUpdatedFields(obj: any): string[] {
   return out.length ? out : ["metadata"];
 }
 
-/** try to find the table row for a given Solana mint and update its Source pill */
+/** Try to find the table row for a given Solana mint and update its Source pill */
 function updateSourcePillForMint(mint: string, source?: string) {
   if (!source) return;
-  // Find a <code> element that exactly shows the mint in the Solana results table
   const codeEls = Array.from(document.querySelectorAll("code"));
   const targetCode = codeEls.find((el) => (el.textContent || "").trim() === mint);
   if (!targetCode) return;
 
-  // Row = <tr> ancestor
   const row = targetCode.closest("tr");
   if (!row) return;
 
-  // Assuming Source is the 4th <td> (Token, Mint, Decimals, Source, Actions)
   const tds = row.querySelectorAll("td");
   if (tds.length < 4) return;
   const sourceTd = tds[3];
 
-  // Find the pill (span) and update its text + classes
   const pill = sourceTd.querySelector("span");
   if (!pill) return;
 
   pill.textContent = source;
 
-  // Remove any previous styling classes that might conflict
   pill.classList.remove(
     "border-emerald-300/40","text-emerald-200/95","bg-emerald-900/20",
     "border-sky-300/40","text-sky-200/95","bg-sky-900/20",
     "border-white/20","text-white/80","bg-white/5",
     "border-white/15","text-white/70","border"
   );
-
-  // Always keep base pill decoration
   pill.classList.add("inline-block","rounded-full","px-2","py-0.5","text-xs","border");
 
   if (source === "jup") {
@@ -61,6 +54,7 @@ export default function EnrichInterceptor() {
 
   useEffect(() => {
     const originalFetch = window.fetch;
+
     async function wrappedFetch(input: RequestInfo | URL, init?: RequestInit) {
       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : String(input);
       const isEnrich = url.includes("/api/sol-meta-live?mint=");
@@ -71,21 +65,36 @@ export default function EnrichInterceptor() {
         const res = await originalFetch(input as any, init as any);
 
         if (isEnrich) {
-          // Clone & parse safely for UX feedback and DOM update
           let body: any = undefined;
           try {
-            const clone = res.clone();
-            body = await clone.json();
+            body = await res.clone().json();
           } catch {
-            // ignore parse errors; fallback below
+            // ignore parse errors
           }
 
           if (res.ok) {
-            const updated = !!(body && body.updated);
-            const source: string | undefined = typeof body?.source === "string" ? body.source : undefined;
+            // Treat either explicit {updated:true} OR {ok:true, meta:{...}} as an update
+            const hasMetaShape = body?.ok === true && body?.meta && typeof body.meta === "object";
+            const updated = !!body?.updated || !!hasMetaShape;
+
+            // Prefer top-level source, otherwise from meta
+            const source: string | undefined =
+              typeof body?.source === "string"
+                ? body.source
+                : (hasMetaShape && typeof body.meta.source === "string" ? body.meta.source : undefined);
+
+            // Infer fields from either top-level or meta
+            const fields =
+              Array.isArray(body?.fields) ? body.fields :
+              hasMetaShape ? inferUpdatedFields({
+                symbol: body.meta.symbol,
+                name: body.meta.name,
+                logo: body.meta.logoURI,
+                decimals: body.meta.decimals,
+              }) :
+              inferUpdatedFields(body);
 
             if (updated) {
-              const fields = Array.isArray(body?.fields) ? body.fields : inferUpdatedFields(body);
               const srcText = source ? ` via ${source}` : "";
               toast.show(`Updated ${fields.join(", ")}${srcText}.`, "success");
               if (mint) updateSourcePillForMint(mint, source);
@@ -107,7 +116,6 @@ export default function EnrichInterceptor() {
       }
     }
 
-    // install wrapper
     (window as any).fetch = wrappedFetch;
     return () => {
       (window as any).fetch = originalFetch;
