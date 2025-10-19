@@ -1,6 +1,5 @@
 "use client";
 import EstimateFeeButton from "@/components/EstimateFeeButton";
-import ClearFeeOnAmountChange from "@/components/ClearFeeOnAmountChange";
 // components/SwapCard.tsx
 
 export default function SwapCard() {
@@ -34,7 +33,6 @@ export default function SwapCard() {
                 width: "100%",
               }}
             />
-          <ClearFeeOnAmountChange targetId="pay" />
           </div>
         </div>
 
@@ -70,13 +68,40 @@ export default function SwapCard() {
         </div>
 
         {/* Slippage pills */}
+        {/* Network fee row (local wallet estimate) */}
+        <div className="flex items-center justify-between text-sm mt-2">
+          <div className="opacity-80">Network fee (est., BNB)</div>
+          {(() => {
+            const pick = (name) => { try { return eval(`typeof ${name} !== "undefined" ? ${name} : null`); } catch { return null; } };
+            const maybeTx = pick("builtTx") || pick("builtSwapTx") || pick("swapTx") || pick("tx") || null;
+            return (<EstimateFeeButton builtTx={maybeTx} symbol="BNB" compact />);
+          })()}
+        </div>
+        {/* Network fee row (local wallet estimate) */}
+        <div className="flex items-center justify-between text-sm mt-2">
+          <div className="opacity-80">Network fee (est., BNB)</div>
+          {(() => {
+            const pick = (name) => { try { return eval(`typeof ${name} !== "undefined" ? ${name} : null`); } catch { return null; } };
+            const maybeTx = pick("builtTx") || pick("builtSwapTx") || pick("swapTx") || pick("tx") || null;
+            return (<EstimateFeeButton builtTx={maybeTx} symbol="BNB" compact />);
+          })()}
+        </div>
         <div className="mb-4">
           <p className="label mb-2">Slippage</p>
         {/* Network fee row (local wallet estimate) */}
         <div className="flex items-center justify-between text-sm mt-2">
-          <div className="opacity-80">Network fee (est., BNB)</div><span id="wallet-fee" className="text-xs opacity-90 ml-2"></span><span id="wallet-fee" className="text-xs opacity-90 ml-2"></span>
+          <div className="opacity-80">Network fee (est., BNB)</div>
           {(() => {
-            const pick = (name) => { try { return eval(`typeof  !== "undefined" ?  : null`); } catch { return null; } };
+            const pick = (name) => { try { return eval(`typeof ${name} !== "undefined" ? ${name} : null`); } catch { return null; } };
+            const maybeTx = pick("builtTx") || pick("builtSwapTx") || pick("swapTx") || pick("tx") || null;
+            return (<EstimateFeeButton builtTx={maybeTx} symbol="BNB" compact />);
+          })()}
+        </div>
+        {/* Network fee row (local wallet estimate) */}
+        <div className="flex items-center justify-between text-sm mt-2">
+          <div className="opacity-80">Network fee (est., BNB)</div>
+          {(() => {
+            const pick = (name) => { try { return eval(`typeof ${name} !== "undefined" ? ${name} : null`); } catch { return null; } };
             const maybeTx = pick("builtTx") || pick("builtSwapTx") || pick("swapTx") || pick("tx") || null;
             return (<EstimateFeeButton builtTx={maybeTx} symbol="BNB" compact />);
           })()}
