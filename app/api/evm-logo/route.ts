@@ -1,128 +1,149 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 
-function toChecksumAddress(address: string) {
-  const a = address.toLowerCase().replace(/^0x/, "");
-  try {
-    const { keccak256 } = require("@ethersproject/keccak256");
-    const { toUtf8Bytes } = require("@ethersproject/strings");
-    const hash = keccak256(toUtf8Bytes(a));
-    let ret = "0x";
-    for (let i = 0; i < a.length; i++) ret += parseInt(hash[i + 2], 16) >= 8 ? a[i].toUpperCase() : a[i];
-    return ret;
-  } catch {
-    return "0x" + a;
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+type CdnHit = { url: string; buf: Buffer; contentType: string; source: string };
+
+const MIN_BYTES = 1024;
+
+/* === paths/fs === */
+function pngPath(chainId: number, addrLc: string) {
+  return path.join(process.cwd(), "public", "token-logos", String(chainId), `${addrLc}.png`);
+}
+function pngHref(chainId: number, addrLc: string) {
+  return `/token-logos/${chainId}/${addrLc}.png`;
+}
+async function statBytes(p: string): Promise<number | null> { try { const s = await fs.stat(p); return s.isFile() ? s.size : null; } catch { return null; } }
+async function readLocal(chainId: number, addrLc: string): Promise<Buffer | null> { try { return await fs.readFile(pngPath(chainId, addrLc)); } catch { return null; } }
+async function ensureDirFor(p: string) { await fs.mkdir(path.dirname(p), { recursive: true }); }
+
+/* === headers === */
+function cacheHeaders() { return { "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400" }; }
+function pngHeaders(extra: Record<string, string> = {}) { return { "Content-Type": "image/png", ...cacheHeaders(), ...extra }; }
+
+/* === chains === */
+function trustWalletChain(chainId: number) {
+  switch (chainId) {
+    case 1: return "ethereum";
+    case 56: return "smartchain";
+    case 137: return "polygon";
+    case 43114: return "avalanchec";
+    case 250: return "fantom";
+    case 42161: return "arbitrum";
+    case 10: return "optimism";
+    case 8453: return "base";
+    default: return "";
+  }
+}
+function chainSlug(chainId: number): string | null {
+  switch (chainId) {
+    case 1: return "ethereum";
+    case 56: return "bsc";
+    case 137: return "polygon";
+    case 250: return "fantom";
+    case 43114: return "avalanche";
+    case 42161: return "arbitrum";
+    case 10: return "optimism";
+    case 8453: return "base";
+    default: return null;
   }
 }
 
-async function tryLocal(chainId: string, addrLower: string) {
-  const base = path.join(process.cwd(), "public", "token-logos", chainId);
-  for (const ext of ["svg", "png"]) {
-    const p = path.join(base, `${addrLower}.${ext}`);
-    try {
-      const data = await fs.readFile(p);
-      const ct = ext === "svg" ? "image/svg+xml" : "image/png";
-      return new Response(data, {
-        headers: {
-          "content-type": ct,
-          "cache-control": "public, max-age=86400, immutable",
-          "x-pcw-source": `local:${ext}`,
-        },
-      });
-    } catch {}
+/* === CDN candidates (expanded) === */
+function candidates(chainId: number, addrRaw: string, addrLc: string): string[] {
+  const list: string[] = [];
+  const tw = trustWalletChain(chainId);
+  const slug = chainSlug(chainId);
+
+  // TrustWallet (raw/lc + jsdelivr mirror)
+  if (tw) {
+    list.push(`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${tw}/assets/${addrRaw}/logo.png`);
+    list.push(`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${tw}/assets/${addrLc}/logo.png`);
+    list.push(`https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/${tw}/assets/${addrRaw}/logo.png`);
+    list.push(`https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/${tw}/assets/${addrLc}/logo.png`);
+  }
+
+  // 1inch (both hosts)
+  list.push(`https://tokens-data.1inch.io/images/${chainId}/${addrRaw}.png`);
+  list.push(`https://tokens-data.1inch.io/images/${chainId}/${addrLc}.png`);
+  list.push(`https://tokens.1inch.io/${addrRaw}.png`);
+  list.push(`https://tokens.1inch.io/${addrLc}.png`);
+
+  // Pancake — ALL common patterns
+  list.push(`https://assets.pancakeswap.finance/web/tokens/${addrRaw}.png`);
+  list.push(`https://assets.pancakeswap.finance/web/tokens/${addrLc}.png`);
+  list.push(`https://assets.pancakeswap.finance/web/${addrRaw}.png`);
+  list.push(`https://assets.pancakeswap.finance/web/${addrLc}.png`);
+  list.push(`https://assets.pancakeswap.finance/images/tokens/${addrRaw}.png`);
+  list.push(`https://assets.pancakeswap.finance/images/tokens/${addrLc}.png`);
+
+  // DexScreener — both paths seen in the wild
+  if (slug) {
+    list.push(`https://cdn.dexscreener.com/token-images/${slug}/${addrRaw}.png`);
+    list.push(`https://cdn.dexscreener.com/token-images/${slug}/${addrLc}.png`);
+    list.push(`https://cdn.dexscreener.com/token-icons/${slug}/${addrRaw}.png`);
+    list.push(`https://cdn.dexscreener.com/token-icons/${slug}/${addrLc}.png`);
+  }
+  return list;
+}
+
+function okImage(ct?: string) { return !!ct && ct.startsWith("image/"); }
+async function tryFetch(url: string): Promise<CdnHit | null> {
+  try {
+    const r = await fetch(url, { redirect: "follow", cache: "no-store" });
+    if (!r.ok) return null;
+    const ct = r.headers.get("content-type") || "";
+    if (!okImage(ct)) return null;
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.byteLength < MIN_BYTES) return null;
+    return { url, buf, contentType: ct, source: new URL(url).hostname };
+  } catch { return null; }
+}
+async function firstGood(chainId: number, addrRaw: string, addrLc: string): Promise<CdnHit | null> {
+  for (const u of candidates(chainId, addrRaw, addrLc)) {
+    const hit = await tryFetch(u);
+    if (hit) return hit;
   }
   return null;
 }
 
-async function headOk(url: string) {
-  try {
-    const r = await fetch(url, { method: "HEAD", cache: "no-store", redirect: "follow" });
-    if (!r.ok) return false;
-    const ct = r.headers.get("content-type") ?? "";
-    return /^image\//i.test(ct);
-  } catch {
-    return false;
-  }
-}
-
+/* === handler === */
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const chainId = (searchParams.get("chainId") ?? "").trim();
-  const raw = (searchParams.get("address") ?? "").trim().toLowerCase();
-  const prefer = (searchParams.get("prefer") ?? "").toLowerCase();   // "cdn" to skip local-first
-  const redirect = (searchParams.get("redirect") ?? "").trim() === "1"; // when true, 302 to CDN
+  try {
+    const { searchParams } = new URL(req.url);
+    const chainId = Number(searchParams.get("chainId") || "0");
+    const addressRaw = (searchParams.get("address") || "").trim();
+    const prefer = (searchParams.get("prefer") || "").toLowerCase();
+    const redirect = searchParams.get("redirect") === "1";
+    if (!chainId || !/^0x[0-9a-fA-F]{40}$/.test(addressRaw)) return new NextResponse("Bad params", { status: 400 });
 
-  if (!chainId || !raw || !/^0x[0-9a-f]{40}$/.test(raw)) {
-    return new Response("Bad params", { status: 400 });
-  }
+    const addrLc = addressRaw.toLowerCase();
 
-  // local-first unless prefer=cdn
-  if (prefer !== "cdn") {
-    const local = await tryLocal(chainId, raw);
-    if (local) return local;
-  }
-
-  const checksum = toChecksumAddress(raw);
-  const chainFolder =
-    chainId === "56"    ? "smartchain" :
-    chainId === "1"     ? "ethereum"   :
-    chainId === "137"   ? "polygon"    :
-    chainId === "10"    ? "optimism"   :
-    chainId === "42161" ? "arbitrum"   :
-    "smartchain";
-  const dexSlug =
-    chainId === "56"    ? "bsc" :
-    chainId === "1"     ? "ethereum" :
-    chainId === "137"   ? "polygon"  :
-    chainId === "10"    ? "optimism" :
-    chainId === "42161" ? "arbitrum" :
-    "bsc";
-
-  const sources = [
-    // Pancake
-    `https://assets.pancakeswap.finance/web/tokens/${raw}.png`,
-    `https://assets.pancakeswap.finance/web/tokens/${checksum}.png`,
-    // 1inch
-    `https://tokens.1inch.io/${checksum}.png`,
-    `https://tokens.1inch.io/${checksum}.svg`,
-    // TrustWallet
-    `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${chainFolder}/assets/${checksum}/logo.png`,
-    // DexScreener
-    `https://cdn.dexscreener.com/token-icons/${dexSlug}/${raw}.png`,
-    `https://cdn.dexscreener.com/token-icons/${dexSlug}/${checksum}.png`,
-  ];
-
-  for (const url of sources) {
-    if (await headOk(url)) {
-      if (redirect) {
-        return new Response(null, {
-          status: 302,
-          headers: {
-            "Location": url,
-            "cache-control": "public, max-age=86400, immutable",
-            "x-pcw-source": `redirect:${url}`,
-          },
-        });
-      }
-      // Fallback: proxy bytes (shouldn't be needed once redirect=1 is used by UI)
-      const r = await fetch(url, { cache: "no-store", redirect: "follow" });
-      const body = await r.arrayBuffer();
-      const ct = r.headers.get("content-type") ?? "image/png";
-      return new Response(body, {
-        headers: {
-          "content-type": ct,
-          "cache-control": "public, max-age=86400, immutable",
-          "x-pcw-source": url,
-        },
-      });
+    // Local PNG first (if present)
+    const local = await readLocal(chainId, addrLc);
+    const localBytes = await statBytes(pngPath(chainId, addrLc));
+    if (prefer !== "cdn" && local && (localBytes ?? 0) > 0) {
+      if (redirect) return NextResponse.redirect(pngHref(chainId, addrLc), 302);
+      return new NextResponse(local, { status: 200, headers: pngHeaders({ "x-pcw-source": "local" }) });
     }
-  }
 
-  if (prefer === "cdn") {
-    const localLast = await tryLocal(chainId, raw);
-    if (localLast) return localLast;
-  }
+    // CDNs → write-through cache
+    const cdn = await firstGood(chainId, addressRaw, addrLc);
+    if (cdn) {
+      const out = pngPath(chainId, addrLc);
+      const canWrite = (localBytes ?? 0) === 0 || cdn.buf.byteLength > (localBytes ?? 0);
+      if (canWrite) { try { await ensureDirFor(out); await fs.writeFile(out, cdn.buf); } catch {} }
+      if (redirect) return NextResponse.redirect(pngHref(chainId, addrLc), 302);
+      return new NextResponse(cdn.buf, { status: 200, headers: pngHeaders({ "x-pcw-source": `cdn:${cdn.source}`, "x-pcw-url": cdn.url }) });
+    }
 
-  return new Response("Not found", { status: 404 });
+    // SVG fallback
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#a3e635"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs><rect width="100%" height="100%" fill="#0b1220"/><circle cx="32" cy="32" r="28" fill="url(#g)"/><text x="32" y="38" font-family="system-ui" font-size="20" text-anchor="middle" fill="#0b1220">?</text></svg>`;
+    return new NextResponse(svg, { status: 200, headers: { "Content-Type": "image/svg+xml", ...cacheHeaders(), "x-pcw-source": "svg" } });
+  } catch (e: any) {
+    return new NextResponse(`evm-logo error: ${e?.message || "unknown"}`, { status: 500 });
+  }
 }
