@@ -1,0 +1,74 @@
+"use client";
+import { useEffect } from "react";
+
+/** CDN-only source (no local fallback) with cache-buster + debug title */
+function buildSource(chainId: string, address: string): string {
+  const c = String(chainId).trim();
+  const a = String(address).trim().toLowerCase();
+  const ts = Date.now();
+  return `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn&ts=${ts}`;
+}
+
+/** Pick a sensible anchor near the token name; otherwise use row. */
+function chooseAnchor(row: HTMLElement): HTMLElement {
+  const leaves = Array.from(row.querySelectorAll<HTMLElement>('*')).filter(el => el.childElementCount === 0);
+  const dashLeaf = leaves.find(el => /—/.test(el.textContent ?? ''));
+  if (dashLeaf?.parentElement) return dashLeaf.parentElement as HTMLElement;
+
+  const addrLeaf = leaves.find(el => /0x[a-f0-9]{6,}/i.test(el.textContent ?? ''));
+  if (addrLeaf?.parentElement?.previousElementSibling) {
+    const prev = addrLeaf.parentElement.previousElementSibling as HTMLElement;
+    const txt = (prev.textContent ?? "").trim();
+    if (txt && !/0x[a-f0-9]{6,}/i.test(txt)) return prev;
+  }
+  const firstText = leaves.find(el => (el.textContent ?? "").trim());
+  return firstText?.parentElement ?? row;
+}
+
+export default function InlineRowLogoInjector() {
+  useEffect(() => {
+    const markAttr = "data-logo-injected";
+
+    const scan = () => {
+      const rows = document.querySelectorAll<HTMLElement>('[data-chain-id][data-address]');
+      rows.forEach((row) => {
+        const chainId = row.getAttribute('data-chain-id')?.trim();
+        const address = row.getAttribute('data-address')?.trim()?.toLowerCase();
+        if (!chainId || !address) return;
+
+        const mark = `${chainId}:${address}`;
+        // Always re-inject to avoid stale logo (remove old first)
+        row.querySelectorAll('img.pcw-inline-token-logo').forEach(n => n.remove());
+
+        const anchor = chooseAnchor(row);
+        const img = document.createElement('img');
+        img.className = 'pcw-inline-token-logo';
+        img.alt = 'token logo';
+        const src = buildSource(chainId, address);
+        img.title = src; // debug: hover to see which URL is used
+        Object.assign(img.style, {
+          width: '28px',
+          height: '28px',
+          borderRadius: '6px',
+          verticalAlign: 'middle',
+          marginRight: '8px',
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.18) inset',
+          display: 'inline-block',
+          objectFit: 'cover',
+          pointerEvents: 'none',
+        } as CSSStyleDeclaration);
+
+        img.src = src;
+
+        anchor.insertBefore(img, anchor.firstChild);
+        row.setAttribute(markAttr, mark);
+      });
+    };
+
+    scan();
+    const id = window.setInterval(scan, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return null;
+}

@@ -1,45 +1,21 @@
 "use client";
 import { useEffect } from "react";
 
-/** Build prioritized logo URLs that the *browser* fetches directly (like big DEXes). */
+/** CDN-first via redirect (then local SVG/PNG). */
 function buildSources(chainId: string, address: string): string[] {
   const c = String(chainId).trim();
   const a = String(address).trim().toLowerCase();
-
-  const cdn: string[] = [];
-  // Pancake supports lowercase and checksum; lowercase often works for BSC.
-  cdn.push(`https://assets.pancakeswap.finance/web/tokens/${a}.png`);
-
-  // DexScreener supports lowercase + chain slug; we map the common ones.
-  const slug =
-    c === "56"    ? "bsc" :
-    c === "1"     ? "ethereum" :
-    c === "137"   ? "polygon" :
-    c === "10"    ? "optimism" :
-    c === "42161" ? "arbitrum" :
-    "bsc";
-  cdn.push(`https://cdn.dexscreener.com/token-icons/${slug}/${a}.png`);
-
-  // Local overrides next (if you pinned anything)
-  const local = [
-    `/token-logos/${c}/${a}.png`,
+  return [
+    `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn&redirect=1`,
     `/token-logos/${c}/${a}.svg`,
+    `/token-logos/${c}/${a}.png`
   ];
-
-  // Our API last (in case a future server-side source works)
-  const api = [
-    `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn`,
-  ];
-
-  return [...cdn, ...local, ...api];
 }
 
-/** Pick a sensible anchor near the token name; otherwise use row. */
 function chooseAnchor(row: HTMLElement): HTMLElement {
   const leaves = Array.from(row.querySelectorAll<HTMLElement>('*')).filter(el => el.childElementCount === 0);
   const dashLeaf = leaves.find(el => /—/.test(el.textContent ?? ''));
   if (dashLeaf?.parentElement) return dashLeaf.parentElement as HTMLElement;
-
   const addrLeaf = leaves.find(el => /0x[a-f0-9]{6,}/i.test(el.textContent ?? ''));
   if (addrLeaf?.parentElement?.previousElementSibling) {
     const prev = addrLeaf.parentElement.previousElementSibling as HTMLElement;
@@ -50,16 +26,13 @@ function chooseAnchor(row: HTMLElement): HTMLElement {
   return firstText?.parentElement ?? row;
 }
 
-/** Inject once per row (no flicker). */
 function injectLogoOnce(row: HTMLElement) {
   const chainId = row.getAttribute('data-chain-id')?.trim();
   const address = row.getAttribute('data-address')?.trim()?.toLowerCase();
   if (!chainId || !address) return;
-
   const markAttr = 'data-logo-injected';
   const mark = `${chainId}:${address}`;
   if (row.getAttribute(markAttr) === mark) return;
-
   row.querySelectorAll('img.pcw-inline-token-logo').forEach(n => n.remove());
 
   const anchor = chooseAnchor(row);

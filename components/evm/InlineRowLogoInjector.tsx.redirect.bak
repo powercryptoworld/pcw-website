@@ -1,37 +1,15 @@
 "use client";
 import { useEffect } from "react";
 
-/** Build prioritized logo URLs that the *browser* fetches directly (like big DEXes). */
+/** Build prioritized logo URLs (CDN API → local SVG → local PNG). */
 function buildSources(chainId: string, address: string): string[] {
   const c = String(chainId).trim();
   const a = String(address).trim().toLowerCase();
-
-  const cdn: string[] = [];
-  // Pancake supports lowercase and checksum; lowercase often works for BSC.
-  cdn.push(`https://assets.pancakeswap.finance/web/tokens/${a}.png`);
-
-  // DexScreener supports lowercase + chain slug; we map the common ones.
-  const slug =
-    c === "56"    ? "bsc" :
-    c === "1"     ? "ethereum" :
-    c === "137"   ? "polygon" :
-    c === "10"    ? "optimism" :
-    c === "42161" ? "arbitrum" :
-    "bsc";
-  cdn.push(`https://cdn.dexscreener.com/token-icons/${slug}/${a}.png`);
-
-  // Local overrides next (if you pinned anything)
-  const local = [
-    `/token-logos/${c}/${a}.png`,
-    `/token-logos/${c}/${a}.svg`,
-  ];
-
-  // Our API last (in case a future server-side source works)
-  const api = [
+  return [
     `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn`,
+    `/token-logos/${c}/${a}.svg`,
+    `/token-logos/${c}/${a}.png`
   ];
-
-  return [...cdn, ...local, ...api];
 }
 
 /** Pick a sensible anchor near the token name; otherwise use row. */
@@ -50,7 +28,7 @@ function chooseAnchor(row: HTMLElement): HTMLElement {
   return firstText?.parentElement ?? row;
 }
 
-/** Inject once per row (no flicker). */
+/** Inject exactly one logo into a single row, if not already injected. */
 function injectLogoOnce(row: HTMLElement) {
   const chainId = row.getAttribute('data-chain-id')?.trim();
   const address = row.getAttribute('data-address')?.trim()?.toLowerCase();
@@ -58,8 +36,9 @@ function injectLogoOnce(row: HTMLElement) {
 
   const markAttr = 'data-logo-injected';
   const mark = `${chainId}:${address}`;
-  if (row.getAttribute(markAttr) === mark) return;
+  if (row.getAttribute(markAttr) === mark) return; // already injected
 
+  // If any old injected logos exist, remove them once (avoid doubles)
   row.querySelectorAll('img.pcw-inline-token-logo').forEach(n => n.remove());
 
   const anchor = chooseAnchor(row);
@@ -93,21 +72,42 @@ function injectLogoOnce(row: HTMLElement) {
 
 export default function InlineRowLogoInjector() {
   useEffect(() => {
-    document.querySelectorAll<HTMLElement>('[data-chain-id][data-address]').forEach(injectLogoOnce);
+    // Initial pass: inject for any existing rows
+    document
+      .querySelectorAll<HTMLElement>('[data-chain-id][data-address]')
+      .forEach(injectLogoOnce);
+
+    // Observe for newly added rows (no polling, no flicker)
     const observer = new MutationObserver((mutations) => {
       for (const m of mutations) {
+        // rows added directly
         m.addedNodes.forEach((node) => {
           if (!(node instanceof HTMLElement)) return;
-          if (node.matches?.('[data-chain-id][data-address]')) injectLogoOnce(node);
-          node.querySelectorAll?.('[data-chain-id][data-address]').forEach((el: Element) => injectLogoOnce(el as HTMLElement));
+          if (node.matches?.('[data-chain-id][data-address]')) {
+            injectLogoOnce(node);
+          }
+          // rows added inside containers
+          node
+            .querySelectorAll?.('[data-chain-id][data-address]')
+            .forEach((el: Element) => injectLogoOnce(el as HTMLElement));
         });
+
+        // attribute changes on rows (e.g., same row reused with new address)
         if (m.type === 'attributes' && (m.target as HTMLElement).matches?.('[data-chain-id][data-address]')) {
           injectLogoOnce(m.target as HTMLElement);
         }
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-chain-id','data-address'] });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-chain-id', 'data-address'],
+    });
+
     return () => observer.disconnect();
   }, []);
+
   return null;
 }

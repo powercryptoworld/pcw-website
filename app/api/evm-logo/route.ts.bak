@@ -1,0 +1,104 @@
+import { NextRequest } from "next/server";
+import { promises as fs } from "fs";
+import path from "path";
+
+/** Lightweight checksum (ethers-style) without adding big deps. */
+function toChecksumAddress(address: string) {
+  const a = address.toLowerCase().replace(/^0x/, "");
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { keccak256 } = require("@ethersproject/keccak256");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { toUtf8Bytes } = require("@ethersproject/strings");
+    const hash = keccak256(toUtf8Bytes(a));
+    let ret = "0x";
+    for (let i = 0; i < a.length; i++) {
+      ret += parseInt(hash[i + 2], 16) >= 8 ? a[i].toUpperCase() : a[i];
+    }
+    return ret;
+  } catch {
+    return "0x" + a;
+  }
+}
+
+async function tryLocal(chainId: string, addrLower: string) {
+  const base = path.join(process.cwd(), "public", "token-logos", chainId);
+  for (const ext of ["svg", "png"]) {
+    const p = path.join(base, `${addrLower}.${ext}`);
+    try {
+      const data = await fs.readFile(p);
+      const ct = ext === "svg" ? "image/svg+xml" : "image/png";
+      return new Response(data, {
+        headers: {
+          "content-type": ct,
+          "cache-control": "public, max-age=86400, immutable",
+          "x-pcw-source": `local:${ext}`,
+        },
+      });
+    } catch {}
+  }
+  return null;
+}
+
+async function tryFetch(url: string, label: string) {
+  try {
+    const r = await fetch(url, { cache: "no-store", redirect: "follow" });
+    if (!r.ok) return null;
+    const ct = r.headers.get("content-type") ?? "image/png";
+    if (!/^image\//i.test(ct)) return null;
+    const body = await r.arrayBuffer();
+    return new Response(body, {
+      headers: {
+        "content-type": ct,
+        "cache-control": "public, max-age=86400, immutable",
+        "x-pcw-source": label,
+      },
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const chainId = (searchParams.get("chainId") ?? "").trim();
+  const raw = (searchParams.get("address") ?? "").trim().toLowerCase();
+
+  if (!chainId || !raw || !/^0x[0-9a-f]{40}$/.test(raw)) {
+    return new Response("Bad params", { status: 400 });
+  }
+
+  // 1) Local overrides win
+  const local = await tryLocal(chainId, raw);
+  if (local) return local;
+
+  // 2) Trusted public sources (Pancake → 1inch → TrustWallet)
+  const checksum = toChecksumAddress(raw);
+
+  // TrustWallet chain folder map
+  const chainFolder =
+    chainId === "56"    ? "smartchain" :
+    chainId === "1"     ? "ethereum"   :
+    chainId === "137"   ? "polygon"    :
+    chainId === "10"    ? "optimism"   :
+    chainId === "42161" ? "arbitrum"   :
+    "smartchain";
+
+  const sources: Array<[string, string]> = [
+    // Pancake (BSC common; try lowercased first, then checksum)
+    [`https://assets.pancakeswap.finance/web/tokens/${raw}.png`, `pancake:raw`],
+    [`https://assets.pancakeswap.finance/web/tokens/${checksum}.png`, `pancake:checksum`],
+    // 1inch
+    [`https://tokens.1inch.io/${checksum}.png`, `1inch:png`],
+    [`https://tokens.1inch.io/${checksum}.svg`, `1inch:svg`],
+    // TrustWallet
+    [`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${chainFolder}/assets/${checksum}/logo.png`, `trustwallet:logo.png`],
+  ];
+
+  for (const [url, label] of sources) {
+    const hit = await tryFetch(url, label);
+    if (hit) return hit;
+  }
+
+  return new Response("Not found", { status: 404 });
+}

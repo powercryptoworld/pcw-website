@@ -1,0 +1,468 @@
+diff --git a/app/token-search-test/layout.tsx b/app/token-search-test/layout.tsx
+index 4d493df..d335747 100644
+--- a/app/token-search-test/layout.tsx
++++ b/app/token-search-test/layout.tsx
+@@ -1,21 +1,5 @@
+ import React from "react";
+-import ToastClient from "@/components/providers/ToastClient";
+-import EnrichInterceptor from "@/components/tokenSearch/EnrichInterceptor";
+-import EnrichCooldown from "@/components/tokenSearch/EnrichCooldown";
+-import EnrichDebug from "@/components/tokenSearch/EnrichDebug";
+-import SelectLogoDecorator from "@/components/chain/SelectLogoDecorator";
+-import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
+ 
+-export default function TokenSearchTestLayout({ children }: { children: React.ReactNode }) {
+-  return (
+-    <ToastClient>
+-      <EnrichInterceptor />
+-      <EnrichCooldown />
+-      <SelectLogoDecorator />
+-      {/* Inline injector renders the logo inside the row */}
+-      <InlineRowLogoInjector />
+-      <div className="pcw-tscope">{children}</div>
+-      <EnrichDebug />
+-    </ToastClient>
+-  );
++export default function Layout({ children }: { children: React.ReactNode }) {
++  return <>{children}</>;
+ }
+diff --git a/app/token-search-test/template.tsx b/app/token-search-test/template.tsx
+index a6aa49f..c42c013 100644
+--- a/app/token-search-test/template.tsx
++++ b/app/token-search-test/template.tsx
+@@ -1,6 +1,13 @@
+-import React from 'react';
++"use client";
++import React from "react";
++import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
+ 
+ export default function TokenSearchTemplate({ children }: { children: React.ReactNode }) {
+-  // Keep the page lean; logos now render inline in the result rows.
+-  return <>{children}</>;
++  return (
++    <>
++      {/* Keep the inline multi-source injector running */}
++      <InlineRowLogoInjector />
++      {children}
++    </>
++  );
+ }
+diff --git a/components/evm/EvmAddrResultRow.tsx b/components/evm/EvmAddrResultRow.tsx
+index 674ee3e..ce850fb 100644
+--- a/components/evm/EvmAddrResultRow.tsx
++++ b/components/evm/EvmAddrResultRow.tsx
+@@ -1,28 +1,35 @@
+ "use client";
+ import React from "react";
+-import EvmRowLogo from "@/components/evm/EvmRowLogo";
+ 
+-export default function EvmAddrResultRow({
+-  chainId,
+-  address,
+-  symbol,
+-  name,
+-}: {
++type Props = {
+   chainId: number | string;
+   address: string;
+-  symbol: string;
+-  name: string;
+-}) {
+-  const addr = String(address).trim();
++  symbol?: string | null;
++  name?: string | null;
++};
++
++export default function EvmAddrResultRow({ chainId, address, symbol, name }: Props) {
++  const c = String(chainId).trim();
++  const a = String(address).trim();
++  const aLower = a.toLowerCase();
++
+   return (
+-    <div className="mt-2">
+-      <div className="text-lg truncate" data-chain-id={chainId} data-address={addr}>
+-        <EvmRowLogo chainId={chainId} address={addr} logoURI={null} />
+-        {symbol || "UNK"} — {name || "Token"}
++    <div className="mb-4">
++      <div
++        className="text-lg truncate flex items-center gap-2"
++        data-chain-id={c}
++        data-address={aLower}
++      >
++        {/* Logo is injected by InlineRowLogoInjector */}
++        <span className="sr-only">logo</span>
++        <span className="font-semibold">{symbol ?? "UNKNOWN"}</span>
++        <span className="opacity-70"> — {name ?? "Token"}</span>
++      </div>
++
++      <div className="text-sm opacity-80">
++        ChainId: {c}
+       </div>
+-      <div className="text-sm opacity-80">ChainId: {chainId}</div>
+-      <div className="text-sm opacity-80">{addr}</div>
+-      <div className="text-sm opacity-80">decimals: 18</div>
++      <div className="text-xs opacity-80">{a}</div>
+     </div>
+   );
+ }
+diff --git a/components/evm/EvmRowLogo.tsx b/components/evm/EvmRowLogo.tsx
+index f896b15..6752d94 100644
+--- a/components/evm/EvmRowLogo.tsx
++++ b/components/evm/EvmRowLogo.tsx
+@@ -2,12 +2,13 @@
+ import React, { useMemo, useState, useEffect } from "react";
+ 
+ /**
+- * Inline EVM token logo with prioritized sources:
+- * 1) Local: /token-logos/{chainId}/{address}.svg
+- * 2) Local: /token-logos/{chainId}/{address}.png
+- * 3) CDN:   https://tokens.1inch.io/{address}.png
+- * 4) CDN:   TrustWallet assets (e.g., smartchain for BSC)
+- * 5) API:   /api/evm-logo?chainId=..&address=..
++ * Priority order (to mimic Pancake/1inch behavior):
++ * 0) Provided logoURI (if present)
++ * 1) 1inch CDN:     https://tokens.1inch.io/{address}.png
++ * 2) TrustWallet:   blockchains/{folder}/assets/{address}/logo.png
++ * 3) Local SVG:     /token-logos/{chainId}/{address}.svg
++ * 4) Local PNG:     /token-logos/{chainId}/{address}.png
++ * 5) Fallback API:  /api/evm-logo?chainId=..&address=..
+  */
+ export default function EvmRowLogo({
+   chainId,
+@@ -23,7 +24,6 @@ export default function EvmRowLogo({
+   const c = String(chainId).trim();
+   const addr = String(address).trim().toLowerCase();
+ 
+-  // Map chainId -> TrustWallet chain folder
+   const trustFolder =
+     c === "56" || c === "0x38" ? "smartchain" :
+     c === "1"  || c === "0x1"  ? "ethereum"  :
+@@ -32,36 +32,35 @@ export default function EvmRowLogo({
+     c === "42161"|| c === "0xa4b1" ? "arbitrum" : null;
+ 
+   const fallbacks = useMemo(() => {
+-    const first: string[] = [];
+-    if (logoURI && logoURI.trim()) first.push(logoURI.trim());
+-    const arr = [
+-      ...first,
+-      `/token-logos/${c}/${addr}.svg`,
+-      `/token-logos/${c}/${addr}.png`,
+-      `https://tokens.1inch.io/${addr}.png`,
+-    ];
++    const list: Array<{src:string}> = [];
++    if (logoURI && logoURI.trim()) list.push({ src: logoURI.trim() });
++    list.push({ src: `https://tokens.1inch.io/${addr}.png` });
+     if (trustFolder) {
+-      arr.push(
+-        `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${trustFolder}/assets/${addr}/logo.png`
+-      );
++      list.push({
++        src: `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${trustFolder}/assets/${addr}/logo.png`,
++      });
+     }
+-    arr.push(`/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(addr)}`);
+-    return arr;
++    list.push({ src: `/token-logos/${c}/${addr}.svg` });
++    list.push({ src: `/token-logos/${c}/${addr}.png` });
++    list.push({
++      src: `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(addr)}`,
++    });
++    return list;
+   }, [c, addr, logoURI, trustFolder]);
+ 
+   const [idx, setIdx] = useState(0);
+-  const [src, setSrc] = useState(fallbacks[0]);
++  const [src, setSrc] = useState(fallbacks[0]?.src ?? "");
+ 
+   useEffect(() => {
+     setIdx(0);
+-    setSrc(fallbacks[0]);
++    setSrc(fallbacks[0]?.src ?? "");
+   }, [fallbacks]);
+ 
+   const onError = () => {
+     const next = idx + 1;
+     if (next < fallbacks.length) {
+       setIdx(next);
+-      setSrc(fallbacks[next]);
++      setSrc(fallbacks[next].src);
+     }
+   };
+ 
+diff --git a/components/evm/InlineRowLogoInjector.tsx b/components/evm/InlineRowLogoInjector.tsx
+index ed5648d..bbe67bf 100644
+--- a/components/evm/InlineRowLogoInjector.tsx
++++ b/components/evm/InlineRowLogoInjector.tsx
+@@ -1,141 +1,113 @@
+ "use client";
+-
+ import { useEffect } from "react";
+ 
+-/**
+- * InlineRowLogoInjector
+- * Finds any element inside `.pcw-tscope` whose text contains a 0x…40 address.
+- * It inserts a small <img> BEFORE that address and sets data-pcw-inline-logo="1"
+- * so the overlay component will skip it (no double logos).
+- *
+- * Logo src priority:
+- *   1) /token-logos/<chainId>/<address-lc>.svg
+- *   2) /token-logos/<chainId>/<address-lc>.png
+- *   3) /api/evm-logo?chainId=<id>&address=<addr>
+- */
+-export default function InlineRowLogoInjector() {
+-  useEffect(() => {
+-    const scope = document.querySelector(".pcw-tscope") || document.body;
+-
+-    const findChainSelect = (): HTMLSelectElement | undefined => {
+-      const selects = Array.from(scope.querySelectorAll("select"));
+-      return selects.find((sel) => {
+-        const opts = Array.from(sel.querySelectorAll("option"));
+-        const ints = opts.filter((o) => /^\d+$/.test((o as HTMLOptionElement).value)).length;
+-        return opts.length >= 6 && ints / Math.max(1, opts.length) > 0.6;
+-      }) as HTMLSelectElement | undefined;
+-    };
+-
+-    const getChainId = () => {
+-      const sel = findChainSelect();
+-      if (!sel) return 0;
+-      const v = parseInt(sel.value || "0", 10);
+-      return Number.isFinite(v) ? v : 0;
+-    };
+-
+-    const mkImg = (chainId: number, addr: string) => {
+-      const lower = addr.toLowerCase();
+-      const tries = [
+-        `/token-logos/${chainId}/${lower}.svg`,
+-        `/token-logos/${chainId}/${lower}.png`,
+-        `/api/evm-logo?chainId=${chainId}&address=${addr}`,
+-      ];
+-      let i = 0;
+-      const img = document.createElement("img");
+-      img.width = 18;
+-      img.height = 18;
+-      img.alt = "token logo";
+-      img.className = "inline-block align-middle rounded-sm mr-1";
+-      img.draggable = false;
+-      img.src = tries[i];
+-      img.addEventListener("error", () => {
+-        if (i + 1 < tries.length) {
+-          i += 1;
+-          img.src = tries[i];
+-        }
+-      });
+-      return img;
+-    };
+-
+-    const addrRe = /0x[a-fA-F0-9]{40}/;
+-
+-    const inject = () => {
+-      const chainId = getChainId();
+-      if (!chainId) return;
+-
+-      const candidates = Array.from(
+-        scope.querySelectorAll<HTMLElement>("div,span,code,a,b,strong,td,li")
+-      );
+-
+-      for (const el of candidates) {
+-        if (el.getAttribute("data-pcw-inline-logo") === "1") continue;
+-
+-        const txt = (el.textContent || "").trim();
+-        if (!txt) continue;
+-
+-        const m = txt.match(addrRe);
+-        if (!m) continue;
+-
+-        const addr = m[0];
+-
+-        // Place the image just before the FIRST text node that contains the address
+-        // Split that node so the image sits exactly in front of the address text.
+-        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+-        let t: Node | null = walker.nextNode();
+-        let hit: Text | null = null;
+-        while (t) {
+-          const data = (t as Text).data;
+-          if (data && data.toLowerCase().includes(addr.toLowerCase())) {
+-            hit = t as Text;
+-            break;
+-          }
+-          t = walker.nextNode();
+-        }
+-        if (!hit) continue;
+-
+-        const data = hit.data;
+-        const idx = data.toLowerCase().indexOf(addr.toLowerCase());
+-        if (idx < 0) continue;
++/** Build prioritized logo URLs that the *browser* fetches directly (like big DEXes). */
++function buildSources(chainId: string, address: string): string[] {
++  const c = String(chainId).trim();
++  const a = String(address).trim().toLowerCase();
++
++  const cdn: string[] = [];
++  // Pancake supports lowercase and checksum; lowercase often works for BSC.
++  cdn.push(`https://assets.pancakeswap.finance/web/tokens/${a}.png`);
++
++  // DexScreener supports lowercase + chain slug; we map the common ones.
++  const slug =
++    c === "56"    ? "bsc" :
++    c === "1"     ? "ethereum" :
++    c === "137"   ? "polygon" :
++    c === "10"    ? "optimism" :
++    c === "42161" ? "arbitrum" :
++    "bsc";
++  cdn.push(`https://cdn.dexscreener.com/token-icons/${slug}/${a}.png`);
++
++  // Local overrides next (if you pinned anything)
++  const local = [
++    `/token-logos/${c}/${a}.png`,
++    `/token-logos/${c}/${a}.svg`,
++  ];
++
++  // Our API last (in case a future server-side source works)
++  const api = [
++    `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn`,
++  ];
++
++  return [...cdn, ...local, ...api];
++}
+ 
+-        // Already has an <img> right before? Skip.
+-        const prev = hit.previousSibling as HTMLElement | null;
+-        if (prev && prev.tagName === "IMG") {
+-          el.setAttribute("data-pcw-inline-logo", "1");
+-          continue;
+-        }
++/** Pick a sensible anchor near the token name; otherwise use row. */
++function chooseAnchor(row: HTMLElement): HTMLElement {
++  const leaves = Array.from(row.querySelectorAll<HTMLElement>('*')).filter(el => el.childElementCount === 0);
++  const dashLeaf = leaves.find(el => /—/.test(el.textContent ?? ''));
++  if (dashLeaf?.parentElement) return dashLeaf.parentElement as HTMLElement;
++
++  const addrLeaf = leaves.find(el => /0x[a-f0-9]{6,}/i.test(el.textContent ?? ''));
++  if (addrLeaf?.parentElement?.previousElementSibling) {
++    const prev = addrLeaf.parentElement.previousElementSibling as HTMLElement;
++    const txt = (prev.textContent ?? "").trim();
++    if (txt && !/0x[a-f0-9]{6,}/i.test(txt)) return prev;
++  }
++  const firstText = leaves.find(el => (el.textContent ?? "").trim());
++  return firstText?.parentElement ?? row;
++}
+ 
+-        // Split the text node and insert <img>
+-        const before = data.slice(0, idx);
+-        const after = data.slice(idx);
+-        hit.data = before;
++/** Inject once per row (no flicker). */
++function injectLogoOnce(row: HTMLElement) {
++  const chainId = row.getAttribute('data-chain-id')?.trim();
++  const address = row.getAttribute('data-address')?.trim()?.toLowerCase();
++  if (!chainId || !address) return;
++
++  const markAttr = 'data-logo-injected';
++  const mark = `${chainId}:${address}`;
++  if (row.getAttribute(markAttr) === mark) return;
++
++  row.querySelectorAll('img.pcw-inline-token-logo').forEach(n => n.remove());
++
++  const anchor = chooseAnchor(row);
++  const img = document.createElement('img');
++  img.className = 'pcw-inline-token-logo';
++  img.alt = 'token logo';
++  Object.assign(img.style, {
++    width: '24px',
++    height: '24px',
++    borderRadius: '6px',
++    verticalAlign: 'middle',
++    marginRight: '8px',
++    boxShadow: '0 0 0 1px rgba(255,255,255,0.18) inset',
++    display: 'inline-block',
++    objectFit: 'cover',
++    pointerEvents: 'none',
++  } as CSSStyleDeclaration);
++
++  const srcs = buildSources(chainId, address);
++  let i = 0;
++  const tryNext = () => {
++    if (i >= srcs.length) { img.remove(); return; }
++    img.src = srcs[i++];
++  };
++  img.onerror = tryNext;
++  tryNext();
++
++  anchor.insertBefore(img, anchor.firstChild);
++  row.setAttribute(markAttr, mark);
++}
+ 
+-        const addrNode = document.createTextNode(after);
+-        if (hit.nextSibling) {
+-          el.insertBefore(addrNode, hit.nextSibling);
+-        } else {
+-          el.appendChild(addrNode);
++export default function InlineRowLogoInjector() {
++  useEffect(() => {
++    document.querySelectorAll<HTMLElement>('[data-chain-id][data-address]').forEach(injectLogoOnce);
++    const observer = new MutationObserver((mutations) => {
++      for (const m of mutations) {
++        m.addedNodes.forEach((node) => {
++          if (!(node instanceof HTMLElement)) return;
++          if (node.matches?.('[data-chain-id][data-address]')) injectLogoOnce(node);
++          node.querySelectorAll?.('[data-chain-id][data-address]').forEach((el: Element) => injectLogoOnce(el as HTMLElement));
++        });
++        if (m.type === 'attributes' && (m.target as HTMLElement).matches?.('[data-chain-id][data-address]')) {
++          injectLogoOnce(m.target as HTMLElement);
+         }
+-
+-        const img = mkImg(chainId, addr);
+-        el.insertBefore(img, addrNode);
+-        el.setAttribute("data-pcw-inline-logo", "1");
+       }
+-    };
+-
+-    // Run now and on DOM changes / chain changes
+-    inject();
+-    const mo = new MutationObserver(() => inject());
+-    mo.observe(scope, { childList: true, subtree: true });
+-
+-    const sel = findChainSelect();
+-    const onChange = () => inject();
+-    sel?.addEventListener("change", onChange);
+-
+-    return () => {
+-      mo.disconnect();
+-      sel?.removeEventListener("change", onChange);
+-    };
++    });
++    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-chain-id','data-address'] });
++    return () => observer.disconnect();
+   }, []);
+-
+   return null;
+ }
+diff --git a/components/tokenSearch/EnrichInterceptor.tsx b/components/tokenSearch/EnrichInterceptor.tsx
+index 6b835c7..5b6de6e 100644
+--- a/components/tokenSearch/EnrichInterceptor.tsx
++++ b/components/tokenSearch/EnrichInterceptor.tsx
+@@ -31,6 +31,7 @@ function updateSourcePillForMint(mint: string, source?: string) {
+   if (!pill) return;
+ 
+   pill.textContent = source;
++  pill.setAttribute("title", `Source: ${source}`); // <-- tooltip for clarity
+ 
+   pill.classList.remove(
+     "border-emerald-300/40","text-emerald-200/95","bg-emerald-900/20",
+diff --git a/public/token-logos/56/0xd955c9ba56fb1ab30e34766e252a97ccce3d31a6.svg b/public/token-logos/56/0xd955c9ba56fb1ab30e34766e252a97ccce3d31a6.svg
+deleted file mode 100644
+index 0f365ac..0000000
+--- a/public/token-logos/56/0xd955c9ba56fb1ab30e34766e252a97ccce3d31a6.svg
++++ /dev/null
+@@ -1,11 +0,0 @@
+-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
+-  <defs>
+-    <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1">
+-      <stop offset="0" stop-color="#7c5cff"/>
+-      <stop offset="1" stop-color="#00d1ff"/>
+-    </linearGradient>
+-  </defs>
+-  <rect width="256" height="256" rx="40" fill="url(#g2)"/>
+-  <circle cx="128" cy="128" r="84" fill="rgba(0,0,0,0.22)"/>
+-  <text x="50%" y="54%" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="80" fill="#ffffff" style="letter-spacing:2px">XPIN</text>
+-</svg>

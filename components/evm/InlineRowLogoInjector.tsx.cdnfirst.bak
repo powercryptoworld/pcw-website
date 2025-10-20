@@ -1,37 +1,15 @@
 "use client";
 import { useEffect } from "react";
 
-/** Build prioritized logo URLs that the *browser* fetches directly (like big DEXes). */
+/** Prefer local PNG → local SVG → CDN via redirect (stable, no flicker). */
 function buildSources(chainId: string, address: string): string[] {
   const c = String(chainId).trim();
   const a = String(address).trim().toLowerCase();
-
-  const cdn: string[] = [];
-  // Pancake supports lowercase and checksum; lowercase often works for BSC.
-  cdn.push(`https://assets.pancakeswap.finance/web/tokens/${a}.png`);
-
-  // DexScreener supports lowercase + chain slug; we map the common ones.
-  const slug =
-    c === "56"    ? "bsc" :
-    c === "1"     ? "ethereum" :
-    c === "137"   ? "polygon" :
-    c === "10"    ? "optimism" :
-    c === "42161" ? "arbitrum" :
-    "bsc";
-  cdn.push(`https://cdn.dexscreener.com/token-icons/${slug}/${a}.png`);
-
-  // Local overrides next (if you pinned anything)
-  const local = [
-    `/token-logos/${c}/${a}.png`,
-    `/token-logos/${c}/${a}.svg`,
+  return [
+    `/token-logos/${c}/${a}.png`,                                                       // 1) local PNG
+    `/token-logos/${c}/${a}.svg`,                                                       // 2) local SVG
+    `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn&redirect=1` // 3) CDN
   ];
-
-  // Our API last (in case a future server-side source works)
-  const api = [
-    `/api/evm-logo?chainId=${encodeURIComponent(c)}&address=${encodeURIComponent(a)}&prefer=cdn`,
-  ];
-
-  return [...cdn, ...local, ...api];
 }
 
 /** Pick a sensible anchor near the token name; otherwise use row. */

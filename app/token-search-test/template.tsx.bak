@@ -1,11 +1,14 @@
 "use client";
 import React from "react";
 import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
+import ForceApiLogo from "@/components/evm/ForceApiLogo";
 
 export default function TokenSearchTemplate({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Keep the inline multi-source injector running */}
+      {/* Force our own API logo first for debugging/guaranteed render */}
+      <ForceApiLogo />
+      {/* Keep the inline multi-source injector running too */}
       <InlineRowLogoInjector />
       {children}
     </>

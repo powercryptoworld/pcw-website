@@ -31,6 +31,7 @@ function updateSourcePillForMint(mint: string, source?: string) {
   if (!pill) return;
 
   pill.textContent = source;
+  pill.setAttribute("title", `Source: ${source}`); // <-- tooltip for clarity
 
   pill.classList.remove(
     "border-emerald-300/40","text-emerald-200/95","bg-emerald-900/20",

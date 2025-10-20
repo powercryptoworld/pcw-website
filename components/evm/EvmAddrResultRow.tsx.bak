@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import EvmRowLogo from "./EvmRowLogo";
 
 type Props = {
   chainId: number | string;
@@ -20,8 +21,7 @@ export default function EvmAddrResultRow({ chainId, address, symbol, name }: Pro
         data-chain-id={c}
         data-address={aLower}
       >
-        {/* Logo is injected by InlineRowLogoInjector */}
-        <span className="sr-only">logo</span>
+        <EvmRowLogo chainId={c} address={aLower} />
         <span className="font-semibold">{symbol ?? "UNKNOWN"}</span>
         <span className="opacity-70"> — {name ?? "Token"}</span>
       </div>
