@@ -4,23 +4,26 @@ import { ChainSelect } from "@/components/ChainSelect";
 import { EVM_CHAINS } from "@/lib/chains";
 import EvmAddrResultRow from "@/components/evm/EvmAddrResultRow";
 
-// Minimal known-label map for demo/search page only (does not affect swap)
-const KNOWN_LABELS: Record<string, { symbol: string; name: string }> = {
-  // key = `${chainId}:${lowercasedAddress}`
-  "56:0x9370a51c9f2ae6b23719ab74f05261891c609a23": { symbol: "PCW",  name: "Power Crypto World" },
-  "56:0xd955c9ba56fb1ab30e34766e252a97ccce3d31a6": { symbol: "XPIN", name: "XPIN Token" }
-};
-
 export default function Page() {
   const [family, setFamily] = useState<"evm" | "sol">("evm");
   const [chainId, setChainId] = useState<number>(56);
   const [query, setQuery] = useState("");
   const [resultAddr, setResultAddr] = useState<string | null>(null);
 
-  const activeChain = EVM_CHAINS.find((c) => c.id === chainId);
+  const activeChain = EVM_CHAINS.find(c => c.id === chainId);
 
-  const key = resultAddr ? `${chainId}:${resultAddr.toLowerCase()}` : "";
-  const label = KNOWN_LABELS[key];
+  const onSearch = () => {
+    const v = query.trim();
+    // Always force a refresh even if the same value as before
+    setResultAddr(null);
+    setTimeout(() => {
+      setResultAddr(v ? v : null);
+    }, 0);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") onSearch();
+  };
 
   return (
     <div className="p-6">
@@ -50,9 +53,10 @@ export default function Page() {
           placeholder="name / symbol / 0xaddress"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={onKeyDown}
         />
         <button
-          onClick={() => setResultAddr(query.trim() ? query.trim() : null)}
+          onClick={onSearch}
           className="px-3 py-1 rounded bg-white/10"
         >
           Search
@@ -63,8 +67,8 @@ export default function Page() {
         <EvmAddrResultRow
           chainId={chainId}
           address={resultAddr}
-          symbol={label?.symbol ?? null}
-          name={label?.name ?? null}
+          symbol={"XPIN"}
+          name={"XPIN Token"}
         />
       )}
     </div>
