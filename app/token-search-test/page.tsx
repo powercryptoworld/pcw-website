@@ -40,8 +40,10 @@ export default function TokenSearchTest() {
       } else {
         // EVM family
         if (isEvmAddr(q)) {
-          // keep the address path logic elsewhere (unchanged)
-          setList([]);
+          // NEW: address path -> use our EVM search API so addresses work
+          const r = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}&chainId=${selectedChainId}`, { cache: "no-store" });
+          const j = await r.json().catch(()=>null);
+          setList(normalizeList(j));
         } else {
           // 1) try chain-scoped search first
           const r1 = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}&chainId=${selectedChainId}`, { cache: "no-store" });
@@ -99,6 +101,7 @@ export default function TokenSearchTest() {
                 chainId={t.chainId ?? selectedChainId}
                 symbol={t.symbol}
                 name={t.name}
+                logoURI={t.logoURI}
                 size={32}
               />
               <div className="flex-1 min-w-0">
@@ -119,7 +122,8 @@ export default function TokenSearchTest() {
         {family==="solana" && rows.map((t: any, i: number)=>(
           <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5">
             <div className="flex items-center gap-3">
-              <SolRowLogo uri={t.logoURI} alt={t.symbol || t.name || "token"} mint={t.mint} symbol={t.symbol} name={t.name} />
+              <SolRowLogo uri={t.logoURI} alt={t.symbol || t.name || "token"} mint={t.mint} symbol={t.symbol} name={t.name}
+                logoURI={t.logoURI} />
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">
                   {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>

@@ -1,122 +1,198 @@
-export const runtime = 'nodejs';
-import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-let localIndex: Record<number, any[]> = {};
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const local = require("@/lib/oneinchTokens");
-  localIndex = local?.default || local || {};
-} catch {}
-
-export const dynamic = "force-dynamic";
-
-function tokenListUrls(chainId: number): string[] {
-  return [
-    `https://token-list.1inch.io/v6.0/${chainId}`,
-    `https://token-list.1inch.io/v5.0/${chainId}`,
-    `https://tokens.1inch.io/v1.2/${chainId}`,
-  ];
-}
-
-type Token = {
-  address: string;
-  symbol: string;
-  name: string;
-  decimals?: number;
-  logoURI?: string;
-  chainId?: number;
+// minimal chain map for logos & normalization
+const CHAIN_TO_ID: Record<string, number> = {
+  ethereum: 1,
+  bsc: 56,
+  polygon: 137,
+  base: 8453,
+  arbitrum: 42161,
+  optimism: 10,
+  avalanche: 43114,
+  fantom: 250,
+  gnosis: 100,
+  celo: 42220,
+  moonbeam: 1284,
+  mantle: 5000,
+  blast: 81457,
+  zora: 7777777,
+  kava: 2222,
+  "polygon-zkevm": 1101,
+  aurora: 1313161554,
+  "arbitrum-nova": 42170,
+  "zksync-era": 324,
+  linea: 59144,
+  scroll: 534352
 };
 
-function pick(tokens: Token[], q: string) {
-  const qq = q.toLowerCase();
-  return tokens.filter(t => {
-    const sym = (t.symbol || "").toLowerCase();
-    const nm = (t.name || "").toLowerCase();
-    return sym.includes(qq) || nm.includes(qq);
-  });
+function isHexAddr(q: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test((q || "").trim());
 }
-
-async function fetchOneInchList(chainId: number): Promise<Token[]> {
-  const urls = tokenListUrls(chainId);
-  for (const url of urls) {
-    try {
-      const r = await fetch(url, { cache: "no-store" });
-      if (!r.ok) continue;
-      const j = await r.json();
-      const arr: any[] = Array.isArray(j) ? j : (Array.isArray(j?.tokens) ? j.tokens : []);
-      if (arr.length) {
-        return arr.map((t: any) => ({
-          address: t.address || t.tokenAddress || "",
-          symbol: t.symbol || "",
-          name: t.name || "",
-          decimals: t.decimals ?? null,
-          logoURI: t.logoURI || t.logoUri || t.logo || null,
-          chainId: t.chainId || chainId,
-        })).filter(x => x.address);
-      }
-    } catch {}
-  }
-  return [];
+function normAddr(a?: string) {
+  return (a || "").toLowerCase();
 }
+type Item = { chainId: number; address: string; symbol: string; name: string; decimals: number | null; logoURI?: string | null };
 
-export async function GET(req: NextRequest) {
+// 1inch public token list (no API key) per chain
+async function fetchOneInchTokens(chainId: number): Promise<Item[]> {
   try {
-    const { searchParams } = new URL(req.url);
-    const q = (searchParams.get("q") || "").trim();
-    const chainIdStr = searchParams.get("chainId");
-    const chainId = chainIdStr ? Number(chainIdStr) : undefined;
-
-    if (!q) {
-      return new Response(JSON.stringify({ items: [] }), { status: 200, headers: { "content-type": "application/json" } });
-    }
-
-    if (/^0x[a-fA-F0-9]{40}$/.test(q)) {
-      const item: Token = { address: q, symbol: "", name: "", decimals: null as any, logoURI: null as any, chainId: chainId as any };
-      return new Response(JSON.stringify({ items: [item] }), { status: 200, headers: { "content-type": "application/json" } });
-    }
-
-    let results: Token[] = [];
-
-    // local first
-    if (chainId && Array.isArray(localIndex[chainId])) {
-      results = pick(localIndex[chainId], q);
-    } else if (!chainId) {
-      for (const cidStr of Object.keys(localIndex)) {
-        const cid = Number(cidStr);
-        results.push(...pick(localIndex[cid], q).map(t => ({ ...t, chainId: cid })));
-      }
-    }
-
-    // 1inch fallback
-    if (results.length === 0) {
-      if (chainId) {
-        const fromRemote = await fetchOneInchList(chainId);
-        if (fromRemote.length) results = pick(fromRemote, q);
-      } else {
-        const commonChains = [1, 56, 137, 42161, 10, 8453];
-        for (const cid of commonChains) {
-          const arr = await fetchOneInchList(cid);
-          if (arr.length) {
-            results.push(...pick(arr, q).map(t => ({ ...t, chainId: t.chainId || cid })));
-          }
-        }
-      }
-    }
-
-    const items = results.map(t => ({
-      chainId: t.chainId ?? (chainId ?? 1),
-      address: t.address,
-      symbol: t.symbol,
-      name: t.name,
+    const url = `https://tokens.1inch.io/v1.2/${chainId}`;
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const arr: any[] = Array.isArray(j) ? j : Object.values(j);
+    return arr.map((t: any) => ({
+      chainId,
+      address: normAddr(t.address),
+      symbol: t.symbol || "",
+      name: t.name || "",
       decimals: typeof t.decimals === "number" ? t.decimals : null,
-      logoURI: t.logoURI ?? null,
+      logoURI: t.logoURI || t.logoUri || null
     }));
+  } catch {
+    return [];
+  }
+}
 
-    return new Response(JSON.stringify({ items }), {
-      status: 200,
-      headers: { "content-type": "application/json", "cache-control": "public, max-age=120" },
+// Dexscreener: search by free text (returns pairs)
+async function fetchDexscreenerSearch(q: string): Promise<Item[]> {
+  try {
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const pairs: any[] = j?.pairs || [];
+    const items: Item[] = [];
+    for (const p of pairs) {
+      const chainKey: string = p?.chainId || p?.chain || "";
+      const chainId = CHAIN_TO_ID[chainKey];
+      if (!chainId) continue;
+      const t0 = p?.baseToken || p?.token0;
+      const t1 = p?.quoteToken || p?.token1;
+      if (t0?.address) {
+        items.push({
+          chainId,
+          address: normAddr(t0.address),
+          symbol: t0.symbol || "",
+          name: t0.name || "",
+          decimals: null,
+          logoURI: t0.logoURI || null
+        });
+      }
+      if (t1?.address) {
+        items.push({
+          chainId,
+          address: normAddr(t1.address),
+          symbol: t1.symbol || "",
+          name: t1.name || "",
+          decimals: null,
+          logoURI: t1.logoURI || null
+        });
+      }
+    }
+    const seen = new Set<string>();
+    return items.filter(i => {
+      const k = `${i.chainId}:${i.address}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
     });
   } catch {
-    return new Response(JSON.stringify({ items: [] }), { status: 200, headers: { "content-type": "application/json" } });
+    return [];
   }
+}
+
+// Dexscreener: lookup by token address (returns pairs that reference the token)
+async function fetchDexscreenerByAddress(addr: string): Promise<Item[]> {
+  try {
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { cache: "no-store" });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const pairs: any[] = j?.pairs || [];
+    const results: Item[] = [];
+    for (const p of pairs) {
+      const chainKey: string = p?.chainId || p?.chain || "";
+      const chainId = CHAIN_TO_ID[chainKey];
+      if (!chainId) continue;
+      const cand = [p?.baseToken, p?.quoteToken].find((t: any) => normAddr(t?.address) === normAddr(addr));
+      if (!cand) continue;
+      results.push({
+        chainId,
+        address: normAddr(cand.address),
+        symbol: cand.symbol || "",
+        name: cand.name || "",
+        decimals: null,
+        logoURI: cand.logoURI || null
+      });
+    }
+    const seen = new Set<string>();
+    return results.filter(i => {
+      const k = `${i.chainId}:${i.address}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const q = (searchParams.get("q") || "").trim();
+  const chainIdParam = searchParams.get("chainId");
+  const chainId = chainIdParam ? Number(chainIdParam) : undefined;
+
+  if (!q) return NextResponse.json({ items: [] }, { status: 200 });
+
+  let items: Item[] = [];
+
+  // ADDRESS PATH
+  if (isHexAddr(q)) {
+    if (chainId) {
+      const list = await fetchOneInchTokens(chainId);
+      const hit = list.find(t => normAddr(t.address) === normAddr(q));
+      if (hit) items.push(hit);
+    }
+    if (items.length === 0) {
+      const common = chainId ? [chainId] : [1,56,137,8453,42161,10,43114,250,100,42220,1284,5000,81457,7777777,2222,1101,1313161554,42170,324,59144,534352];
+      for (const cid of common) {
+        const list = await fetchOneInchTokens(cid);
+        const hit = list.find(t => normAddr(t.address) === normAddr(q));
+        if (hit) items.push(hit);
+      }
+    }
+    if (items.length === 0) items = await fetchDexscreenerByAddress(q);
+    return NextResponse.json({ items }, { status: 200 });
+  }
+
+  // NAME/SYMBOL PATH
+  if (chainId) {
+    const list = await fetchOneInchTokens(chainId);
+    const ql = q.toLowerCase();
+    items = list.filter(t => (t.symbol||"").toLowerCase().includes(ql) || (t.name||"").toLowerCase().includes(ql));
+    if (items.length === 0) {
+      const ds = await fetchDexscreenerSearch(q);
+      items = ds.filter(t => t.chainId === chainId);
+    }
+  } else {
+    const common = [1,56,137,8453,42161,10];
+    const ql = q.toLowerCase();
+    const fromLists: Item[] = [];
+    for (const cid of common) {
+      const list = await fetchOneInchTokens(cid);
+      fromLists.push(...list.filter(t => (t.symbol||"").toLowerCase().includes(ql) || (t.name||"").toLowerCase().includes(ql)));
+    }
+    const ds = await fetchDexscreenerSearch(q);
+    items = [...fromLists, ...ds];
+  }
+
+  const seen = new Set<string>();
+  const deduped = items.filter(i => {
+    const k = `${i.chainId}:${normAddr(i.address)}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).slice(0, 30);
+
+  return NextResponse.json({ items: deduped }, { status: 200 });
 }
