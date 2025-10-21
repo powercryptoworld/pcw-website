@@ -3,38 +3,38 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 type T = {
-  address?: string; // mint
+  address?: string;
   mint?: string;
-  symbol?: string | null;
-  name?: string | null;
+  symbol?: string;
+  name?: string;
   decimals?: number | null;
   logoURI?: string | null;
   chainId?: number | null;
-  source?: string | null;
 };
 
-const BASE58_RE = /[1-9A-HJ-NP-Za-km-z]{32,50}/g;
+// Accept slightly longer base58 runs; some UIs add a char or suffix.
+// Also allow weirder pastes (whitespace, mixed text) by extracting the first base58-looking run.
+const BASE58_RE = /[1-9A-HJ-NP-Za-km-z]{32,50}/g; // was 32–44
 
 function extractMint(input: string): string | null {
   const s = (input || "").trim();
   if (!s) return null;
   const m = s.match(BASE58_RE);
   if (!m || m.length === 0) return null;
-  // Prefer the classic 32–44 length if present; else first match
+  // Prefer a run in the classic 32–44 range if present; else take the first match.
   const classic = m.find(x => x.length >= 32 && x.length <= 44);
-  return (classic || m[0]) || null;
+  return classic || m[0];
 }
 
 function normalize(list: T[] = []) {
   return list
     .map((t) => ({
       mint: t.address || t.mint || "",
-      symbol: (t.symbol ?? null) || (t.symbol === "" ? null : t.symbol),
-      name: (t.name ?? null) || (t.name === "" ? null : t.name),
+      symbol: t.symbol || "UNKNOWN",
+      name: t.name || "Token",
       decimals: typeof t.decimals === "number" ? t.decimals : null,
-      logoURI: t.logoURI ?? null,
+      logoURI: t.logoURI || null,
       chainId: typeof t.chainId === "number" ? t.chainId : 101,
-      source: t.source ?? null,
     }))
     .filter((x) => x.mint);
 }
@@ -51,7 +51,7 @@ async function fetchJSON(url: string, timeoutMs = 8000) {
     cache: "no-store",
     redirect: "follow",
     signal: AbortSignal.timeout(timeoutMs),
-    headers: { accept: "application/json", "user-agent": "pcw-sol-search/1.7" },
+    headers: { accept: "application/json", "user-agent": "pcw-sol-search/1.6" },
   });
   if (!r.ok) throw new Error(`upstream ${r.status}`);
   return r.json();
@@ -69,12 +69,11 @@ function dsMintToItem(ds: any, mint: string): T | null {
   return {
     address: mint,
     mint,
-    symbol: typeof base.symbol === "string" && base.symbol.length ? base.symbol : null,
-    name: typeof base.name === "string" && base.name.length ? base.name : null,
+    symbol: base.symbol || undefined,
+    name: base.name || undefined,
     decimals: null,
     logoURI: imageUrl,
     chainId: 101,
-    source: "dexscreener",
   };
 }
 
@@ -85,39 +84,19 @@ export async function GET(req: NextRequest) {
     if (!qRaw) return NextResponse.json({ items: [] }, { status: 200 });
 
     const jupBase = (process.env.NEXT_PUBLIC_JUPITER_LITE || "https://lite-api.jup.ag").replace(/\/+$/, "");
+
+    // If input contains a mint-looking substring, treat it as a mint search (DexScreener-first)
     const mint = extractMint(qRaw);
 
-    // If input contains a mint-like substring, treat as mint search (DexScreener-first)
     if (mint) {
-      // 1) DexScreener tokens endpoint
+      // 1) DexScreener for immediate symbol/name (works for newborn tokens)
       let dsItem: T | null = null;
       try {
         const ds = await fetchJSON(`https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(mint)}`, 8000);
         dsItem = dsMintToItem(ds, mint);
       } catch {}
 
-      // 1b) DexScreener search fallback if tokens returned no pairs
-      if (!dsItem) {
-        try {
-          const ds2 = await fetchJSON(`https://api.dexscreener.com/latest/dex/search/?q=${encodeURIComponent(mint)}`, 8000);
-          const pairs2 = Array.isArray(ds2?.pairs) ? ds2.pairs : [];
-          const hit = pairs2.find((p: any) => p?.baseToken?.address === mint) || pairs2[0];
-          if (hit?.baseToken?.address) {
-            dsItem = {
-              address: mint,
-              mint,
-              symbol: hit?.baseToken?.symbol || null,
-              name: hit?.baseToken?.name || null,
-              decimals: null,
-              logoURI: null,
-              chainId: 101,
-              source: "dexscreener",
-            };
-          }
-        } catch {}
-      }
-
-      // 2) Jupiter registry (ultra -> tokens) for confirmation/fallback
+      // 2) Jupiter registry for confirmation/fallback
       let regItems: any[] = [];
       try {
         const ultra = await fetchJSON(`${jupBase}/ultra/v1/search?query=${encodeURIComponent(mint)}`);
@@ -132,7 +111,6 @@ export async function GET(req: NextRequest) {
       const exact = regItems.filter((x) => x.mint === mint);
       if (exact.length > 0) regItems = exact;
 
-      // 3) Merge rule: prefer DexScreener if it gives a symbol/name; else registry; else echo mint
       let items: any[] = [];
       if (dsItem && (dsItem.symbol || dsItem.name)) {
         items = normalize([dsItem]);
@@ -142,11 +120,10 @@ export async function GET(req: NextRequest) {
         items = normalize([{ address: mint }]);
       }
 
-      // Convert nulls to UI defaults only at the UI layer; here we keep null to indicate "unknown"
       return NextResponse.json({ items }, { status: 200, headers: { "Cache-Control": "public, max-age=60" } });
     }
 
-    // Otherwise, normal symbol/name text search (SOL, USDC, bonk...)
+    // Otherwise, normal text search (SOL, USDC, bonk...)
     let items: any[] = [];
     try {
       const ultra = await fetchJSON(`${jupBase}/ultra/v1/search?query=${encodeURIComponent(qRaw)}`);

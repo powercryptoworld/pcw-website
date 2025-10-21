@@ -1,0 +1,140 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+type T = {
+  address?: string; // mint
+  mint?: string;
+  symbol?: string;
+  name?: string;
+  decimals?: number | null;
+  logoURI?: string | null;
+  chainId?: number | null;
+};
+
+const isBase58Mint = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s);
+
+function normalize(list: T[] = []) {
+  return list
+    .map((t) => ({
+      mint: t.address || t.mint || "",
+      symbol: t.symbol || "UNKNOWN",
+      name: t.name || "Token",
+      decimals: typeof t.decimals === "number" ? t.decimals : null,
+      logoURI: t.logoURI || null,
+      chainId: typeof t.chainId === "number" ? t.chainId : 101,
+    }))
+    .filter((x) => x.mint);
+}
+
+function takeArrayShape(payload: any): T[] {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload?.data && Array.isArray(payload.data)) return payload.data as T[];
+  if (payload?.items && Array.isArray(payload.items)) return payload.items as T[];
+  return [];
+}
+
+async function fetchJSON(url: string, timeoutMs = 8000) {
+  const r = await fetch(url, {
+    cache: "no-store",
+    redirect: "follow",
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: {
+      accept: "application/json",
+      "user-agent": "pcw-sol-search/1.5",
+    },
+  });
+  if (!r.ok) throw new Error(`upstream ${r.status}`);
+  return r.json();
+}
+
+// DexScreener helpers
+function dsMintToItem(ds: any, mint: string): T | null {
+  const pairs = Array.isArray(ds?.pairs) ? ds.pairs : [];
+  const exact = pairs.find((p: any) => p?.baseToken?.address === mint);
+  const src = exact || pairs[0];
+  if (!src?.baseToken) return null;
+  const base = src.baseToken;
+  const imageUrl: string | null =
+    typeof ds?.info?.imageUrl === "string" && ds.info.imageUrl.length
+      ? ds.info.imageUrl
+      : null;
+  return {
+    address: mint,
+    mint,
+    symbol: base.symbol || undefined,
+    name: base.name || undefined,
+    decimals: null,
+    logoURI: imageUrl,
+    chainId: 101,
+  };
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const qRaw = (searchParams.get("q") || "").trim();
+    if (!qRaw) return NextResponse.json({ items: [] }, { status: 200 });
+
+    const jupBase = (process.env.NEXT_PUBLIC_JUPITER_LITE || "https://lite-api.jup.ag").replace(/\/+$/, "");
+
+    // Text search path (SOL / USDC / bonk...)
+    if (!isBase58Mint(qRaw)) {
+      let items: any[] = [];
+      try {
+        const ultra = await fetchJSON(`${jupBase}/ultra/v1/search?query=${encodeURIComponent(qRaw)}`);
+        items = normalize(takeArrayShape(ultra)).slice(0, 50);
+      } catch {}
+      if (items.length === 0) {
+        try {
+          const reg = await fetchJSON(`https://tokens.jup.ag/tokens?search=${encodeURIComponent(qRaw)}`);
+          items = normalize(takeArrayShape(reg)).slice(0, 50);
+        } catch {}
+      }
+      return NextResponse.json({ items }, { status: 200, headers: { "Cache-Control": "public, max-age=60" } });
+    }
+
+    // Mint search path (DexScreener FIRST, then Jupiter)
+    const mint = qRaw;
+
+    // 1) DexScreener mint enrich (gives symbol/name immediately for new tokens)
+    let dsItem: T | null = null;
+    try {
+      const ds = await fetchJSON(`https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(mint)}`, 8000);
+      dsItem = dsMintToItem(ds, mint);
+    } catch {}
+
+    // 2) Jupiter registry (ultra -> tokens) for confirmation/fallback
+    let regItems: any[] = [];
+    try {
+      const ultra = await fetchJSON(`${jupBase}/ultra/v1/search?query=${encodeURIComponent(mint)}`);
+      regItems = normalize(takeArrayShape(ultra));
+    } catch {}
+    if (regItems.length === 0) {
+      try {
+        const reg = await fetchJSON(`https://tokens.jup.ag/tokens?search=${encodeURIComponent(mint)}`);
+        regItems = normalize(takeArrayShape(reg));
+      } catch {}
+    }
+    // keep exact mint if present
+    const exact = regItems.filter((x) => x.mint === mint);
+    if (exact.length > 0) regItems = exact;
+
+    // 3) Merge preference: if DS found symbol/name, put it first; else use registry; else echo mint
+    let items: any[] = [];
+    if (dsItem && (dsItem.symbol || dsItem.name)) {
+      items = normalize([dsItem]);
+    } else if (regItems.length > 0) {
+      items = regItems;
+    } else {
+      items = normalize([{ address: mint }]);
+    }
+
+    return NextResponse.json(
+      { items },
+      { status: 200, headers: { "Cache-Control": "public, max-age=60" } }
+    );
+  } catch (e: any) {
+    return NextResponse.json({ items: [], error: e?.message || "error" }, { status: 200 });
+  }
+}

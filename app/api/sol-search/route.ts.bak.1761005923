@@ -1,0 +1,136 @@
+import { NextRequest, NextResponse } from "next/server";
+// ✅ Call enrich in-process (no HTTP): avoids Codespaces origin issues
+import { GET as liveMetaGET } from "../sol-meta-live/route";
+
+export const dynamic = "force-dynamic";
+
+type T = {
+  address?: string; // mint
+  mint?: string;
+  symbol?: string;
+  name?: string;
+  decimals?: number | null;
+  logoURI?: string | null;
+  chainId?: number | null;
+};
+
+const isBase58Mint = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s);
+
+function normalize(list: T[] = []) {
+  return list
+    .map((t) => ({
+      mint: t.address || t.mint || "",
+      symbol: t.symbol || "UNKNOWN",
+      name: t.name || "Token",
+      decimals: typeof t.decimals === "number" ? t.decimals : null,
+      logoURI: t.logoURI || null,
+      chainId: typeof t.chainId === "number" ? t.chainId : 101,
+    }))
+    .filter((x) => x.mint);
+}
+
+function takeArrayShape(payload: any): T[] {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload?.data && Array.isArray(payload.data)) return payload.data as T[];
+  if (payload?.items && Array.isArray(payload.items)) return payload.items as T[];
+  return [];
+}
+
+async function fetchJSON(url: string, timeoutMs = 8000) {
+  const r = await fetch(url, {
+    cache: "no-store",
+    redirect: "follow",
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: {
+      accept: "application/json",
+      "user-agent": "pcw-sol-search/1.4",
+    },
+  });
+  if (!r.ok) throw new Error(`upstream ${r.status}`);
+  return r.json();
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const qRaw = (searchParams.get("q") || "").trim();
+    if (!qRaw) return NextResponse.json({ items: [] }, { status: 200 });
+
+    const jupBase = (process.env.NEXT_PUBLIC_JUPITER_LITE || "https://lite-api.jup.ag").replace(/\/+$/, "");
+
+    // helper: Jupiter registry-style searches (ULTRA then tokens.jup.ag)
+    const registrySearch = async (q: string) => {
+      let items: any[] = [];
+      try {
+        const ultra = await fetchJSON(`${jupBase}/ultra/v1/search?query=${encodeURIComponent(q)}`);
+        items = normalize(takeArrayShape(ultra));
+      } catch {}
+      if (items.length === 0) {
+        try {
+          const reg = await fetchJSON(`https://tokens.jup.ag/tokens?search=${encodeURIComponent(q)}`);
+          items = normalize(takeArrayShape(reg));
+        } catch {}
+      }
+      return items;
+    };
+
+    // ✅ If q is a mint: search, then auto-enrich UNKNOWN by calling live handler directly (no HTTP)
+    if (isBase58Mint(qRaw)) {
+      let items = await registrySearch(qRaw);
+      // keep exact mint if present
+      const exact = items.filter((x) => x.mint === qRaw);
+      if (exact.length > 0) items = exact;
+
+      // If empty or UNKNOWN, call /api/sol-meta-live GET directly
+      const needsEnrich =
+        items.length === 0 ||
+        ((!items[0]?.symbol || items[0]?.symbol === "UNKNOWN") &&
+         (!items[0]?.name || items[0]?.name === "Token"));
+
+      if (needsEnrich) {
+        try {
+          // Construct a request object for the live handler
+          const liveReq = new Request(`http://internal/api/sol-meta-live?mint=${encodeURIComponent(qRaw)}`, {
+            headers: { accept: "application/json" }
+          });
+          const liveRes = await liveMetaGET(liveReq as any);
+          if (liveRes && (liveRes as any).json) {
+            const j = await (liveRes as any).json();
+            const d = (j && (j.data || j)) || {};
+            if (d && (d.symbol || d.name)) {
+              const enriched = normalize([{
+                address: qRaw,
+                symbol: d.symbol,
+                name: d.name,
+                decimals: typeof d.decimals === "number" ? d.decimals : null,
+                logoURI: typeof d.logoURI === "string" ? d.logoURI : null,
+                chainId: 101
+              }]);
+              items = enriched.length ? enriched : items;
+            }
+          }
+        } catch {
+          // swallow enrich errors; we still return whatever we had
+        }
+      }
+
+      if (items.length === 0) {
+        items = normalize([{ address: qRaw }]);
+      }
+
+      return NextResponse.json(
+        { items },
+        { status: 200, headers: { "Cache-Control": "public, max-age=60" } }
+      );
+    }
+
+    // Non-mint text search (e.g., SOL, USDC)
+    const items = (await registrySearch(qRaw)).slice(0, 50);
+    return NextResponse.json(
+      { items },
+      { status: 200, headers: { "Cache-Control": "public, max-age=60" } }
+    );
+  } catch (e: any) {
+    return NextResponse.json({ items: [], error: e?.message || "error" }, { status: 200 });
+  }
+}
