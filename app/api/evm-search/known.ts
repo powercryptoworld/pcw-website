@@ -1,17 +1,16 @@
 export type KnownToken = {
   chainId: number;
-  address: string;   // lowercase 0x…
+  address: string;   // lowercase
   symbol: string;
   name: string;
   logoURI?: string | null;
   decimals?: number | null;
 };
 
-// Local registry. We can add more entries later.
 export const KNOWN_TOKENS: KnownToken[] = [
   {
     chainId: 56,
-    address: "0x9370a51c9f2ae6b23719ab74f05261891c609a23", // PCW (BNB) — lowercased
+    address: "0x9370a51c9f2ae6b23719ab74f05261891c609a23", // PCW (BNB)
     symbol: "PCW",
     name: "Power Crypto World",
     logoURI: "/token-fallback.svg",
