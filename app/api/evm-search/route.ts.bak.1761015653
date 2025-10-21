@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+
+// We only rely on your local token list file.
+type Tok = { address: string; symbol?: string; name?: string; decimals?: number; chainId?: number };
+
+let TOKS: Record<string, Tok[]> = {};
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require("@/lib/oneinchTokens");
+  // File can export default or named
+  const raw = (mod?.default || mod?.TOKENS || mod) as Record<string, Tok[]>;
+  TOKS = raw || {};
+} catch (e) {
+  TOKS = {};
+}
+
+export const dynamic = "force-dynamic";
+
+/**
+ * GET /api/evm-search?q=USDC&chainId=1
+ * Returns { items: [{ address, symbol, name, decimals, chainId }] }
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const q = (searchParams.get("q") || "").trim();
+    const chainId = Number(searchParams.get("chainId") || "0");
+
+    if (!q || !chainId) {
+      return NextResponse.json({ items: [] }, { status: 200 });
+    }
+
+    // get list for the chain (keys in lib/oneinchTokens may be strings)
+    const key = String(chainId);
+    const list: Tok[] = Array.isArray((TOKS as any)[key]) ? (TOKS as any)[key] : [];
+
+    const query = q.toLowerCase();
+    const out = list
+      .filter(t => {
+        const sym = (t.symbol || "").toLowerCase();
+        const name = (t.name || "").toLowerCase();
+        // substring match on symbol or name
+        return sym.includes(query) || name.includes(query);
+      })
+      .slice(0, 50) // trim
+      .map(t => ({
+        address: t.address,
+        symbol: t.symbol || "UNKNOWN",
+        name: t.name || "Token",
+        decimals: typeof t.decimals === "number" ? t.decimals : null,
+        chainId: t.chainId ?? chainId
+      }));
+
+    return NextResponse.json({ items: out }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json({ items: [], error: e?.message || "error" }, { status: 200 });
+  }
+}

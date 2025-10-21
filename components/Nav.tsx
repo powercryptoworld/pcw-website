@@ -1,4 +1,6 @@
 "use client";
+import "@/app/w3m-init";
+import "@/app/appkit";
 
 import React from "react";
 import Image from "next/image";
@@ -122,7 +124,7 @@ export default function Nav() {
               className={styles.tab}
               style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
             >
-              <ConnectWallet compact />
+              <ConnectWallet />
             </div>
           </div>
         </nav>

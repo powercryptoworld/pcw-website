@@ -1,0 +1,110 @@
+export const runtime = 'nodejs';
+import { NextRequest, NextResponse } from "next/server";
+
+/**
+ * GET /api/sol-search?q=<text or mint>
+ * Returns a STABLE shape: { items: Array<{ mint, symbol, name, decimals|null, logoURI|null, source }> }
+ * - First try Jupiter tokens search
+ * - If empty, fall back to Dexscreener **but only keep Solana mints** (no 0x, chainId === 'solana')
+ */
+export const dynamic = "force-dynamic";
+
+type Item = {
+  mint: string;
+  symbol: string;
+  name: string;
+  decimals: number | null;
+  logoURI: string | null;
+  source?: string;
+};
+
+function isBase58Mint(s: string) {
+  const x = (s || "").trim();
+  if (x.length < 32 || x.length > 45) return false;
+  return /^[1-9A-HJ-NP-Za-km-z]+$/.test(x);
+}
+
+async function fetchJSON(url: string, timeoutMs = 8000) {
+  const r = await fetch(url, {
+    cache: "no-store",
+    redirect: "follow",
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: { accept: "application/json", "user-agent": "pcw-sol-search/1.0" },
+  });
+  if (!r.ok) throw new Error(String(r.status));
+  return r.json();
+}
+
+function fromJupiter(list: any[]): Item[] {
+  return (Array.isArray(list) ? list : [])
+    .slice(0, 50)
+    .map((t: any) => ({
+      mint: String(t?.address || t?.mint || ""),
+      symbol: t?.symbol || "UNKNOWN",
+      name: t?.name || "Token",
+      decimals: typeof t?.decimals === "number" ? t.decimals : null,
+      logoURI: t?.logoURI || null,
+      source: "jupiter",
+    }))
+    .filter(x => isBase58Mint(x.mint));
+}
+
+function fromDexscreener(ds: any): Item[] {
+  const pairs = Array.isArray(ds?.pairs) ? ds.pairs : [];
+  const byMint = new Map<string, Item>();
+
+  for (const p of pairs) {
+    // Dexscreener uses a string chainId like 'solana', 'bsc', 'ethereum', etc.
+    if (p?.chainId !== "solana") continue;
+
+    const base = p?.baseToken;
+    const m = String(base?.address || "");
+    if (!isBase58Mint(m)) continue; // reject 0x and non-solana
+
+    if (byMint.has(m)) continue;
+    byMint.set(m, {
+      mint: m,
+      symbol: base?.symbol || "UNKNOWN",
+      name: base?.name || "Token",
+      decimals: null,
+      logoURI: null,
+      source: "dexscreener",
+    });
+    if (byMint.size >= 50) break;
+  }
+
+  return Array.from(byMint.values());
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const q = (searchParams.get("q") || "").trim();
+    if (!q) return NextResponse.json({ items: [] }, { status: 200 });
+
+    // 1) Jupiter first
+    try {
+      const j = await fetchJSON(`https://tokens.jup.ag/tokens?search=${encodeURIComponent(q)}`);
+      const jItems = fromJupiter(j);
+      if (jItems.length) {
+        return NextResponse.json({ items: jItems }, { status: 200, headers: { "Cache-Control": "public, max-age=60" } });
+      }
+    } catch {/* ignore */}
+
+    // 2) Dexscreener fallback (Solana only)
+    try {
+      // If q looks like a mint -> /tokens/<mint>, else /search?q=<q>
+      const isMint = isBase58Mint(q);
+      const url = isMint
+        ? `https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(q)}`
+        : `https://api.dexscreener.com/latest/dex/search/?q=${encodeURIComponent(q)}`;
+      const ds = await fetchJSON(url);
+      const dsItems = fromDexscreener(ds);
+      return NextResponse.json({ items: dsItems }, { status: 200, headers: { "Cache-Control": "public, max-age=30" } });
+    } catch {/* ignore */}
+
+    return NextResponse.json({ items: [] }, { status: 200 });
+  } catch {
+    return NextResponse.json({ items: [] }, { status: 200 });
+  }
+}

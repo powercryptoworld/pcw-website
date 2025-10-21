@@ -1,32 +1,43 @@
 "use client";
 
 import React from "react";
-import { useAccount } from "wagmi";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useAccount, useDisconnect } from "wagmi";
 
-function short(addr?: `0x${string}`) {
+// Allow the custom element <w3m-connect-button /> in TSX
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "w3m-connect-button": any;
+    }
+  }
+}
+
+function shortAddr(addr?: `0x${string}`) {
   if (!addr) return "";
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 export default function ConnectWallet() {
   const { address, isConnected } = useAccount();
-  const { open } = useWeb3Modal();
+  const { disconnect } = useDisconnect();
 
-  // Avoid hydration mismatch
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  if (!isConnected) {
+    // Plain connect button from Web3Modal (no balance, no chain icon)
+    return <w3m-connect-button />;
+  }
 
-  const label = !mounted ? "" : isConnected ? short(address) : "Connect Wallet";
-
+  // Connected: show ONLY the short address + Disconnect
   return (
-    <button
-      type="button"
-      onClick={() => open()}
-      className="rounded-2xl px-4 py-2 text-sm backdrop-blur bg-white/10 hover:bg-white/20 transition shadow-md"
-      aria-live="polite"
-    >
-      {label}
-    </button>
+    <div className="flex items-center gap-2">
+      <span className="px-2 py-1 text-xs rounded border border-white/20 bg-white/10">
+        {shortAddr(address)}
+      </span>
+      <button
+        onClick={() => disconnect()}
+        className="px-2 py-1 text-xs rounded border border-white/20 bg-white/10 hover:bg-white/20"
+      >
+        Disconnect
+      </button>
+    </div>
   );
 }

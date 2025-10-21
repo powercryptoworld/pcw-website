@@ -1,0 +1,289 @@
+"use client";
+import React from "react";
+import { ChainSelect } from "@/components/ChainSelect";
+import { EVM_CHAINS } from "@/lib/chains";
+
+type Family = "evm" | "solana";
+
+type EvmItem = {
+  address: `0x${string}`;
+  symbol: string;
+  name: string;
+  decimals: number;
+  logoURI?: string | null;
+  chainId: number;
+};
+
+type SolItem = {
+  mint: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  logoURI: string | null;
+  source?: "known" | "jup" | "dex" | "fallback" | "cached";
+};
+
+function looksLikeSolMint(s: string): boolean {
+  const x = s.trim();
+  return x.length >= 32 && x.length <= 64 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(x);
+}
+function isDexscreenerUrl(s: string): boolean {
+  try { const u = new URL(s.trim()); return u.hostname.includes("dexscreener.com"); } catch { return false; }
+}
+async function safeJson<T = any>(res: Response): Promise<T> {
+  const txt = await res.text();
+  try { return JSON.parse(txt) as T; } catch { throw new Error(res.ok ? "Bad JSON from server" : `HTTP ${res.status}`); }
+}
+function CopyBtn({ value, aria }: { value: string; aria: string }) {
+  const [copied, setCopied] = React.useState(false);
+  async function doCopy() {
+    try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(()=>setCopied(false), 1200); } catch {}
+  }
+  return (
+    <button
+      type="button"
+      aria-label={aria}
+      onClick={doCopy}
+      className={`ml-2 px-2 py-0.5 rounded text-[10px] border ${copied ? "bg-green-600/70 border-green-400 text-white" : "bg-white/10 hover:bg-white/20 border-white/15"}`}
+    >
+      {copied ? "Copied!" : "Copy"}
+    </button>
+  );
+}
+
+/** --- NEW: SVG identicon for missing Solana logos --- */
+function hashStr(s: string): number {
+  let h = 2166136261 >>> 0; // FNV-1a base
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+function h2rgb(h: number) {
+  // deterministic H (0..360); soft S/L
+  const H = (h % 360);
+  const S = 65;
+  const L = 55;
+  return { H, S, L };
+}
+function hsl(H:number,S:number,L:number){ return `hsl(${H} ${S}% ${L}%)`; }
+function mintIdenticonDataURI(mint: string): string {
+  const h = hashStr(mint);
+  const { H: H1, S: S1, L: L1 } = h2rgb(h);
+  const { H: H2, S: S2, L: L2 } = h2rgb(h >>> 1);
+  const bg = hsl(H1, S1, Math.max(45, L1 - 10));
+  const fg = hsl(H2, S2, Math.min(70, L2 + 10));
+  const r = 12;
+  const cells = 5;
+  const cell = (r*2)/cells;
+  // draw a symmetrical 5x5 pattern from hash bits
+  let rects = "";
+  let bits = h;
+  for (let y=0;y<cells;y++){
+    for (let x=0;x<Math.ceil(cells/2);x++){
+      const on = (bits & 1) === 1;
+      bits = (bits >>> 1) | ((bits & 1) << 31);
+      if (on) {
+        const px = x*cell;
+        const py = y*cell;
+        rects += `<rect x='${px}' y='${py}' width='${cell}' height='${cell}' rx='1.2' ry='1.2' fill='${fg}'/>`;
+        // mirror
+        const mx = (r*2 - cell) - x*cell;
+        rects += `<rect x='${mx}' y='${py}' width='${cell}' height='${cell}' rx='1.2' ry='1.2' fill='${fg}'/>`;
+      }
+    }
+  }
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 ${r*2} ${r*2}'>`+
+      `<rect width='100%' height='100%' rx='${r}' ry='${r}' fill='${bg}'/>`+
+      `<g>${rects}</g>`+
+    `</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+export default function TokenSearchTest() {
+  const [family, setFamily] = React.useState<Family>("evm");
+  const [chainId, setChainId] = React.useState(56);
+  const [q, setQ] = React.useState("");
+  const [list, setList] = React.useState<Array<EvmItem | SolItem>>([]);
+  const [err, setErr] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [enriching, setEnriching] = React.useState<Record<string, boolean>>({});
+
+  async function search() {
+    setErr(null); setLoading(true); setList([]);
+    try {
+      if (family === "evm") {
+        const url = `/api/evm-tokens?chainId=${chainId}&q=${encodeURIComponent(q.trim())}`;
+        const res = await fetch(url, { cache: "no-store" });
+        const json = await safeJson(res);
+        if (!res.ok) throw new Error((json as any)?.error || `HTTP ${res.status}`);
+        setList((json as any) || []);
+      } else {
+        const raw = q.trim();
+        if (looksLikeSolMint(raw)) {
+          const url = `/api/sol-meta?mint=${encodeURIComponent(raw)}`;
+          const res = await fetch(url, { cache: "no-store" });
+          const json = await safeJson(res);
+          if (!res.ok || !(json as any)?.ok) throw new Error((json as any)?.error || `HTTP ${res.status}`);
+          setList([(json as any).meta]);
+          return;
+        }
+        if (isDexscreenerUrl(raw)) {
+          let last = raw;
+          try { const u = new URL(raw); const parts = u.pathname.split("/").filter(Boolean); last = parts[parts.length - 1] || raw; } catch {}
+          const url = `/api/sol-meta-live?mint=${encodeURIComponent(last)}`;
+          const res = await fetch(url, { cache: "no-store" });
+          const json = await safeJson(res);
+          if (res.ok && (json as any)?.ok) { setList([(json as any).meta]); return; }
+          setList([]); return;
+        }
+        // safe text search (returns [])
+        const url = `/api/sol-search?q=${encodeURIComponent(raw)}`;
+        const res = await fetch(url, { cache: "no-store" });
+        const json = await safeJson(res);
+        if (!res.ok) throw new Error((json as any)?.error || `HTTP ${res.status}`);
+        setList((json as any) || []);
+      }
+    } catch (e: any) {
+      setErr(e?.message || "Failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function enrichMint(mint: string) {
+    try {
+      setEnriching((m) => ({ ...m, [mint]: true }));
+      const url = `/api/sol-meta-live?mint=${encodeURIComponent(mint)}`;
+      const res = await fetch(url, { cache: "no-store" });
+      const json = await safeJson(res);
+      if (!res.ok || !(json as any)?.ok) throw new Error((json as any)?.error || `HTTP ${res.status}`);
+      const meta = (json as any).meta as SolItem;
+      setList((prev) =>
+        prev.map((it) => {
+          const s = it as SolItem;
+          if ((s as any).mint === mint) {
+            return {
+              ...s,
+              symbol: meta.symbol || s.symbol,
+              name: meta.name || s.name,
+              decimals: typeof meta.decimals === "number" ? meta.decimals : s.decimals,
+              logoURI: meta.logoURI ?? s.logoURI,
+              source: meta.source ?? s.source,
+            } as SolItem;
+          }
+          return it;
+        })
+      );
+    } catch (e: any) {
+      setErr(e?.message || "Enrich failed");
+    } finally {
+      setEnriching((m) => ({ ...m, [mint]: false }));
+    }
+  }
+
+  const activeChain = EVM_CHAINS.find(c => c.id === chainId);
+  const resultCount = list.length;
+
+  return (
+    <div className="container pt-10 pb-20">
+      <h1 className="text-2xl mb-2">Token Search (EVM + Solana)</h1>
+
+      <div className="flex items-center gap-3 mb-2">
+        <div className="space-x-2">
+          <button onClick={()=>setFamily("evm")} className={`px-3 py-1 rounded border ${family==="evm"?"bg-white/20":"bg-white/5"} border-white/10`}>EVM</button>
+          <button onClick={()=>setFamily("solana")} className={`px-3 py-1 rounded border ${family==="solana"?"bg-white/20":"bg-white/5"} border-white/10`}>Solana</button>
+        </div>
+        {family==="evm" && (
+          <div className="flex items-center gap-3">
+            <label>Chain</label>
+            <ChainSelect value={chainId} onChange={setChainId} />
+          </div>
+        )}
+      </div>
+
+      <div className="text-xs opacity-75 mb-2">
+        {family==="evm"
+          ? <>Active EVM chain: <span className="opacity-100">{activeChain?.name}</span> (ID {chainId}) • Results: {resultCount}</>
+          : <>Source: <span className="opacity-100">Solana token registry (mint = instant) + optional Enrich</span> • Results: {resultCount}</>}
+      </div>
+
+      <div className="text-[11px] opacity-70 mb-4">
+        Tip: Paste the <span className="opacity-100">mint address</span> for instant results, then click <span className="opacity-100">Enrich</span> to try live metadata.
+      </div>
+
+      <div className="flex gap-3 items-center mb-4">
+        <input
+          placeholder={family==="evm" ? "name / symbol / 0xaddress" : "symbol / name / mint / address / Dexscreener URL"}
+          className="flex-1 px-3 py-2 rounded bg-black/30 border border-white/10"
+          value={q} onChange={e=>setQ(e.target.value)}
+          onKeyDown={(e)=>{ if(e.key==="Enter") search(); }}
+        />
+        <button onClick={search} className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 border border-white/10">
+          {loading ? "Searching…" : "Search"}
+        </button>
+      </div>
+
+      {err && <div className="text-red-400 mb-3">{err}</div>}
+
+      <div className="space-y-2">
+        {/* EVM results */}
+        {family==="evm" && (list as EvmItem[]).map((t,i)=>(
+          <div key={i} className="p-3 rounded border border-white/10 bg-white/5">
+            <div className="flex items-center gap-3">
+              {/* unchanged for EVM */}
+              {t.logoURI ? (<img src={t.logoURI} alt={t.symbol} width={24} height={24} className="rounded-full border border-white/20 bg-white/5" />)
+                         : (<div className="w-6 h-6 rounded-full border border-white/20 bg-white/10" />)}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm opacity-80">ChainId: {t.chainId}</div>
+                <div className="text-lg truncate">{t.symbol || "UNK"} — {t.name || "Token"}</div>
+                <div className="text-xs break-all">
+                  {t.address}<CopyBtn value={t.address} aria="Copy EVM token address" />
+                </div>
+                <div className="text-xs">decimals: {t.decimals}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Solana results with identicon fallback */}
+        {family==="solana" && (Array.isArray(list)?list:[]).map((t,i)=> {
+          const imgSrc = t.logoURI || mintIdenticonDataURI(t.mint);
+          return (
+            <div key={i} className="p-3 rounded border border-white/10 bg-white/5">
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imgSrc} alt={t.symbol || "token"} width={24} height={24} className="rounded-full border border-white/20 bg-white/5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="text-lg truncate">{t.symbol || "UNK"} — {t.name || "Token"}</div>
+                    {t.source && <span className="px-2 py-[2px] text-[10px] rounded-full bg-white/10 border border-white/20">{t.source}</span>}
+                  </div>
+                  <div className="text-xs break-all">
+                    {t.mint}<CopyBtn value={t.mint} aria="Copy Solana mint address" />
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="text-xs">decimals: {t.decimals}</div>
+                    {(t.symbol === "UNKNOWN" || t.name === "Unknown Solana Token") && (
+                      <button
+                        onClick={()=>enrichMint(t.mint)}
+                        disabled={!!enriching[t.mint]}
+                        className="ml-2 px-2 py-[2px] rounded text-[11px] border bg-white/10 hover:bg-white/20 border-white/15 disabled:opacity-50"
+                      >
+                        {enriching[t.mint] ? "Enriching…" : "Enrich"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {list.length === 0 && !loading && <div className="opacity-60">No results</div>}
+      </div>
+    </div>
+  );
+}

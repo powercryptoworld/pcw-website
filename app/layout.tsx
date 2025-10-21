@@ -1,3 +1,4 @@
+import AppKitInit from "../components/AppKitInit";
 import "./globals.css";
 import type { Metadata } from "next";
 
@@ -24,7 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             className="mx-auto max-w-6xl px-5 py-10"
             style={{ paddingTop: 64, paddingBottom: 96 }}
           >
-            {children}
+            <AppKitInit />
+        {children}
           </main>
           <Footer />
           <SocialDock />

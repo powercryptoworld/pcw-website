@@ -36,27 +36,16 @@ export default function TokenSearchTest() {
       if (family==="solana") {
         const r = await fetch(`/api/sol-search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
         const j = await r.json();
-        setList(normalizeList(j)); // {items:[]}
+        setList(normalizeList(j)); // {items:[...]}
       } else {
-        // EVM family
         if (isEvmAddr(q)) {
-          // keep the address path logic elsewhere (unchanged)
+          // Keep your existing address path logic elsewhere; do not break it
+          // We keep list empty here to avoid mixing behaviors
           setList([]);
         } else {
-          // 1) try chain-scoped search first
-          const r1 = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}&chainId=${selectedChainId}`, { cache: "no-store" });
-          const j1 = await r1.json().catch(()=>null);
-          let items = normalizeList(j1);
-
-          // 2) if nothing, try without chainId (some routes aggregate across chains or expect no chain param)
-          if (!items.length) {
-            const r2 = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}`, { cache: "no-store" }).catch(()=>null);
-            const j2 = r2 ? await r2.json().catch(()=>null) : null;
-            const items2 = normalizeList(j2);
-            if (items2.length) items = items2.filter(Boolean);
-          }
-
-          setList(items);
+          const r = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}&chainId=${selectedChainId}`, { cache: "no-store" });
+          const j = await r.json();
+          setList(normalizeList(j));
         }
       }
     } catch {
@@ -92,7 +81,7 @@ export default function TokenSearchTest() {
       <div className="space-y-2">
         {/* EVM results */}
         {family==="evm" && rows.map((t: any, i: number)=>(
-          <div key={`${t.address||i}-${t.chainId??selectedChainId}`} className="p-3 rounded border border-white/10 bg-white/5">
+          <div key={`${t.address||i}-${t.chainId||selectedChainId}`} className="p-3 rounded border border-white/10 bg-white/5">
             <div className="flex items-center gap-3">
               <InlineRowLogoInjector
                 address={t.address}
@@ -119,7 +108,7 @@ export default function TokenSearchTest() {
         {family==="solana" && rows.map((t: any, i: number)=>(
           <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5">
             <div className="flex items-center gap-3">
-              <SolRowLogo uri={t.logoURI} alt={t.symbol || t.name || "token"} mint={t.mint} symbol={t.symbol} name={t.name} />
+              <SolRowLogo uri={t.logoURI} alt={t.symbol || t.name || "token"} />
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">
                   {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>
@@ -132,14 +121,8 @@ export default function TokenSearchTest() {
           </div>
         ))}
 
-        {rows.length===0 && !loading && family==="evm" && (
-          <div className="text-sm text-white/70">
-            No matches by name/symbol on <span className="underline">{EVM_CHAINS.find(c=>c.id===selectedChainId)?.name || `chainId ${selectedChainId}`}</span>.
-            Try another chain or search by address.
-          </div>
-        )}
-        {rows.length===0 && !loading && family==="solana" && (
-          <div className="text-sm text-white/70">No results</div>
+        {rows.length===0 && !loading && (
+          <div className="text-sm text-white/60">No results</div>
         )}
       </div>
     </div>
