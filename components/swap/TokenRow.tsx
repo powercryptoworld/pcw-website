@@ -31,21 +31,20 @@ export default function TokenRow({
 
   const [balStr, setBalStr] = useState<string>("—");
   const [balNum, setBalNum] = useState<number>(0);
-  const [decimals, setDecimals] = useState<number>(token.decimals ?? 18);
+  const [runtimeDecimals, setRuntimeDecimals] = useState<number>(token.decimals ?? 18);
   const [err, setErr] = useState<string>("");
 
-  // fetch balance
+  // fetch balance + authoritative decimals
   useEffect(() => {
     let mounted = true;
     async function go() {
       if (!token.address) {
-        // native
         if (native.data?.value != null) {
           const v = native.data.value;
           const dec = native.data.decimals;
           const str = formatUnits(v, dec);
           if (!mounted) return;
-          setDecimals(dec);
+          setRuntimeDecimals(dec);
           setBalStr(str);
           const asNum = Number(str);
           setBalNum(Number.isFinite(asNum) ? asNum : 0);
@@ -57,7 +56,7 @@ export default function TokenRow({
       if (!mounted || !erc) return;
       const dec = erc.decimals ?? token.decimals ?? 18;
       const str = erc.balance != null ? formatUnits(erc.balance, dec) : "0";
-      setDecimals(dec);
+      setRuntimeDecimals(dec);
       setBalStr(str);
       const asNum = Number(str);
       setBalNum(Number.isFinite(asNum) ? asNum : 0);
@@ -70,7 +69,8 @@ export default function TokenRow({
 
   // Price source: token address OR wrapped-native (for native coins)
   const priceAddr = (token.address as Address|undefined) ?? wrappedAddressFor(token.chainId);
-  const usd = useUsdQuote(token.chainId, priceAddr);
+  // IMPORTANT: pass runtimeDecimals (authoritative) not the static token.decimals
+  const usd = useUsdQuote(token.chainId, priceAddr, runtimeDecimals);
   const stableHere = isKnownStable(token.chainId, token.address as any);
 
   // USD display (with $1 stable fallback)
@@ -96,7 +96,7 @@ export default function TokenRow({
     // ERC-20: full balance; Native: subtract gas buffer
     if (!token.address) {
       const v = native.data?.value;
-      const dec = native.data?.decimals ?? decimals;
+      const dec = native.data?.decimals ?? runtimeDecimals;
       if (!v) return;
       const buf = toBufferWei(token.chainId, dec);
       const spendable = v > buf ? v - buf : 0n;
@@ -104,7 +104,6 @@ export default function TokenRow({
       onAmount(str);
       return;
     }
-    // ERC-20
     onAmount(balStr === "—" ? "" : balStr);
   }
 
@@ -133,8 +132,10 @@ export default function TokenRow({
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
 
       {/* DEBUG — remove after confirm */}
-      <div className="mt-1 text-[11px] opacity-60">
-        priceDbg • chain:{token.chainId} • addr:{String(priceAddr||"native")} • dsPrice:{usd.priceUsd ?? "n/a"} • stable:{stableHere ? "yes" : "no"}
+      <div className="mt-1 text-[11px] opacity-70">
+        priceDbg • chain:{token.chainId} • addr:{String(priceAddr||"native")}
+        {' '}• price:{usd.priceUsd ?? "n/a"} • source:{usd.source ?? "n/a"}
+        {' '}• runtimeDecimals:{runtimeDecimals} • stable:{stableHere ? "yes" : "no"}
       </div>
 
       {err && <div className="mt-1 text-xs text-red-400">{err}</div>}
