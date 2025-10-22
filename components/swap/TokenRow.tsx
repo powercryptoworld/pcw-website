@@ -5,6 +5,8 @@ import { formatUnits } from "viem";
 import { useEvmBalances, type EvmToken } from "@/hooks/useEvmBalances";
 import { useUsdQuote } from "@/hooks/useUsdQuote";
 import { toBufferWei } from "@/hooks/useGasBuffer";
+import { wrappedAddressFor } from "@/hooks/useWrappedMap";
+import { isKnownStable } from "@/hooks/useStableMap";
 
 export type RowToken = EvmToken & {
   logoURI?: string;
@@ -17,11 +19,8 @@ type Props = {
   token: RowToken;
   amount: string;
   onAmount: (v: string)=>void;
-  /** Parent can read the computed numeric balance (in token units). */
   onComputedBalance?: (v: number)=>void;
-  /** For bottom row we keep read-only amount (we'll drive it from quotes later). */
   readOnlyAmount?: boolean;
-  /** Show a MAX button (usually only on "You pay"). */
   showMax?: boolean;
 };
 
@@ -69,14 +68,22 @@ export default function TokenRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token.address, token.chainId, native.data?.value]);
 
-  // USD estimate
-  const usd = useUsdQuote(token.chainId, token.address as Address|undefined);
+  // Price source: token address OR wrapped-native (for native coins)
+  const priceAddr = (token.address as Address|undefined) ?? wrappedAddressFor(token.chainId);
+  const usd = useUsdQuote(token.chainId, priceAddr);
+  const stableHere = isKnownStable(token.chainId, token.address as any);
+
+  // USD display (with $1 stable fallback)
   const usdLine = useMemo(() => {
     if (!amount) return "";
     const amt = Number(amount);
-    if (!Number.isFinite(amt) || !usd.priceUsd) return "≈ $—";
-    return `≈ $${(amt * usd.priceUsd).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-  }, [amount, usd.priceUsd]);
+    if (!Number.isFinite(amt)) return "";
+    const p = (usd.priceUsd && usd.priceUsd > 0)
+      ? usd.priceUsd
+      : (stableHere ? 1 : undefined);
+    if (!p) return "≈ $—";
+    return `≈ $${(amt * p).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  }, [amount, usd.priceUsd, stableHere]);
 
   // simple validation: amount <= balance
   useEffect(() => {
@@ -124,6 +131,12 @@ export default function TokenRow({
       </div>
 
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
+
+      {/* DEBUG — remove after confirm */}
+      <div className="mt-1 text-[11px] opacity-60">
+        priceDbg • chain:{token.chainId} • addr:{String(priceAddr||"native")} • dsPrice:{usd.priceUsd ?? "n/a"} • stable:{stableHere ? "yes" : "no"}
+      </div>
+
       {err && <div className="mt-1 text-xs text-red-400">{err}</div>}
     </div>
   );
