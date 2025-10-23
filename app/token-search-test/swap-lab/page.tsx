@@ -1,19 +1,179 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-export default function Page() {
-  // dynamic import keeps this page small; Next.js 15 app router friendly
-  // eslint-disable-next-line @next/next/no-img-element
-  return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl">Swap Lab (EVM) — balances + USD + flip</h1>
-      <p className="opacity-70 text-sm">This is a sandbox nested under /token-search-test. Your main test page is untouched.</p>
-      {/* @ts-expect-error async Server Component wrapper */}
-      <SwapClient />
-    </div>
-  );
+import React, { useEffect, useMemo, useState } from "react";
+import TokenRow from "@/components/swap/TokenRow";
+import QuotePanel from "@/components/swap/QuotePanel";
+import { useEvmQuote } from "@/hooks/useEvmQuote";
+
+export type Addr = `0x${string}`;
+type TokenRef = { chainId: number; address: Addr; decimals: number; symbol?: string; name?: string; logoURI?: string };
+
+const USDC_BY_CHAIN: Record<number, TokenRef> = {
+  1:   { chainId: 1, address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  56:  { chainId: 56, address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", decimals: 18, symbol: "USDC", name: "USD Coin" },
+  137: { chainId: 137, address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  8453:{ chainId: 8453, address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  42161:{ chainId: 42161, address: "0xaf88d065e77c8C2239327C5EDb3A432268e5831", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  10:  { chainId: 10, address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6, symbol: "USDC", name: "USD Coin" },
+};
+
+const WETH_MAINNET: TokenRef = {
+  chainId: 1,
+  address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  decimals: 18,
+  symbol: "WETH",
+  name: "Wrapped Ether",
+};
+
+function useDebounced<T>(value: T, ms = 180) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
 }
 
-async function SwapClient() {
-  const SwapPanel = (await import("@/components/swap/SwapPanel")).default;
-  return <SwapPanel />;
+export default function SwapLabPage() {
+  const [chainId] = useState<number>(1);
+  const [payToken, setPayToken] = useState<TokenRef>(WETH_MAINNET);
+  const [receiveToken, setReceiveToken] = useState<TokenRef>(USDC_BY_CHAIN[1]);
+
+  const [payAmount, setPayAmount] = useState<string>("0.00");
+  const [receiveAmount, setReceiveAmount] = useState<string>("");
+
+  const [mode, setMode] = useState<"pay" | "receive">("pay");
+
+  const debouncedPay = useDebounced(payAmount);
+  const debouncedReceive = useDebounced(receiveAmount);
+
+  const src = mode === "pay" ? payToken : receiveToken;
+  const dst = mode === "pay" ? receiveToken : payToken;
+  const humanAmount = mode === "pay" ? debouncedPay : debouncedReceive;
+
+  const q = useEvmQuote({
+    chainId,
+    src: { address: src.address as Addr, decimals: src.decimals, symbol: src.symbol },
+    dst: { address: dst.address as Addr, decimals: dst.decimals, symbol: dst.symbol },
+    amount: humanAmount || "0",
+    slippageBps: 50,
+    includeProtocols: true,
+    gasSpeed: "fast",
+  });
+
+  // derive opposite field with nice trimming
+  useEffect(() => {
+    const dstAmount = q?.data?.dstAmount ?? null;
+    if (!dstAmount) return;
+    const human = Number(dstAmount) / 10 ** (dst.decimals ?? 18);
+    let out = human.toLocaleString(undefined, { maximumFractionDigits: Math.min(8, dst.decimals ?? 8) }).replace(/,/g,"");
+    // trim trailing zeros and lone dot
+    out = out.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,"").replace(/\.$/,"");
+    if (mode === "pay") {
+      if (out !== receiveAmount) setReceiveAmount(out);
+    } else {
+      if (out !== payAmount) setPayAmount(out);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q?.data?.dstAmount, mode, dst.decimals]);
+
+  const flip = () => {
+    setPayToken(receiveToken);
+    setReceiveToken(payToken);
+    setPayAmount(receiveAmount || "");
+    setReceiveAmount(payAmount || "");
+  };
+
+  const canQuote = useMemo(
+    () =>
+      chainId && src?.address && dst?.address && Number(humanAmount) > 0 && src?.decimals != null,
+    [chainId, src, dst, humanAmount]
+  );
+
+  const priceLines = useMemo(() => {
+    const dstAmount = q?.data?.dstAmount ?? null;
+    if (!dstAmount || Number(humanAmount) <= 0) return null;
+    const dstHuman = Number(dstAmount) / 10 ** (dst.decimals ?? 18);
+    if (!Number.isFinite(dstHuman) || dstHuman <= 0) return null;
+    const x = dstHuman / Number(humanAmount);
+    const fwd = `1 ${src.symbol ?? "SRC"} ≈ ${x.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${dst.symbol ?? "DST"}`;
+    const y = Number(humanAmount) / dstHuman;
+    const inv = `1 ${dst.symbol ?? "DST"} ≈ ${y.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${src.symbol ?? "SRC"}`;
+    return { fwd, inv };
+  }, [q?.data?.dstAmount, humanAmount, src.symbol, dst.symbol, dst.decimals]);
+
+  const topRow = (
+    <TokenRow
+      title="You pay"
+      token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
+      amount={payAmount}
+      onAmount={(v: string) => { setMode("pay"); setPayAmount(v); }}
+      onComputedBalance={()=>{}}
+      readOnlyAmount={mode === "receive"}
+      showMax
+    />
+  );
+
+  const bottomRow = (
+    <TokenRow
+      title="You receive"
+      token={{ ...receiveToken, chainId: receiveToken.chainId, symbol: receiveToken.symbol ?? "DST" } as any}
+      amount={receiveAmount}
+      onAmount={(v: string) => { setMode("receive"); setReceiveAmount(v); }}
+      onComputedBalance={()=>{}}
+      readOnlyAmount={mode === "pay"}
+      showMax={false}
+    />
+  );
+
+  return (
+    <div className="mx-auto max-w-xl p-4">
+      <h1 className="text-xl font-semibold mb-3">Swap Lab</h1>
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+        {topRow}
+
+        <div className="flex items-center justify-between my-2">
+          <button
+            onClick={flip}
+            className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+            title="Flip tokens and amounts"
+          >
+            Flip
+          </button>
+
+          <button
+            onClick={() => setMode(m => (m === "pay" ? "receive" : "pay"))}
+            className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+            title={mode === "pay" ? "Switch: set output" : "Switch: set input"}
+          >
+            {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
+          </button>
+        </div>
+
+        {bottomRow}
+
+        {priceLines && (
+          <div className="mt-2 text-xs opacity-80">
+            <div>{priceLines.fwd}</div>
+            <div className="opacity-70">{priceLines.inv}</div>
+          </div>
+        )}
+
+        {canQuote ? (
+          <QuotePanel
+            chainId={chainId}
+            src={mode === "pay" ? payToken : receiveToken}
+            dst={mode === "pay" ? receiveToken : payToken}
+            amount={mode === "pay" ? payAmount : receiveAmount}
+            defaultSlippageBps={50}
+          />
+        ) : null}
+      </div>
+
+      <div className="mt-3 text-xs opacity-70">
+        Chain: <span className="font-mono">{chainId}</span>
+      </div>
+    </div>
+  );
 }

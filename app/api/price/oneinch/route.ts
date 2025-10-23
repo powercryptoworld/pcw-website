@@ -1,108 +1,118 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-type P = { chainId: number; token: string; decimals: number };
+/**
+ * LAB-ONLY USD price proxy
+ * - Primary: 1inch v6 quote (token -> USDC)
+ * - Clamp stables (USDC/USDT) to 1.00 when needed
+ * - Fallbacks: CoinGecko (mainnet WETH only) -> DexScreener (generic)
+ * - Never exposes ONEINCH_API_KEY to the client
+ *
+ * Usage: /api/price/oneinch?chainId=1&token=0x...&decimals=18
+ */
 
-const USDC_BY_CHAIN: Record<number, { address: `0x${string}`, decimals: number }> = {
-  1:   { address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6 },
-  56:  { address: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", decimals: 18 },
-  137: { address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6 },
-  42161:{ address: "0xFF970A61A04b1cA14834A43f5de4533eBDDB5CC8", decimals: 6 },
-  10:  { address: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607", decimals: 6 },
-  8453:{ address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
-  43114:{ address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", decimals: 6 },
+const ONEINCH_API_KEY = process.env.ONEINCH_API_KEY; // server-only, do not log
+
+const USDC_BY_CHAIN: Record<number, { address: `0x${string}`; decimals: number }> = {
+  1:   { address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6  }, // Ethereum
+  56:  { address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", decimals: 18 }, // BNB
+  137: { address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6  }, // Polygon
+  43114:{ address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", decimals: 6  }, // Avalanche
+  10:  { address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6  }, // Optimism
+  42161:{ address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6  }, // Arbitrum
+  8453:{ address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6  }, // Base
 };
 
-function jsonError(msg: string, status = 400) {
-  return NextResponse.json({ error: msg }, { status });
+const STABLES_BY_CHAIN: Record<number, Set<string>> = {
+  1: new Set([
+    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+    "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
+  ]),
+  56: new Set([
+    "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // USDC
+    "0x55d398326f99059ff775485246999027b3197955", // USDT
+  ]),
+  137: new Set([
+    "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // USDC.e
+  ]),
+};
+
+const WETH_MAINNET = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2".toLowerCase();
+
+function ok(data: any, status = 200) { return NextResponse.json(data, { status }); }
+function bad(msg: string, extra?: any) { return ok({ ok: false, error: msg, ...(extra || {}) }, 400); }
+function num(n: any): number | undefined {
+  const x = Number(n);
+  return Number.isFinite(x) && x > 0 ? x : undefined;
 }
-function isStable(chainId: number, addr: string): boolean {
-  const stables: Record<number, string[]> = {
-    1: [
-      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      "0xdac17f958d2ee523a2206206994597c13d831ec7",
-      "0x6b175474e89094c44da98b954eedeac495271d0f",
-    ],
-    56: [
-      "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
-      "0x55d398326f99059ff775485246999027b3197955",
-      "0x1af3f329e8bedcddf7e3c08f3c62177cdcaaefbf",
-    ],
-    137: [
-      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
-      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
-      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-    ],
-  };
-  return (stables[chainId] || []).includes(addr.toLowerCase());
-}
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const chainId = Number(searchParams.get("chainId") || "");
-  const token = String(searchParams.get("token") || "").toLowerCase();
-  const decimals = Number(searchParams.get("decimals") || "");
-  if (!Number.isInteger(chainId) || !token || !Number.isInteger(decimals)) {
-    return jsonError("Missing or invalid chainId/token/decimals", 400);
-  }
-  const USDC = USDC_BY_CHAIN[chainId];
-  if (!USDC) return jsonError("USDC not configured for this chain", 422);
-
-  const key = process.env.ONEINCH_API_KEY;
-  if (!key) return jsonError("Server missing ONEINCH_API_KEY", 500);
-
-  const amount = BigInt(10) ** BigInt(Math.max(0, Math.min(36, decimals)));
-
-  // 1) 1inch quote: 1 token -> USDC
-  const url = new URL(`https://api.1inch.dev/swap/v6.0/${chainId}/quote`);
-  url.searchParams.set("src", token);
-  url.searchParams.set("dst", USDC.address);
-  url.searchParams.set("amount", amount.toString());
-
-  let priceUsd: number | undefined;
-  let source: string | undefined;
-
+export async function GET(req: NextRequest) {
   try {
-    const r = await fetch(url, {
-      headers: { "Authorization": `Bearer ${key}`, "X-API-KEY": key },
-      cache: "no-store",
-    });
-    if (r.ok) {
-      const q = await r.json();
-      const dstAmount = BigInt(q?.dstAmount ?? 0n);
-      if (dstAmount > 0n) {
-        priceUsd = Number(dstAmount) / (10 ** USDC.decimals);
-        source = "1inch";
-      }
+    const url = new URL(req.url);
+    const chainId = Number(url.searchParams.get("chainId") || "");
+    const token = (url.searchParams.get("token") || "").toLowerCase() as `0x${string}`;
+    const decimals = Number(url.searchParams.get("decimals") || "");
+
+    if (!chainId || !token || !Number.isFinite(decimals)) {
+      return bad("missing params: chainId, token, decimals");
     }
-  } catch {}
 
-  // 2) Stable clamp near $1
-  if ((!priceUsd || priceUsd <= 0) && isStable(chainId, token)) {
-    priceUsd = 1;
-    source = source ?? "stable";
-  }
+    // 1) Stable clamp — authoritative $1 for USDC/USDT
+    if (STABLES_BY_CHAIN[chainId]?.has(token)) {
+      return ok({ ok: true, usd: 1, source: "stable" });
+    }
 
-  // 3) DexScreener fallback
-  if (!priceUsd || priceUsd <= 0) {
-    try {
-      const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token}`, { cache: "no-store" });
-      if (r.ok) {
-        const j = await r.json();
-        const pairs: any[] = Array.isArray(j?.pairs) ? j.pairs : [];
-        const candidates = pairs
-          .map((p:any) => ({
-            pu: p?.priceUsd != null ? Number(p.priceUsd) : NaN,
-            liq: p?.liquidity?.usd != null ? Number(p.liquidity.usd) : (p?.liquidityUsd ?? 0),
-          }))
-          .filter(x => Number.isFinite(x.pu) && x.pu > 0);
-        if (candidates.length) {
-          candidates.sort((a,b)=> (b.liq - a.liq));
-          priceUsd = candidates[0].pu;
-          source = source ?? "dexscreener";
+    // 2) Primary: 1inch v6 quote — price per 1 token in USDC
+    const usdc = USDC_BY_CHAIN[chainId];
+    if (ONEINCH_API_KEY && usdc) {
+      try {
+        const params = new URLSearchParams({
+          src: token,
+          dst: usdc.address,
+          amount: "1",                    // 1 token unit (human)
+          srcDecimals: String(decimals),  // important for Wei conversion
+          includeProtocols: "0",
+        });
+        const oneUrl = `https://api.1inch.dev/swap/v6.0/${chainId}/quote?${params.toString()}`;
+        const r = await fetch(oneUrl, {
+          headers: { Authorization: `Bearer ${ONEINCH_API_KEY}` },
+          cache: "no-store",
+        });
+        const j = await r.json().catch(() => ({} as any));
+        if (r.ok && j?.dstAmount) {
+          const usd = num(Number(j.dstAmount) / 10 ** usdc.decimals);
+          if (usd) return ok({ ok: true, usd, source: "1inch" });
         }
-      }
-    } catch {}
-  }
+      } catch { /* ignore and try fallbacks */ }
+    }
 
-  return NextResponse.json({ priceUsd, source }, { status: 200 });
+    // 3) Fallback A: CoinGecko for mainnet WETH (reliable, keyless)
+    if (chainId === 1 && token === WETH_MAINNET) {
+      try {
+        const cg = await fetch(
+          `https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${token}&vs_currencies=usd`,
+          { cache: "no-store" }
+        );
+        const j = await cg.json().catch(() => ({} as any));
+        const usd = num(j?.[token]?.usd);
+        if (usd) return ok({ ok: true, usd, source: "coingecko" });
+      } catch { /* ignore */ }
+    }
+
+    // 4) Fallback B: DexScreener (generic)
+    try {
+      const ds = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token}`, { cache: "no-store" });
+      const j = await ds.json().catch(() => ({} as any));
+      const pairs: any[] = Array.isArray(j?.pairs) ? j.pairs : [];
+      // Prefer verified/stable venues; else take the first with priceUsd
+      const withUsd = pairs.filter(p => p?.priceUsd && Number(p.priceUsd) > 0);
+      const pick = withUsd[0];
+      const usd = num(pick?.priceUsd);
+      if (usd) return ok({ ok: true, usd, source: "dexscreener" });
+    } catch { /* ignore */ }
+
+    // 5) Total failure
+    return bad("price lookup failed");
+  } catch (e: any) {
+    return ok({ ok: false, error: e?.message || "unknown error" }, 500);
+  }
 }

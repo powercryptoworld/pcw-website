@@ -1,46 +1,100 @@
-import { useEffect, useMemo, useState } from "react";
-import type { Address } from "viem";
+"use client";
 
-type PriceState = { priceUsd?: number; loading: boolean; source?: string };
-const cache = new Map<string, { t: number; v: PriceState }>();
-const TTL_MS = 20000; // 20s
+import { useEffect, useRef, useState } from "react";
 
-export function useUsdQuote(chainId: number, tokenAddress?: Address, tokenDecimals?: number) {
-  const key = useMemo(
-    () => `${chainId}:${(tokenAddress||"native").toLowerCase()}:${tokenDecimals ?? "nd"}:v1`,
-    [chainId, tokenAddress, tokenDecimals]
-  );
-  const [state, setState] = useState<PriceState>(() => {
-    const c = cache.get(key);
-    if (c && (Date.now() - c.t) < TTL_MS) return c.v;
-    return { loading: !!tokenAddress, priceUsd: undefined };
-  });
+type UsdState = { priceUsd?: number; source?: string };
+
+// ~20s in-tab cache to avoid hammering the proxy and to keep UI snappy.
+const CACHE_TTL_MS = 20_000;
+const cache = new Map<string, { ts: number; val: UsdState }>();
+
+/**
+ * useUsdQuote(chainId, tokenAddress, decimals)
+ * - Returns { priceUsd, source } for the given token on a chain.
+ * - Fetches from our lab proxy: /api/price/oneinch?chainId=&token=&decimals=
+ * - Stable deps: [chainId, token, decimals]; no loops; aborts in-flight fetches on change.
+ * - Idempotent setState: only updates when the value actually changed.
+ */
+export function useUsdQuote(
+  chainId?: number,
+  token?: string,
+  decimals?: number
+): UsdState {
+  const [state, setState] = useState<UsdState>({});
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Build a stable cache key only when inputs are valid
+  const key =
+    chainId && token && decimals != null
+      ? `${chainId}-${String(token).toLowerCase()}-${decimals}`
+      : undefined;
 
   useEffect(() => {
-    let aborted = false;
-    async function run() {
-      if (!tokenAddress || tokenDecimals == null) { setState({ loading:false }); return; }
-      const c = cache.get(key);
-      if (c && (Date.now()-c.t) < TTL_MS) { setState(c.v); return; }
-      setState({ loading:true });
-
-      try {
-        const u = new URL("/api/price/oneinch", window.location.origin);
-        u.searchParams.set("chainId", String(chainId));
-        u.searchParams.set("token", tokenAddress);
-        u.searchParams.set("decimals", String(tokenDecimals));
-        const r = await fetch(u.toString(), { cache: "no-store" });
-        const j = r.ok ? await r.json() : {};
-        const v = { loading:false, priceUsd: j?.priceUsd, source: j?.source ?? (r.ok ? "proxy" : "error") } as PriceState;
-        cache.set(key, { t: Date.now(), v });
-        if (!aborted) setState(v);
-      } catch {
-        if (!aborted) setState({ loading:false, priceUsd: undefined, source: "error" });
-      }
+    // If inputs are incomplete, clear state and bail without fetching
+    if (!key || !chainId || !token || decimals == null) {
+      setState((prev) => (prev.priceUsd || prev.source ? {} : prev));
+      return;
     }
-    run();
-    return ()=>{ aborted = true; };
-  }, [key, chainId, tokenAddress, tokenDecimals]);
+
+    // Serve from cache if fresh
+    const now = Date.now();
+    const hit = cache.get(key);
+    if (hit && now - hit.ts < CACHE_TTL_MS) {
+      const v = hit.val;
+      setState((prev) =>
+        prev.priceUsd === v.priceUsd && prev.source === v.source ? prev : v
+      );
+      return;
+    }
+
+    // Abort any in-flight fetch tied to the previous inputs
+    if (abortRef.current) abortRef.current.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+
+    (async () => {
+      try {
+        const url = new URL("/api/price/oneinch", window.location.origin);
+        url.searchParams.set("chainId", String(chainId));
+        url.searchParams.set("token", String(token));
+        url.searchParams.set("decimals", String(decimals));
+
+        const res = await fetch(url.toString(), {
+          signal: ac.signal,
+          cache: "no-store",
+        });
+        const j = await res.json().catch(() => ({} as any));
+
+        if (!res.ok || !j?.ok) {
+          const next: UsdState = { priceUsd: undefined, source: "error" };
+          cache.set(key, { ts: Date.now(), val: next });
+          setState((prev) =>
+            prev.source === "error" ? prev : next
+          );
+          return;
+        }
+
+        const next: UsdState = { priceUsd: j.usd, source: j.source };
+        cache.set(key, { ts: Date.now(), val: next });
+        setState((prev) =>
+          prev.priceUsd === next.priceUsd && prev.source === next.source
+            ? prev
+            : next
+        );
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+        const next: UsdState = { priceUsd: undefined, source: "error" };
+        cache.set(key, { ts: Date.now(), val: next });
+        setState((prev) =>
+          prev.source === "error" ? prev : next
+        );
+      }
+    })();
+
+    return () => {
+      ac.abort();
+    };
+  }, [key, chainId, token, decimals]);
 
   return state;
 }

@@ -1,0 +1,127 @@
+import { NextRequest, NextResponse } from "next/server";
+
+type MaybeNum = number | string | null | undefined;
+
+function asNumber(x: MaybeNum): number | null {
+  if (x == null) return null;
+  if (typeof x === "number") return Number.isFinite(x) ? x : null;
+  if (typeof x === "string") {
+    const n = Number(x);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/**
+ * Normalize any gas price to **wei** (decimal string).
+ * Heuristics:
+ *  - If value < 1e6 -> assume gwei (common APIs), multiply 1e9.
+ *  - Else if value < 1e12 -> still likely gwei, multiply 1e9.
+ *  - Else already wei.
+ */
+function toWeiString(v: MaybeNum): string | undefined {
+  const n = asNumber(v);
+  if (n == null) return undefined;
+  // If the number is too small to be wei, treat as gwei
+  const wei = n < 1e12 ? n * 1e9 : n;
+  // Use BigInt to avoid scientific notation
+  try {
+    return BigInt(Math.round(wei)).toString();
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchOneInch(chainId: number) {
+  const key = process.env.ONEINCH_API_KEY;
+  if (!key) throw new Error("Missing ONEINCH_API_KEY");
+
+  // Try the current 1inch gas endpoint first (v1.5). If that fails, try legacy.
+  const urls = [
+    `https://api.1inch.dev/gas-price/v1.5/${chainId}`,
+    `https://api.1inch.dev/gas-price/v1.4/${chainId}`,
+    `https://api.1inch.dev/gas-price/v1.2/${chainId}`
+  ];
+
+  let lastErr: any;
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${key}`,
+          // make sure this route never leaks to the client cache
+          "cache-control": "no-cache"
+        },
+        // server-side only
+        next: { revalidate: 0 },
+      });
+      if (!r.ok) {
+        lastErr = new Error(`1inch HTTP ${r.status}`);
+        continue;
+      }
+      const j = await r.json();
+
+      // 1inch variants observed in the wild:
+      // { standard: { price: <gwei> }, fast: { price: <gwei> }, instant: { price: <gwei> } }
+      // { standard: <gwei>, fast: <gwei>, instant: <gwei> }
+      // Some older payloads: { low, medium, high }
+      const standard =
+        toWeiString(j?.standard?.price ?? j?.standard ?? j?.low?.price ?? j?.low);
+      const fast =
+        toWeiString(j?.fast?.price ?? j?.fast ?? j?.medium?.price ?? j?.medium);
+      const instant =
+        toWeiString(j?.instant?.price ?? j?.instant ?? j?.high?.price ?? j?.high ?? j?.fastest?.price ?? j?.fastest);
+
+      // If at least one tier parsed, return.
+      if (standard || fast || instant) {
+        return {
+          ok: true,
+          source: "1inch",
+          standardWei: standard,
+          fastWei: fast,
+          instantWei: instant,
+        };
+      }
+
+      lastErr = new Error("Unrecognized 1inch gas payload");
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("Failed to fetch 1inch gas");
+}
+
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const chainId = Number(url.searchParams.get("chainId") || "0");
+  if (!chainId) {
+    return NextResponse.json({ ok: false, error: "missing chainId" }, { status: 400 });
+  }
+
+  try {
+    const oneInch = await fetchOneInch(chainId);
+
+    // Final safety: ensure all returned fields are strings or undefined
+    const out = {
+      ok: true,
+      source: oneInch.source || "1inch",
+      standardWei: oneInch.standardWei || undefined,
+      fastWei: oneInch.fastWei || undefined,
+      instantWei: oneInch.instantWei || undefined,
+      chainId,
+    };
+
+    return NextResponse.json(out, {
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+      },
+    });
+  } catch (e: any) {
+    return NextResponse.json(
+      { ok: false, error: e?.message || "gas fetch failed" },
+      { status: 502 }
+    );
+  }
+}

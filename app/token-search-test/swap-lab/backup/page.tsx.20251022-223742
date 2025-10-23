@@ -1,0 +1,116 @@
+"use client";
+
+import React, { useMemo, useState } from "react";
+import TokenRow from "@/components/swap/TokenRow";
+import QuotePanel from "@/components/swap/QuotePanel";
+
+// Minimal token shape we'll keep in local state
+export type Addr = `0x${string}`;
+type TokenRef = { address: Addr; decimals: number; symbol?: string; name?: string; logoURI?: string };
+
+// Common USDC per chain (for USD parity in the lab UI)
+const USDC_BY_CHAIN: Record<number, TokenRef> = {
+  1:   { address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  56:  { address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", decimals: 18, symbol: "USDC", name: "USD Coin" },
+  137: { address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  43114:{ address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  8453:{ address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  42161:{ address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6, symbol: "USDC", name: "USD Coin" },
+  10:  { address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6, symbol: "USDC", name: "USD Coin" },
+};
+
+const WETH_MAINNET: TokenRef = {
+  address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  decimals: 18,
+  symbol: "WETH",
+  name: "Wrapped Ether",
+};
+
+export default function SwapLabPage() {
+  // Lab defaults: Ethereum mainnet
+  const [chainId, setChainId] = useState<number>(1);
+
+  // Pair state used by the panel
+  const [payToken, setPayToken] = useState<TokenRef>(WETH_MAINNET);
+  const [receiveToken, setReceiveToken] = useState<TokenRef>(USDC_BY_CHAIN[1]);
+  const [payAmount, setPayAmount] = useState<string>("");
+  const [receiveAmount, setReceiveAmount] = useState<string>("");
+
+  // Flip rows (simple swap of state)
+  const flip = () => {
+    setPayToken(receiveToken);
+    setReceiveToken(payToken);
+    setPayAmount(receiveAmount || "");
+    setReceiveAmount(payAmount || "");
+  };
+
+  // Build the RowToken objects that TokenRow expects (must include chainId)
+  const payRowToken = { ...payToken, chainId } as any;
+  const receiveRowToken = { ...receiveToken, chainId } as any;
+
+  const canQuote = useMemo(
+    () =>
+      chainId &&
+      payToken?.address &&
+      receiveToken?.address &&
+      Number(payAmount) > 0 &&
+      (payToken?.decimals ?? 18) != null,
+    [chainId, payToken, receiveToken, payAmount]
+  );
+
+  return (
+    <div className="mx-auto max-w-xl p-4">
+      <h1 className="text-xl font-semibold mb-3">Swap Lab</h1>
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+        {/* TOP ROW — must pass amount/onAmount and token WITH chainId */}
+        <TokenRow
+          title="You pay"
+          token={payRowToken}
+          amount={payAmount}
+          onAmount={setPayAmount}
+          onComputedBalance={(v)=>{}}
+          readOnlyAmount={false}
+          showMax
+        />
+
+        <div className="h-3" />
+
+        {/* BOTTOM ROW — read only amount for now (quote fills this in later) */}
+        <TokenRow
+          title="You receive"
+          token={receiveRowToken}
+          amount={receiveAmount}
+          onAmount={setReceiveAmount}
+          readOnlyAmount={true}
+          showMax={false}
+        />
+
+        {/* TEMP debug (keep for now) */}
+        <div className="mt-2 text-[11px] opacity-70 font-mono">
+          dbg canQuote:{String(!!canQuote)} • amount:{payAmount} • srcDec:{payToken?.decimals ?? "?"} • src:{payToken?.address} • dst:{receiveToken?.address}
+        </div>
+
+        {/* Quote panel (lab-only; read-only, no execution) */}
+        {canQuote ? (
+          <QuotePanel
+            chainId={chainId}
+            src={payToken}
+            dst={receiveToken}
+            amount={payAmount}
+            defaultSlippageBps={50}
+          />
+        ) : null}
+
+        {/* Flip button (lab convenience) */}
+        <div className="mt-3">
+          <button onClick={flip} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Flip</button>
+        </div>
+      </div>
+
+      <div className="mt-3 text-xs opacity-70">
+        Chain: <span className="font-mono">{chainId}</span>
+      </div>
+    </div>
+  );
+}

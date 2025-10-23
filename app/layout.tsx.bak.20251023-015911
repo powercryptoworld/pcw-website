@@ -1,4 +1,3 @@
-import NavClientOnly from "@/components/NavClientOnly";
 import AppKitInit from "../components/AppKitInit";
 import "./globals.css";
 import type { Metadata } from "next";
@@ -21,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div id="noise-overlay" />
         <Providers>
-          <NavClientOnly />
+          <Nav />
           <main
             className="mx-auto max-w-6xl px-5 py-10"
             style={{ paddingTop: 64, paddingBottom: 96 }}

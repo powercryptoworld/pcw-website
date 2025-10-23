@@ -47,8 +47,9 @@ export default function TokenRow({
           setRuntimeDecimals(dec);
           setBalStr(str);
           const asNum = Number(str);
-          setBalNum(Number.isFinite(asNum) ? asNum : 0);
-          onComputedBalance?.(Number.isFinite(asNum) ? asNum : 0);
+          const n = Number.isFinite(asNum) ? asNum : 0;
+          setBalNum(n);
+          onComputedBalance?.(n);
         }
         return;
       }
@@ -59,8 +60,9 @@ export default function TokenRow({
       setRuntimeDecimals(dec);
       setBalStr(str);
       const asNum = Number(str);
-      setBalNum(Number.isFinite(asNum) ? asNum : 0);
-      onComputedBalance?.(Number.isFinite(asNum) ? asNum : 0);
+      const n = Number.isFinite(asNum) ? asNum : 0;
+      setBalNum(n);
+      onComputedBalance?.(n);
     }
     go();
     return ()=>{ mounted = false; };
@@ -85,7 +87,7 @@ export default function TokenRow({
     return `≈ $${(amt * p).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   }, [amount, usd.priceUsd, stableHere]);
 
-  // simple validation: amount <= balance
+  // simple validation: amount <= balance (only meaningful when editable)
   useEffect(() => {
     const a = Number(amount || "0");
     if (a > balNum) setErr("Amount exceeds balance");
@@ -121,24 +123,26 @@ export default function TokenRow({
           disabled={!!readOnlyAmount}
           inputMode="decimal"
           placeholder="0.0"
-          className={`w-full bg-transparent text-2xl outline-none ${err ? "text-red-400" : ""}`}
+          className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
         />
         <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
-        {showMax && (
+        {showMax && !readOnlyAmount && (
           <button onClick={onMaxClick} className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">MAX</button>
         )}
       </div>
 
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
 
-      {/* DEBUG — remove after confirm */}
-      <div className="mt-1 text-[11px] opacity-70">
-        priceDbg • chain:{token.chainId} • addr:{String(priceAddr||"native")}
-        {' '}• price:{usd.priceUsd ?? "n/a"} • source:{usd.source ?? "n/a"}
-        {' '}• runtimeDecimals:{runtimeDecimals} • stable:{stableHere ? "yes" : "no"}
-      </div>
+      {/* DEBUG — hidden by default; show only if NEXT_PUBLIC_LAB_DEBUG="1" */}
+      {process.env.NEXT_PUBLIC_LAB_DEBUG === "1" && (
+        <div className="mt-1 text-[11px] opacity-70">
+          priceDbg • chain:{token.chainId} • addr:{String(priceAddr||"native")}
+          {' '}• price:{usd.priceUsd ?? "n/a"} • source:{usd.source ?? "n/a"}
+          {' '}• runtimeDecimals:{runtimeDecimals} • stable:{stableHere ? "yes" : "no"}
+        </div>
+      )}
 
-      {err && <div className="mt-1 text-xs text-red-400">{err}</div>}
+      {(!readOnlyAmount && err) && <div className="mt-1 text-xs text-red-400">{err}</div>}
     </div>
   );
 }

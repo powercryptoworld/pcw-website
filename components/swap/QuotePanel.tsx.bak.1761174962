@@ -1,0 +1,423 @@
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
+import type { Address } from "viem";
+import { useAccount, useReadContract } from "wagmi";
+import { useUsdQuote } from "@/hooks/useUsdQuote";
+import { wrappedAddressFor } from "@/hooks/useWrappedMap";
+import { useEvmQuote } from "@/hooks/useEvmQuote";
+
+type TokenRef = { address?: `0x${string}`; decimals: number; symbol?: string; name?: string };
+
+type Props = {
+  chainId: number;
+  src: TokenRef;
+  dst: TokenRef;
+  amount: string;
+  defaultSlippageBps?: number;
+};
+
+type GasTiers = {
+  standardWei?: string;
+  fastWei?: string;
+  instantWei?: string;
+  source?: string;
+};
+
+function formatUsd(v?: number) {
+  if (v == null || !Number.isFinite(v)) return "—";
+  return `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+function fmtUnits(n?: number) {
+  if (!Number.isFinite(n || NaN)) return "—";
+  return Math.round(n!).toLocaleString();
+}
+const NATIVE_SYMBOL: Record<number, string> = {
+  1: "ETH", 10: "ETH", 56: "BNB", 137: "MATIC", 42161: "ETH", 8453: "ETH", 43114: "AVAX",
+};
+
+// minimal ERC-20 ABI for allowance()
+const ERC20_ABI = [
+  { "constant": true, "inputs": [{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "name":"allowance", "outputs":[{"name":"","type":"uint256"}], "type":"function" }
+] as const;
+
+export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageBps = 50 }: Props) {
+  const { address: user } = useAccount();
+
+  const ssKeySlip = `swapLab.slippage.${chainId}`;
+  const ssKeySpeed = `swapLab.speed.${chainId}`;
+
+  const [slippageBps, setSlippageBps] = useState<number>(() => {
+    if (typeof window === "undefined") return defaultSlippageBps;
+    const v = Number(sessionStorage.getItem(ssKeySlip) || "");
+    return Number.isFinite(v) && v >= 0 && v <= 10_000 ? v : defaultSlippageBps;
+  });
+  const [speed, setSpeed] = useState<"standard" | "fast" | "instant">(() => {
+    if (typeof window === "undefined") return "standard";
+    const v = sessionStorage.getItem(ssKeySpeed);
+    return (v === "standard" || v === "fast" || v === "instant") ? v : "standard";
+  });
+  useEffect(() => { try { sessionStorage.setItem(ssKeySlip, String(slippageBps)); } catch {} }, [ssKeySlip, slippageBps]);
+  useEffect(() => { try { sessionStorage.setItem(ssKeySpeed, String(speed)); } catch {} }, [ssKeySpeed, speed]);
+
+  // Quote
+  const q = useEvmQuote({ chainId, src: src as any, dst: dst as any, amount, slippageBps, includeProtocols: true });
+
+  // USD references
+  const srcAddr = (src.address as Address | undefined) ?? wrappedAddressFor(chainId);
+  const dstAddr = (dst.address as Address | undefined) ?? wrappedAddressFor(chainId);
+  const srcUsd = useUsdQuote(chainId, srcAddr, src.decimals).priceUsd;
+  const dstUsd = useUsdQuote(chainId, dstAddr, dst.decimals).priceUsd;
+
+  // Native coin USD (for gas $)
+  const nativeAddr = wrappedAddressFor(chainId);
+  const nativeUsd = useUsdQuote(chainId, nativeAddr, 18).priceUsd;
+  const nativeSym = NATIVE_SYMBOL[chainId] || "NATIVE";
+
+  // Gas tiers
+  const [gas, setGas] = useState<GasTiers>({});
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const u = new URL("/token-search-test/api/gas/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.ok) setGas(j);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [chainId]);
+
+  // Normalize quote fields
+  const data = q?.data;
+  const raw  = q?.raw;
+  const dstAmtStr: string | undefined =
+    (data?.dstAmount as string | undefined) ??
+    (raw?.dstAmount as string | undefined);
+  const quoteGasStr: string | undefined = (() => {
+    const g = (data?.gas as number | null | undefined);
+    if (g != null && Number(g) > 0) return String(g);
+    const rg = (raw?.gas as number | null | undefined);
+    if (rg != null && Number(rg) > 0) return String(rg);
+    return undefined;
+  })();
+  const routeSummaryStr: string | undefined =
+    (data?.routeSummary as string | undefined) ??
+    (raw?.routeSummary as string | undefined);
+
+  // Route hops/chips
+  const routeHops = useMemo(() => {
+    const prot = (raw as any)?.protocols;
+    const hops: { name: string; from?: string; to?: string }[] = [];
+    try {
+      const legs = Array.isArray(prot) ? prot[0] : [];
+      if (Array.isArray(legs)) {
+        for (const leg of legs) {
+          const hop = Array.isArray(leg) ? leg[0] : undefined;
+          if (hop) hops.push({ name: hop.name || hop.protocol || "", from: hop.fromTokenAddress, to: hop.toTokenAddress });
+        }
+      }
+    } catch {}
+    return hops;
+  }, [raw]);
+  const routeChips = useMemo(() => {
+    if (routeHops.length) return routeHops.map(h => h.name).filter(Boolean);
+    if (routeSummaryStr && routeSummaryStr.trim()) {
+      return routeSummaryStr.split("→").map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+  }, [routeHops, routeSummaryStr]);
+
+  // Impact
+  const priceImpact = useMemo(() => {
+    const pay = Number(amount || "0");
+    if (!pay || !dstAmtStr) return { value: undefined as number | undefined, loading: false };
+    if (srcUsd == null || dstUsd == null) return { value: undefined, loading: true };
+    const dstAmountHuman = Number(dstAmtStr) / 10 ** (dst.decimals ?? 18);
+    if (!Number.isFinite(dstAmountHuman) || dstAmountHuman <= 0) return { value: undefined, loading: false };
+    const execPrice_dstPerSrc = dstAmountHuman / pay;
+    const fair_dstPerSrc = srcUsd / dstUsd;
+    if (!Number.isFinite(execPrice_dstPerSrc) || !Number.isFinite(fair_dstPerSrc) || fair_dstPerSrc <= 0) {
+      return { value: undefined, loading: false };
+    }
+    const impact = (fair_dstPerSrc - execPrice_dstPerSrc) / fair_dstPerSrc * 100;
+    const clamped = Math.max(-99.99, Math.min(99.99, impact));
+    return { value: clamped, loading: false };
+  }, [amount, dstAmtStr, srcUsd, dstUsd, dst.decimals]);
+
+  // Min received
+  const minReceived = useMemo(() => {
+    if (!dstAmtStr) return null;
+    const outHuman = Number(dstAmtStr) / 10 ** (dst.decimals ?? 18);
+    if (!Number.isFinite(outHuman) || outHuman <= 0) return null;
+    const minOut = outHuman * (1 - slippageBps / 10_000);
+    const usd = dstUsd != null ? minOut * dstUsd : undefined;
+    return { minOut, minOutUsd: usd };
+  }, [dstAmtStr, dst.decimals, slippageBps, dstUsd]);
+
+  // Gas calcs
+  const { gasUnits, gasIsEstimated } = useMemo(() => {
+    let units: number | undefined;
+    let est = false;
+    if (quoteGasStr != null && Number(quoteGasStr) > 0) {
+      units = Number(quoteGasStr);
+    } else {
+      units = 140_000;
+      est = true;
+    }
+    return { gasUnits: units, gasIsEstimated: est };
+  }, [quoteGasStr]);
+  const selectedGasWei = useMemo(() => {
+    const tiers = { standard: gas.standardWei, fast: gas.fastWei, instant: gas.instantWei };
+    if (speed === "standard") return tiers.standard ?? tiers.fast ?? tiers.instant;
+    if (speed === "fast") return tiers.fast ?? tiers.instant ?? tiers.standard;
+    return tiers.instant ?? tiers.fast ?? tiers.standard;
+  }, [gas.standardWei, gas.fastWei, gas.instantWei, speed]);
+  const gasNativeAndUsd = useMemo(() => {
+    if (!gasUnits || !selectedGasWei || !nativeUsd) return { native: undefined as number | undefined, usd: undefined as number | undefined };
+    const native = (Number(selectedGasWei) * gasUnits) / 1e18;
+    const usd = native * nativeUsd;
+    const n = Number.isFinite(native) ? native : undefined;
+    const u = Number.isFinite(usd) ? usd : undefined;
+    return { native: n, usd: u };
+  }, [gasUnits, selectedGasWei, nativeUsd]);
+
+  // Errors
+  const tooSmall = (() => {
+    const a = Number(amount || "0");
+    return a > 0 && dstAmtStr && (Number(dstAmtStr) / 10 ** (dst.decimals ?? 18)) < 1e-6;
+  })();
+  const showError = (q?.error && !dstAmtStr) || tooSmall;
+  const impactClass = (() => {
+    const v = priceImpact.value;
+    if (v == null) return "opacity-80";
+    if (v > -0.5) return "text-green-400";
+    if (v > -2) return "text-yellow-400";
+    return "text-red-400";
+  })();
+
+  // ===== Approval check (ERC-20 source only) =====
+  const [spender, setSpender] = useState<Address | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const u = new URL("/api/oneinch/spender", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.ok && j.spender) setSpender(j.spender as Address);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [chainId]);
+
+  // need allowance if src is ERC-20 (has address) and user connected
+  const needAllowance = !!(src.address && user && spender);
+  const amountWeiNeeded = useMemo(() => {
+    if (!amount) return 0n;
+    const [i, f=""] = amount.split(".");
+    const dec = src.decimals ?? 18;
+    const pad = (f + "0".repeat(dec)).slice(0, dec);
+    try { return (BigInt(i||"0") * (10n**BigInt(dec))) + BigInt(pad||"0"); } catch { return 0n; }
+  }, [amount, src.decimals]);
+
+  // read allowance (only when needed)
+  const { data: allowanceData } = useReadContract({
+    abi: ERC20_ABI,
+    address: (needAllowance ? src.address : undefined) as Address | undefined,
+    functionName: "allowance",
+    args: needAllowance && user && spender ? [user as Address, spender as Address] : undefined,
+    query: { enabled: !!(needAllowance && user && spender) }
+  });
+  const allowance = (() => {
+    try {
+      if (typeof allowanceData === "bigint") return allowanceData;
+      if (allowanceData && (allowanceData as any).toString) return BigInt((allowanceData as any).toString());
+    } catch {}
+    return 0n;
+  })();
+  const approvalNeeded = needAllowance && allowance < amountWeiNeeded;
+
+  // ===== Swap TX preview (read-only) =====
+  const [txPreview, setTxPreview] = useState<{
+    to?: string; value?: string; gas?: string; gasPrice?: string; dataLen?: number;
+    routeSummary?: string; dstAmount?: string;
+  } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setTxPreview(null);
+    if (!user) return;
+    if (!src?.address || !dst?.address) return;
+    if (!amount || Number(amount) <= 0) return;
+
+    (async () => {
+      try {
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(user));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.ok && j?.tx) {
+          setTxPreview({
+            to: j.tx.to, value: j.tx.value, gas: j.tx.gas, gasPrice: j.tx.gasPrice,
+            dataLen: j.tx.dataLen, routeSummary: j?.quote?.routeSummary, dstAmount: j?.quote?.dstAmount
+          });
+        }
+      } catch {}
+    })();
+
+    return () => { alive = false; };
+  }, [chainId, user, src?.address, src?.decimals, dst?.address, amount, slippageBps]);
+
+  return (
+    <div className="mt-3 rounded-2xl bg-black/25 border border-white/10 p-3 text-sm">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="opacity-70">Quote details</div>
+
+        <div className="ml-3 opacity-70">Slippage</div>
+        <input
+          className="ml-2 w-16 rounded bg-white/10 px-1 text-right"
+          value={(slippageBps / 100).toFixed(2) + "%"}
+          onChange={(e)=>{
+            const raw = e.target.value.replace(/%/g,"").trim();
+            const n = Number(raw);
+            if (Number.isFinite(n) && n >= 0 && n <= 100) setSlippageBps(Math.round(n*100));
+          }}
+          title="Set a custom slippage percent"
+        />
+        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(10)}>0.10%</button>
+        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(50)}>0.50%</button>
+        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(100)}>1.00%</button>
+        <button className="ml-2 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(50)} title="Reset to 0.50%">Reset</button>
+
+        <div className="ml-4 opacity-70">%Speed</div>
+        <button className={`ml-1 rounded px-2 ${speed==="standard"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("standard")}>Standard</button>
+        <button className={`ml-1 rounded px-2 ${speed==="fast"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("fast")}>Fast</button>
+        <button className={`ml-1 rounded px-2 ${speed==="instant"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("instant")}>Instant</button>
+      </div>
+
+      {/* Friendly error */}
+      {((q?.error && !dstAmtStr) || (Number(amount||"0")>0 && !dstAmtStr)) && (
+        <div className="mt-2 rounded-lg bg-red-500/10 border border-red-500/30 p-2 text-xs">
+          {q?.error ? "We couldn’t get a quote right now. Try a smaller size or different pair." : "No route for this size."}
+          {q?.error && <details className="mt-1 opacity-70"><summary>Details</summary><pre className="whitespace-pre-wrap break-all">{q.error}</pre></details>}
+        </div>
+      )}
+
+      {/* Price impact */}
+      <div className="mt-2">
+        <div className="opacity-70">Price impact</div>
+        <div className={`text-base ${(() => { const v = priceImpact.value; if (v==null) return "opacity-80"; if (v>-0.5) return "text-green-400"; if (v>-2) return "text-yellow-400"; return "text-red-400"; })()}`}>
+          {dstAmtStr ? (priceImpact.loading ? "…" : (priceImpact.value == null ? "—" : `${priceImpact.value.toFixed(2)}%`)) : "—"}
+        </div>
+      </div>
+
+      {/* Min received */}
+      <div className="mt-2">
+        <div className="opacity-70">Min received (after slippage)</div>
+        <div className="text-base">
+          {(() => {
+            if (!dstAmtStr) return "—";
+            const out = Number(dstAmtStr) / 10 ** (dst.decimals ?? 18);
+            const minOut = out * (1 - slippageBps / 10_000);
+            const usd = dstUsd != null ? minOut * dstUsd : undefined;
+            return `${minOut.toLocaleString(undefined, { maximumFractionDigits: Math.min(6, dst.decimals ?? 6) })} ${dst.symbol ?? "DST"} • ${formatUsd(usd)}`;
+          })()}
+        </div>
+      </div>
+
+      {/* Gas */}
+      <div className="mt-2">
+        <div className="opacity-70">Estimated gas</div>
+        <div className="text-base">
+          {gasUnits
+            ? <>
+                {fmtUnits(gasUnits)} {gasIsEstimated ? "(est.)" : ""} &nbsp;•&nbsp;
+                {gasNativeAndUsd.native != null
+                  ? `${gasNativeAndUsd.native.toFixed(6)} ${nativeSym} • ${formatUsd(gasNativeAndUsd.usd)}`
+                  : formatUsd(gasNativeAndUsd.usd)}
+              </>
+            : "—"}
+        </div>
+        <div className="mt-1 text-[11px] opacity-60">
+          {(q?.data?.gas == null || q?.data?.gasPrice == null) && "Network tier used when quote lacks gasPrice."}
+        </div>
+      </div>
+
+      {/* Route */}
+      <div className="mt-2">
+        <div className="opacity-70">Route</div>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {(routeHops.length ? routeHops : routeChips.map(n => ({ name:n })) ).map((h, i) => (
+            <span key={i} className="rounded-full bg-white/10 px-2 py-0.5 text-xs" title={h.from && h.to ? `${h.name}\n${h.from} → ${h.to}` : h.name}>
+              {h.name}
+            </span>
+          ))}
+          {!routeHops.length && !routeChips.length && "—"}
+        </div>
+      </div>
+
+      {/* Allowance + Tx Preview (read-only) */}
+      <div className="mt-3 rounded-xl border border-white/10 p-2">
+        <div className="text-xs opacity-70 mb-1">Execution (preview)</div>
+        <div className="text-sm">
+          <div>
+            Wallet: <span className="font-mono">{user ? `${user.slice(0,6)}…${user.slice(-4)}` : "— (connect)"}</span>
+          </div>
+          <div>
+            Spender: <span className="font-mono">{spender ? `${(spender as string).slice(0,6)}…${(spender as string).slice(-4)}` : "—"}</span>
+          </div>
+          {src.address ? (
+            <div className="mt-1">
+              Allowance: <span className="font-mono">{allowance.toString()}</span>
+              {approvalNeeded
+                ? <span className="ml-2 text-yellow-300">Approval needed for amount</span>
+                : (needAllowance ? <span className="ml-2 text-green-400">OK</span> : <span className="ml-2 opacity-70">N/A (native)</span>)}
+            </div>
+          ) : (
+            <div className="mt-1 opacity-70">Source is native; no approval required.</div>
+          )}
+
+          <div className="mt-2">
+            <div className="opacity-70 text-xs">Swap Tx (read-only preview)</div>
+            <div className="text-sm">
+              {txPreview ? (
+                <>
+                  <div>to: <span className="font-mono">{txPreview.to}</span></div>
+                  <div>value(wei): <span className="font-mono">{txPreview.value ?? "0"}</span></div>
+                  <div>gas limit: <span className="font-mono">{txPreview.gas ?? "—"}</span></div>
+                  <div>gas price: <span className="font-mono">{txPreview.gasPrice ?? "—"}</span></div>
+                  <div>data length: <span className="font-mono">{txPreview.dataLen ?? 0}</span></div>
+                  <div>route summary: <span>{txPreview.routeSummary || "—"}</span></div>
+                </>
+              ) : (
+                <span className="opacity-70">—</span>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <button
+              className="px-3 py-1 rounded bg-white/10 cursor-not-allowed opacity-60"
+              title={approvalNeeded ? "Approval required first (preview only)" : "Execution disabled in lab"}
+              disabled
+            >
+              Execute (disabled in lab)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
