@@ -343,7 +343,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
 
           <div className="mt-2 text-[11px] opacity-60">Swap Tx (read-only preview)</div>
       {/* swap-lab: approval preview mount (append-only) */}
-      <SwapLabApprovalPreviewInline chainId={chainId} src={src} wallet={wallet} allowance={allowance} />
+      <SwapLabApprovalPreviewInline chainId={chainId} src={src} wallet={wallet} allowance={allowance.allowanceWei} />
           <div className="text-xs">
             {txPreview ? (
               <>
@@ -469,7 +469,10 @@ export function SwapLabApprovalPreviewInline(props: {
   }, [chainId, isErc20, needsApprove, src?.address, wallet]);
 
   if (!needsApprove) {
-    return null; // nothing to show if allowance is already sufficient or token is native
+    if (!isErc20) {
+  return <div className={classBox()}>Native asset — no approval required.</div>;
+}
+return null; // nothing to show if allowance is already sufficient
   }
 
   return (

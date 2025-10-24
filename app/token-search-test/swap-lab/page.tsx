@@ -109,7 +109,6 @@ export default function SwapLabPage() {
       amount={payAmount}
       onAmount={(v: string) => { setMode("pay"); setPayAmount(v); }}
       onComputedBalance={()=>{}}
-      readOnlyAmount={mode === "receive"}
       showMax
     />
   );
@@ -121,8 +120,7 @@ export default function SwapLabPage() {
       amount={receiveAmount}
       onAmount={(v: string) => { setMode("receive"); setReceiveAmount(v); }}
       onComputedBalance={()=>{}}
-      readOnlyAmount={mode === "pay"}
-      showMax={false}
+      showMax
     />
   );
 
