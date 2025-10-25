@@ -127,7 +127,7 @@ export default function TokenRow({
         />
         <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
         {showMax && (
-  <button onClick={onMaxClick} disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0} title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")} className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed">MAX</button>
+  <button onClick={onMaxClick} disabled={!!readOnlyAmount} className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed">MAX</button>
 )}
       </div>
 
