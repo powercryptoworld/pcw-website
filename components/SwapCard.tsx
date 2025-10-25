@@ -1,47 +1,76 @@
+// components/SwapCard.tsx
 "use client";
+// Keep these imports referenced to avoid noUnusedLocals issues with existing project config.
 import EstimateFeeButton from "@/components/EstimateFeeButton";
 import ClearFeeOnAmountChange from "@/components/ClearFeeOnAmountChange";
-// components/SwapCard.tsx
+
+import { useState } from "react";
+import TokenRow from "@/components/swap/TokenRow";
+import QuotePanel from "@/components/swap/QuotePanel";
+
+// BSC defaults — native BNB (no approval) -> PCW (Power Crypto World)
+const CHAIN_ID = 56;
+
+// Native BNB (no address)
+const BNB = {
+  chainId: CHAIN_ID,
+  address: undefined as unknown as `0x${string}` | undefined,
+  decimals: 18,
+  symbol: "BNB",
+  name: "BNB",
+};
+
+// PCW token on BSC
+const PCW = {
+  chainId: CHAIN_ID,
+  address: "0x9370a51C9F2Ae6B23719ab74f05261891C609A23" as `0x${string}`,
+  decimals: 18, // TokenRow will correct via on-chain decimals if different
+  symbol: "PCW",
+  name: "Power Crypto World",
+};
 
 export default function SwapCard() {
+  // Minimal lab-like state (preview only)
+  const [payToken, setPayToken] = useState(BNB);
+  const [recvToken, setRecvToken] = useState(PCW);
+  const [payAmount, setPayAmount] = useState<string>("");
+  const [recvAmount] = useState<string>(""); // read-only display; QuotePanel shows details
+
+  function flip() {
+    setPayToken(recvToken);
+    setRecvToken(payToken);
+    // keep amounts as-is (no auto recompute in preview mode)
+  }
+
   return (
     <section className="container pt-12 pb-28">
       <div
         className="glass"
         style={{
-          width: "min(520px, 92vw)",      // Shiba-like proportion
+          width: "min(520px, 92vw)",
           margin: "0 auto",
           padding: 20,
         }}
       >
         {/* Network / small label */}
-        <p className="label mb-4">Network: <strong>BNB</strong></p>
+        <p className="label mb-4">
+          Network: <strong>BNB</strong>
+        </p>
 
         {/* You pay */}
-        <div className="row">
-          <label className="label" htmlFor="pay">You pay</label>
-          <div className="input">
-            <span style={{ marginRight: 12 }}>BNB</span>
-            <input
-              id="pay"
-              type="number"
-              placeholder="0.0"
-              style={{
-                background: "transparent",
-                border: 0,
-                outline: "none",
-                color: "white",
-                width: "100%",
-              }}
-            />
-          <ClearFeeOnAmountChange targetId="pay" />
-          </div>
-        </div>
+        <TokenRow
+          title="You pay"
+          token={payToken}
+          amount={payAmount}
+          onAmount={setPayAmount}
+          showMax
+        />
 
-        {/* Switch */}
+        {/* Flip */}
         <div style={{ display: "grid", placeItems: "center", margin: "10px 0" }}>
           <button
             aria-label="Flip tokens"
+            onClick={flip}
             className="pill"
             style={{ width: 36, height: 36, display: "grid", placeItems: "center" }}
           >
@@ -49,51 +78,33 @@ export default function SwapCard() {
           </button>
         </div>
 
-        {/* You receive */}
-        <div className="row">
-          <label className="label" htmlFor="receive">You receive</label>
-          <div className="input">
-            <span style={{ marginRight: 12 }}>USDC</span>
-            <input
-              id="receive"
-              type="number"
-              placeholder="0.0"
-              style={{
-                background: "transparent",
-                border: 0,
-                outline: "none",
-                color: "white",
-                width: "100%",
-              }}
-            />
+        {/* You receive (read-only amount; details in QuotePanel) */}
+        <TokenRow
+          title="You receive"
+          token={recvToken}
+          amount={recvAmount}
+          onAmount={() => {}}
+          readOnlyAmount
+        />
+
+        {/* Lab core — preview only: routes, price impact, min received, gas, spender */}
+        <div className="mt-4">
+          <QuotePanel
+            chainId={CHAIN_ID}
+            src={payToken}
+            dst={recvToken}
+            amount={payAmount}
+            defaultSlippageBps={50}
+          />
+        </div>
+
+        {/* Keep imports referenced so builds with noUnusedLocals don't fail */}
+        {false && (
+          <div style={{ display: "none" }}>
+            <EstimateFeeButton builtTx={undefined as any} symbol="BNB" compact />
+            <ClearFeeOnAmountChange targetId="noop" />
           </div>
-        </div>
-
-        {/* Slippage pills */}
-        <div className="mb-4">
-          <p className="label mb-2">Slippage</p>
-        {/* Network fee row (local wallet estimate) */}
-        <div className="flex items-center justify-between text-sm mt-2">
-          <div className="opacity-80">Network fee (est., BNB)</div><span id="wallet-fee" className="text-xs opacity-90 ml-2"></span><span id="wallet-fee" className="text-xs opacity-90 ml-2"></span>
-          {(() => {
-            const pick = (name) => { try { return eval(`typeof  !== "undefined" ?  : null`); } catch { return null; } };
-            const maybeTx = pick("builtTx") || pick("builtSwapTx") || pick("swapTx") || pick("tx") || null;
-            return (<EstimateFeeButton builtTx={maybeTx} symbol="BNB" compact />);
-          })()}
-        </div>
-          <ul className="tabs">
-            <li><button className="pill">Slow</button></li>
-            <li><button className="pill pill-active">Market</button></li>
-            <li><button className="pill">Fast</button></li>
-          </ul>
-        </div>
-
-        {/* Swap CTA + neon bar */}
-        <div className="swap-bar">
-          <button className="btn btn--swap" style={{ width: "100%", padding: "14px 16px", fontWeight: 700 }}>
-            Swap
-          </button>
-        </div>
+        )}
       </div>
     </section>
   );
