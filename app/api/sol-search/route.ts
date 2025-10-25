@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSolanaRegistry } from "@/lib/solanaRegistry";
 
 type SolItem = {
   mint: string;
@@ -51,15 +52,28 @@ async function jupByAddresses(mints: string[]): Promise<SolItem[]> {
 }
 
 async function jupSearch(q: string): Promise<SolItem[]> {
+  const qq = (q || "").trim().toLowerCase();
+  if (!qq) return [];
   try {
-    const r = await fetch(`https://lite-api.jup.ag/v1/tokens?search=${encodeURIComponent(q)}`, { cache: "no-store" });
-    if (!r.ok) return [];
-    const j = await r.json();
-    const arr: any[] = Array.isArray(j) ? j : j?.data || j?.tokens || [];
-    return arr.map(normalizeJupToken).filter(Boolean) as SolItem[];
-  } catch { return []; }
-}
+    const list: any[] = await getSolanaRegistry(); // https://cache.jup.ag/tokens
+    const hits = list.filter((t: any) => {
+      const sym  = String(t?.symbol || "").toLowerCase();
+      const name = String(t?.name   || "").toLowerCase();
+      return sym.includes(qq) || name.includes(qq);
+    }).slice(0, 40);
 
+    return hits.map((t: any) => ({
+      mint: String(t?.address || t?.mint || ""),
+      symbol: String(t?.symbol || ""),
+      name: String(t?.name || ""),
+      decimals: Number.isFinite((t as any)?.decimals) ? (t as any).decimals : null,
+      logoURI: (t as any)?.logoURI || (t as any)?.logoUrl || null,
+      source: "jup",
+    })).filter(it => it.mint);
+  } catch {
+    return [];
+  }
+}
 async function dsByMint(mint: string): Promise<SolItem[]> {
   try {
     const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { cache: "no-store" });
