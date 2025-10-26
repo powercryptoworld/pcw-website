@@ -7,6 +7,7 @@ import { useUsdQuote } from "@/hooks/useUsdQuote";
 import { toBufferWei } from "@/hooks/useGasBuffer";
 import { wrappedAddressFor } from "@/hooks/useWrappedMap";
 import { isKnownStable } from "@/hooks/useStableMap";
+import { TokenAvatar } from "@/components/TokenAvatar";
 
 export type RowToken = EvmToken & {
   logoURI?: string;
@@ -24,6 +25,98 @@ type Props = {
   showMax?: boolean;
 };
 
+/** In-memory logo cache for the session: key = `${chainId}:${address||native}` */
+const logoCache = new Map<string, string | null>();
+
+/** Map EVM chainId -> TrustWallet chain folder */
+function trustWalletChainFolder(chainId: number): string | null {
+  switch (chainId) {
+    case 1: return "ethereum";
+    case 56: return "smartchain";
+    case 137: return "polygon";
+    case 10: return "optimism";
+    case 42161: return "arbitrum";
+    case 8453: return "base";
+    default: return null;
+  }
+}
+
+/** Try to resolve a logo URL with a few read-only sources, in order. */
+async function resolveLogoAuto(token: RowToken): Promise<string | null> {
+  const key = `${token.chainId}:${token.address ?? "native"}`;
+
+  if (logoCache.has(key)) return logoCache.get(key) ?? null;
+
+  // 1) If token already has logoURI, prefer it.
+  if (token.logoURI && typeof token.logoURI === "string") {
+    logoCache.set(key, token.logoURI);
+    return token.logoURI;
+  }
+
+  // Helper to test if an image actually loads (no CORS issues for <img>)
+  const imageLoads = (url: string) =>
+    new Promise<boolean>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+
+  // 2) Query our existing stable search endpoints (read-only) to fetch logoURI
+  try {
+    if (token.address) {
+      // EVM search by address
+      const u = new URL("/api/evm-search", window.location.origin);
+      u.searchParams.set("q", token.address as string);
+      u.searchParams.set("chainId", String(token.chainId));
+      const r = await fetch(u.toString(), { cache: "no-store" });
+      const j = await r.json().catch(() => null);
+      const fromApi = j?.items?.[0]?.logoURI as string | undefined;
+      if (fromApi && await imageLoads(fromApi)) {
+        logoCache.set(key, fromApi);
+        return fromApi;
+      }
+    } else {
+      // Native coins: try chain logo via TrustWallet "info/logo.png"
+      const folder = trustWalletChainFolder(token.chainId);
+      if (folder) {
+        const nativeUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${folder}/info/logo.png`;
+        if (await imageLoads(nativeUrl)) {
+          logoCache.set(key, nativeUrl);
+          return nativeUrl;
+        }
+      }
+    }
+  } catch {
+    // ignore network errors and continue to next fallbacks
+  }
+
+  // 3) TrustWallet assets path for ERC-20 tokens (may 404 if not listed)
+  try {
+    if (token.address) {
+      const folder = trustWalletChainFolder(token.chainId);
+      if (folder) {
+        // TrustWallet repo expects checksum-case; lowercase sometimes works, try both
+        const addrLower = (token.address as string).toLowerCase();
+        const cand = [
+          `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${folder}/assets/${addrLower}/logo.png`,
+          `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${folder}/assets/${token.address}/logo.png`,
+        ];
+        for (const url of cand) {
+          if (await imageLoads(url)) {
+            logoCache.set(key, url);
+            return url;
+          }
+        }
+      }
+    }
+  } catch { /* noop */ }
+
+  // 4) Last resort: no logo
+  logoCache.set(key, null);
+  return null;
+}
+
 export default function TokenRow({
   title, token, amount, onAmount, onComputedBalance, readOnlyAmount, showMax
 }: Props) {
@@ -33,6 +126,22 @@ export default function TokenRow({
   const [balNum, setBalNum] = useState<number>(0);
   const [runtimeDecimals, setRuntimeDecimals] = useState<number>(token.decimals ?? 18);
   const [err, setErr] = useState<string>("");
+
+  // Auto logo state
+  const [logo, setLogo] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const l = await resolveLogoAuto(token);
+        if (alive) setLogo(l);
+      } catch {
+        if (alive) setLogo(null);
+      }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token.address, token.chainId, token.logoURI, token.symbol]);
 
   // fetch balance + authoritative decimals
   useEffect(() => {
@@ -125,10 +234,20 @@ export default function TokenRow({
           placeholder="0.0"
           className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
         />
-        <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
+        <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10 flex items-center gap-2">
+          <TokenAvatar size={18} symbol={token.symbol} name={token.symbol} logoURI={logo ?? undefined} />
+          <span>{token.symbol}</span>
+        </div>
         {showMax && (
-  <button onClick={onMaxClick} disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0} title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")} className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed">MAX</button>
-)}
+          <button
+            onClick={onMaxClick}
+            disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0}
+            title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")}
+            className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed"
+          >
+            MAX
+          </button>
+        )}
       </div>
 
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
