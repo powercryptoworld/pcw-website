@@ -234,9 +234,9 @@ export default function TokenRow({
           placeholder="0.0"
           className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
         />
-        <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10 flex items-center gap-2.5">
+        <div className="shrink-0 h-7 px-2.5 rounded-lg bg-white/10 flex items-center gap-2.5">
           <TokenAvatar size={22} symbol={token.symbol} name={token.symbol} logoURI={logo ?? undefined} />
-          <span className="font-medium">{token.symbol}</span>
+          <span className="leading-none font-medium">{token.symbol}</span>
         </div>
         {showMax && (
           <button
