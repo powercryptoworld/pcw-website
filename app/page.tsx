@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import TokenRow from "@/components/swap/TokenRow";
 import QuotePanel from "@/components/swap/QuotePanel";
 import { ChainSelect } from "@/components/ChainSelect";
@@ -8,6 +8,7 @@ import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
 import { SolRowLogo } from "@/components/sol/SolRowLogo";
 import { EVM_CHAINS } from "@/lib/chains";
 import { normalizeList } from "@/lib/normalizeList";
+import { useEvmQuote } from "@/hooks/useEvmQuote";
 
 type Addr = `0x${string}`;
 type TokenRef = { chainId: number; address: Addr; decimals: number; symbol?: string; name?: string; logoURI?: string };
@@ -37,26 +38,17 @@ function useDebounced<T>(value: T, ms = 180) {
   }, [value, ms]);
   return v;
 }
-
 function isEvmAddr(s: string) { return /^0x[a-fA-F0-9]{40}$/.test((s||"").trim()); }
 
 export default function Page() {
-  // Background + overlay (unchanged)
+  // Background
   const HeroBg = (
-    <div
-      aria-hidden
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: -6,
-        backgroundImage: "url(/swap-hero.jpg)",
-        backgroundSize: "cover",
-        backgroundPosition: "center 55%",
-        backgroundRepeat: "no-repeat",
-        filter: "saturate(115%) brightness(0.95)",
-        pointerEvents: "none",
-      }}
-    />
+    <div aria-hidden style={{
+      position:"fixed", inset:0, zIndex:-6,
+      backgroundImage:"url(/swap-hero.jpg)", backgroundSize:"cover",
+      backgroundPosition:"center 55%", backgroundRepeat:"no-repeat",
+      filter:"saturate(115%) brightness(0.95)", pointerEvents:"none"
+    }}/>
   );
   const NeonOverlay = <div className="swap-vfx" aria-hidden />;
 
@@ -64,10 +56,8 @@ export default function Page() {
   const [chainId, setChainId] = useState<number>(1);
   const [payToken, setPayToken] = useState<TokenRef>(WETH_MAINNET);
   const [receiveToken, setReceiveToken] = useState<TokenRef>(USDC_BY_CHAIN[1]);
-
   const [payAmount, setPayAmount] = useState<string>("0.00");
   const [receiveAmount, setReceiveAmount] = useState<string>("");
-
   const [mode, setMode] = useState<"pay" | "receive">("pay");
 
   const debouncedPay = useDebounced(payAmount);
@@ -77,10 +67,10 @@ export default function Page() {
   const dst = mode === "pay" ? receiveToken : payToken;
   const humanAmount = mode === "pay" ? debouncedPay : debouncedReceive;
 
-  // === Compact Token Picker (inside the card) ===
-  const [picker, setPicker] = useState<"pay" | "receive" | null>(null); // null = hidden
+  // === Picker (inside the card) ===
+  const [picker, setPicker] = useState<"pay" | "receive" | null>(null);
   const [family, setFamily] = useState<"evm" | "solana">("evm");
-  const [selectedChainId, setSelectedChainId] = useState<number>(56); // default BNB like test
+  const [selectedChainId, setSelectedChainId] = useState<number>(56);
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -140,28 +130,30 @@ export default function Page() {
     setPicker(null);
   };
 
-  // Keep opposite field parity (to be fully restored in STEP 5B)
+  // === Amount mirroring (real, via useEvmQuote like Swap Lab) ===
+  const q = useEvmQuote({
+    chainId,
+    src: { address: (src.address as Addr), decimals: src.decimals, symbol: src.symbol },
+    dst: { address: (dst.address as Addr), decimals: dst.decimals, symbol: dst.symbol },
+    amount: humanAmount || "0",
+    slippageBps: 50,
+    includeProtocols: true,
+    gasSpeed: "fast",
+  });
+
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<any>).detail;
-      if (!detail) return;
-      const { dstAmount, dstDecimals } = detail as { dstAmount?: string; dstDecimals?: number };
-      if (!dstAmount || !dstDecimals) return;
-      const human = Number(dstAmount) / 10 ** (dstDecimals ?? 18);
-      let out = human
-        .toLocaleString(undefined, { maximumFractionDigits: Math.min(8, dstDecimals ?? 8) })
-        .replace(/,/g, "");
-      out = out.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "").replace(/\.$/, "");
-      if (mode === "pay") {
-        if (out !== receiveAmount) setReceiveAmount(out);
-      } else {
-        if (out !== payAmount) setPayAmount(out);
-      }
-    };
-    window.addEventListener("pcw:quote:dst", handler as EventListener);
-    return () => window.removeEventListener("pcw:quote:dst", handler as EventListener);
+    const dstAmount = q?.data?.dstAmount ?? null;
+    if (!dstAmount) return;
+    const human = Number(dstAmount) / 10 ** (dst.decimals ?? 18);
+    let out = human.toLocaleString(undefined, { maximumFractionDigits: Math.min(8, dst.decimals ?? 8) }).replace(/,/g,"");
+    out = out.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,"").replace(/\.$/,"");
+    if (mode === "pay") {
+      if (out !== receiveAmount) setReceiveAmount(out);
+    } else {
+      if (out !== payAmount) setPayAmount(out);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, dst.decimals]);
+  }, [q?.data?.dstAmount, mode, dst.decimals]);
 
   const flip = () => {
     setPayToken(receiveToken);
@@ -170,7 +162,6 @@ export default function Page() {
     setReceiveAmount(payAmount || "");
   };
 
-  // UI
   return (
     <>
       {HeroBg}
@@ -178,30 +169,16 @@ export default function Page() {
 
       <div className="mx-auto max-w-xl p-4">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 relative">
-          {/* Header row (compact info + open pickers) */}
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs opacity-80">
               Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={()=>setPicker("pay")}
-                className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-                title="Choose Pay token"
-              >
-                Choose Pay token
-              </button>
-              <button
-                onClick={()=>setPicker("receive")}
-                className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-                title="Choose Receive token"
-              >
-                Choose Receive token
-              </button>
+              <button onClick={()=>setPicker("pay")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title="Choose Pay token">Choose Pay token</button>
+              <button onClick={()=>setPicker("receive")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title="Choose Receive token">Choose Receive token</button>
             </div>
           </div>
 
-          {/* You pay / You receive */}
           <TokenRow
             title="You pay"
             token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
@@ -212,21 +189,8 @@ export default function Page() {
           />
 
           <div className="flex items-center justify-between my-2">
-            <button
-              onClick={flip}
-              className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-              title="Flip tokens and amounts"
-            >
-              Flip
-            </button>
-
-            <button
-              onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
-              className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-              title={mode === "pay" ? "Switch: set output" : "Switch: set input"}
-            >
-              {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-            </button>
+            <button onClick={flip} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title="Flip tokens and amounts">Flip</button>
+            <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
           </div>
 
           <TokenRow
@@ -238,7 +202,6 @@ export default function Page() {
             showMax
           />
 
-          {/* Quotes */}
           <QuotePanel
             chainId={chainId}
             src={payToken as any}
@@ -247,91 +210,56 @@ export default function Page() {
             defaultSlippageBps={50}
           />
 
-          {/* Inline Picker Tray (overlay inside the card) */}
           {picker && (
-            <div
-              className="absolute inset-x-3 top-3 z-20 rounded-2xl border border-white/15 bg-black/60 backdrop-blur p-3 shadow-xl"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="absolute inset-x-3 top-3 z-20 rounded-2xl border border-white/15 bg-black/60 backdrop-blur p-3 shadow-xl" role="dialog" aria-modal="true">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-2">
                   <button onClick={()=>setFamily("evm")} className={`px-3 py-1 border rounded ${family==="evm"?"bg-white/10":""}`}>EVM</button>
                   <button onClick={()=>setFamily("solana")} className={`px-3 py-1 border rounded ${family==="solana"?"bg-white/10":""}`}>Solana</button>
                 </div>
-
                 {family==="evm" && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm opacity-80">Chain</span>
                     <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
                   </div>
                 )}
-
                 <div className="ml-auto flex items-center gap-2">
                   <button className="px-3 py-1 border rounded" onClick={()=>setPicker(null)}>Close</button>
                 </div>
               </div>
 
               <div className="mt-2 flex gap-2">
-                <input
-                  className="flex-1 border rounded px-3 py-2"
-                  placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"}
-                  value={searchText}
-                  onChange={(e)=>setSearchText(e.target.value)}
-                  onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }}
-                />
+                <input className="flex-1 border rounded px-3 py-2" placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"} value={searchText} onChange={(e)=>setSearchText(e.target.value)} onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }}/>
                 <button className="px-4 py-2 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
               </div>
 
               <div className="mt-3 space-y-2 max-h-72 overflow-auto pr-1">
-                {/* EVM results */}
                 {family==="evm" && results.map((t: any, i: number)=>(
-                  <button
-                    key={`${t.address||i}-${t.chainId??selectedChainId}`}
-                    onClick={()=>applyEvmSelection(t)}
-                    className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
-                    title={`Apply to ${picker==="pay"?"Pay":"Receive"}`}
-                  >
+                  <button key={`${t.address||i}-${t.chainId??selectedChainId}`} onClick={()=>applyEvmSelection(t)} className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10" title={`Apply to ${picker==="pay"?"Pay":"Receive"}`}>
                     <div className="flex items-center gap-3">
-                      <InlineRowLogoInjector
-                        address={t.address}
-                        chainId={t.chainId ?? selectedChainId}
-                        symbol={t.symbol}
-                        name={t.name}
-                        logoURI={t.logoURI}
-                        size={28}
-                      />
+                      <InlineRowLogoInjector address={t.address} chainId={t.chainId ?? selectedChainId} symbol={t.symbol} name={t.name} logoURI={t.logoURI} size={28}/>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
-                          {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>
-                        </div>
-                        <div className="text-xs text-white/60">
-                          ChainId: {t.chainId ?? selectedChainId} &nbsp;•&nbsp; Network: {(EVM_CHAINS.find(c=>c.id===(t.chainId ?? selectedChainId))?.name) || "EVM"}
-                        </div>
+                        <div className="font-medium truncate">{t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span></div>
+                        <div className="text-xs text-white/60">ChainId: {t.chainId ?? selectedChainId} &nbsp;•&nbsp; Network: {(EVM_CHAINS.find(c=>c.id===(t.chainId ?? selectedChainId))?.name) || "EVM"}</div>
                       </div>
                       <code className="text-xs truncate max-w-[36ch]">{t.address}</code>
                     </div>
                   </button>
                 ))}
 
-                {/* Solana results (selection disabled in 5A) */}
                 {family==="solana" && results.map((t: any, i: number)=>(
                   <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5 opacity-70">
                     <div className="flex items-center gap-3">
                       <SolRowLogo mint={t.mint} size={28} />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
-                          {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>
-                        </div>
+                        <div className="font-medium truncate">{t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span></div>
                         <div className="text-xs text-white/60">Solana • mint: <code className="opacity-80">{t.mint}</code></div>
                       </div>
                     </div>
                   </div>
                 ))}
 
-                {!loading && results.length===0 && (
-                  <div className="text-sm opacity-70">No matches yet. Try a different term or paste an address/mint.</div>
-                )}
+                {!loading && results.length===0 && (<div className="text-sm opacity-70">No matches yet. Try a different term or paste an address/mint.</div>)}
               </div>
             </div>
           )}
