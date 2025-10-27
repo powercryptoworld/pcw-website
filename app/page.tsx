@@ -1,15 +1,14 @@
 "use client";
 
-// Home (/): render the exact working swap composition from Swap Lab,
-// without creating or touching any other files.
-// Background + neon overlay preserved from your current page.tsx.
-
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import TokenRow from "@/components/swap/TokenRow";
 import QuotePanel from "@/components/swap/QuotePanel";
-import type { Address } from "viem";
+import { ChainSelect } from "@/components/ChainSelect";
+import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
+import { SolRowLogo } from "@/components/sol/SolRowLogo";
+import { EVM_CHAINS } from "@/lib/chains";
+import { normalizeList } from "@/lib/normalizeList";
 
-// === Minimal EVM-only initial tokens (same as swap-lab) ===
 type Addr = `0x${string}`;
 type TokenRef = { chainId: number; address: Addr; decimals: number; symbol?: string; name?: string; logoURI?: string };
 
@@ -30,7 +29,6 @@ const WETH_MAINNET: TokenRef = {
   name: "Wrapped Ether",
 };
 
-// Debounce helper (identical behavior to swap-lab)
 function useDebounced<T>(value: T, ms = 180) {
   const [v, setV] = useState(value);
   useEffect(() => {
@@ -40,8 +38,10 @@ function useDebounced<T>(value: T, ms = 180) {
   return v;
 }
 
+function isEvmAddr(s: string) { return /^0x[a-fA-F0-9]{40}$/.test((s||"").trim()); }
+
 export default function Page() {
-  // Keep the fixed hero background & neon overlay exactly as your current page:
+  // Background + neon overlay (unchanged)
   const HeroBg = (
     <div
       aria-hidden
@@ -58,11 +58,10 @@ export default function Page() {
       }}
     />
   );
-
   const NeonOverlay = <div className="swap-vfx" aria-hidden />;
 
-  // === Minimal EVM-only wiring (same as swap-lab) ===
-  const [chainId] = useState<number>(1); // keep mainnet for STEP 3A (chain switching later)
+  // === Swap state (EVM for STEP 3A/3B) ===
+  const [chainId, setChainId] = useState<number>(1);
   const [payToken, setPayToken] = useState<TokenRef>(WETH_MAINNET);
   const [receiveToken, setReceiveToken] = useState<TokenRef>(USDC_BY_CHAIN[1]);
 
@@ -78,7 +77,72 @@ export default function Page() {
   const dst = mode === "pay" ? receiveToken : payToken;
   const humanAmount = mode === "pay" ? debouncedPay : debouncedReceive;
 
-  // derive opposite field (mirrors swap-lab logic) via a tiny bridge
+  // === Token Search (lifted from Token Search Test) ===
+  const [family, setFamily] = useState<"evm" | "solana">("evm");
+  const [selectedChainId, setSelectedChainId] = useState<number>(56); // default BNB like test page
+  const [searchText, setSearchText] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [picker, setPicker] = useState<"pay" | "receive">("pay"); // which row to apply to
+  const [showSearch, setShowSearch] = useState<boolean>(false);
+
+  const doSearch = useCallback(async () => {
+    const q = (searchText || "").trim();
+    if (!q) { setResults([]); return; }
+    setLoading(true);
+    try {
+      if (family === "solana") {
+        const r = await fetch(`/api/sol-search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
+        const j = await r.json();
+        setResults(normalizeList(j));
+      } else {
+        if (isEvmAddr(q)) {
+          const r = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}&chainId=${selectedChainId}`, { cache: "no-store" });
+          const j = await r.json().catch(()=>null);
+          setResults(normalizeList(j));
+        } else {
+          const r1 = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}&chainId=${selectedChainId}`, { cache: "no-store" });
+          const j1 = await r1.json().catch(()=>null);
+          let items = normalizeList(j1);
+          if (!items.length) {
+            const r2 = await fetch(`/api/evm-search?q=${encodeURIComponent(q)}`, { cache: "no-store" }).catch(()=>null);
+            const j2 = r2 ? await r2.json().catch(()=>null) : null;
+            const items2 = normalizeList(j2);
+            if (items2.length) items = items2.filter(Boolean);
+          }
+          setResults(items);
+        }
+      }
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchText, family, selectedChainId]);
+
+  useEffect(() => { if (showSearch) setResults([]); }, [showSearch, family, selectedChainId]);
+
+  // Apply selection to the chosen row (EVM only for now)
+  const applyEvmSelection = (t: any) => {
+    const picked: TokenRef = {
+      chainId: (t.chainId ?? selectedChainId) as number,
+      address: t.address as Addr,
+      decimals: Number(t.decimals ?? 18),
+      symbol: t.symbol || "TKN",
+      name: t.name || "Token",
+      logoURI: t.logoURI || null as any,
+    };
+    if (picker === "pay") {
+      setPayToken(picked);
+      if (picked.chainId !== chainId) setChainId(picked.chainId);
+    } else {
+      setReceiveToken(picked);
+      if (picked.chainId !== chainId) setChainId(picked.chainId);
+    }
+    setShowSearch(false);
+  };
+
+  // Keep opposite field autofill parity with lab (bridge via event)
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<any>).detail;
@@ -108,6 +172,7 @@ export default function Page() {
     setReceiveAmount(payAmount || "");
   };
 
+  // UI pieces
   const topRow = (
     <TokenRow
       title="You pay"
@@ -135,8 +200,119 @@ export default function Page() {
       {HeroBg}
       {NeonOverlay}
 
-      <div className="mx-auto max-w-xl p-4">
+      <div className="mx-auto max-w-3xl p-4">
+        {/* Search / Chain bar */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="flex gap-2">
+            <button onClick={()=>setFamily("evm")} className={`px-3 py-1 border rounded ${family==="evm"?"bg-white/10":""}`}>EVM</button>
+            <button onClick={()=>setFamily("solana")} className={`px-3 py-1 border rounded ${family==="solana"?"bg-white/10":""}`}>Solana</button>
+          </div>
+
+          {family==="evm" && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm opacity-80">Chain</span>
+              <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
+            </div>
+          )}
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm opacity-80">Choose for:</span>
+            <button onClick={()=>{setPicker("pay"); setShowSearch(true);}} className={`px-2 py-1 text-xs rounded border ${picker==="pay"?"bg-white/10":""}`}>You pay</button>
+            <button onClick={()=>{setPicker("receive"); setShowSearch(true);}} className={`px-2 py-1 text-xs rounded border ${picker==="receive"?"bg-white/10":""}`}>You receive</button>
+          </div>
+        </div>
+
+        {/* Inline search panel (same behavior as your test page) */}
+        {showSearch && (
+          <div className="mb-4 p-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+            <div className="flex gap-2">
+              <input
+                className="flex-1 border rounded px-3 py-2"
+                placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"}
+                value={searchText}
+                onChange={(e)=>setSearchText(e.target.value)}
+                onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }}
+              />
+              <button className="px-4 py-2 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
+              <button className="px-3 py-2 border rounded" onClick={()=>setShowSearch(false)}>Close</button>
+            </div>
+
+            <div className="mt-3 space-y-2 max-h-64 overflow-auto pr-1">
+              {/* EVM results */}
+              {family==="evm" && results.map((t: any, i: number)=>(
+                <button
+                  key={`${t.address||i}-${t.chainId??selectedChainId}`}
+                  onClick={()=>applyEvmSelection(t)}
+                  className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
+                  title="Apply to selected row"
+                >
+                  <div className="flex items-center gap-3">
+                    <InlineRowLogoInjector
+                      address={t.address}
+                      chainId={t.chainId ?? selectedChainId}
+                      symbol={t.symbol}
+                      name={t.name}
+                      logoURI={t.logoURI}
+                      size={28}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>
+                      </div>
+                      <div className="text-xs text-white/60">
+                        ChainId: {t.chainId ?? selectedChainId} &nbsp;•&nbsp; Network: {(EVM_CHAINS.find(c=>c.id===(t.chainId ?? selectedChainId))?.name) || "EVM"}
+                      </div>
+                    </div>
+                    <code className="text-xs truncate max-w-[36ch]">{t.address}</code>
+                  </div>
+                </button>
+              ))}
+
+              {/* Solana results (selection disabled in this step to avoid wiring Jupiter here) */}
+              {family==="solana" && results.map((t: any, i: number)=>(
+                <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5 opacity-70 cursor-not-allowed">
+                  <div className="flex items-center gap-3">
+                    <SolRowLogo mint={t.mint} size={28} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>
+                      </div>
+                      <div className="text-xs text-white/60">Solana • mint: <code className="opacity-80">{t.mint}</code></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {!loading && results.length===0 && (
+                <div className="text-sm opacity-70">No matches yet. Try a different term or paste an address/mint.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Swap card (unchanged baseline) */}
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+          {/* Chain is driven by selected token; optionally show chain selector for convenience */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs opacity-80">Active chainId: <span className="font-mono">{chainId}</span></div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={()=>{ setPicker("pay"); setShowSearch(true); }}
+                className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                title="Choose Pay token"
+              >
+                Choose Pay token
+              </button>
+              <button
+                onClick={()=>{ setPicker("receive"); setShowSearch(true); }}
+                className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                title="Choose Receive token"
+              >
+                Choose Receive token
+              </button>
+            </div>
+          </div>
+
           {topRow}
 
           <div className="flex items-center justify-between my-2">
@@ -166,27 +342,8 @@ export default function Page() {
             amount={mode === "pay" ? payAmount : receiveAmount}
             defaultSlippageBps={50}
           />
-
-          <QuoteEventBridge chainId={chainId} src={payToken} dst={receiveToken} amount={mode === "pay" ? payAmount : receiveAmount} />
         </div>
       </div>
     </>
   );
-}
-
-/**
- * QuoteEventBridge:
- * Minimal, non-invasive placeholder so STEP 3A stays single-file.
- * You can remove later when we wire direct state.
- */
-function QuoteEventBridge(props: { chainId: number; src: TokenRef; dst: TokenRef; amount: string }) {
-  useEffect(() => {
-    const el = document.getElementById("wallet-fee");
-    if (!el) return;
-    const obs = new MutationObserver(() => {});
-    obs.observe(el, { childList: true, subtree: true, characterData: true });
-    return () => obs.disconnect();
-  }, [props.chainId, props.src?.address, props.dst?.address, props.amount]);
-
-  return null;
 }
