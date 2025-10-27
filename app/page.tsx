@@ -8,31 +8,13 @@ import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
 import { SolRowLogo } from "@/components/sol/SolRowLogo";
 import { EVM_CHAINS } from "@/lib/chains";
 import { normalizeList } from "@/lib/normalizeList";
-const cx = (...a: (string | undefined | false | null)[]) => a.filter(Boolean).join(" ");
-
-
-// Tiny token chip for logos/symbols above rows (UI only)
-function TokenChip({ chainId, address, symbol, name, logoURI, className }:{
-  chainId:number; address: string; symbol?: string; name?: string; logoURI?: string | null; className?: string;
-}) {
-  return (
-    <span className={cx("inline-flex items-center gap-2 px-2 py-1 rounded-lg border border-white/10 bg-white/5", className)}>;
-      <InlineRowLogoInjector
-        address={address as any}
-        chainId={chainId}
-        symbol={symbol}
-        name={name}
-        logoURI={logoURI || undefined}
-        size={16}
-      />
-      <span className="text-xs font-medium">{symbol || "TKN"}</span>
-    </span>
-  );
-}
 import { useEvmQuote } from "@/hooks/useEvmQuote";
 
 type Addr = `0x${string}`;
 type TokenRef = { chainId: number; address: Addr; decimals: number; symbol?: string; name?: string; logoURI?: string };
+
+// small utility (no classnames dep)
+const cx = (...a: (string | undefined | false | null)[]) => a.filter(Boolean).join(" ");
 
 const USDC_BY_CHAIN: Record<number, TokenRef> = {
   1:   { chainId: 1, address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6,  symbol: "USDC", name: "USD Coin" },
@@ -60,6 +42,25 @@ function useDebounced<T>(value: T, ms = 180) {
   return v;
 }
 function isEvmAddr(s: string) { return /^0x[a-fA-F0-9]{40}$/.test((s||"").trim()); }
+
+// Tiny token chip (logo + symbol) shown above each row
+function TokenChip({ chainId, address, symbol, name, logoURI, className }:{
+  chainId:number; address: string; symbol?: string; name?: string; logoURI?: string | null; className?: string;
+}) {
+  return (
+    <span className={cx("inline-flex items-center gap-2 px-2 py-1 rounded-lg border border-white/10 bg-white/5", className)}>
+      <InlineRowLogoInjector
+        address={address as any}
+        chainId={chainId}
+        symbol={symbol}
+        name={name}
+        logoURI={logoURI || undefined}
+        size={16}
+      />
+      <span className="text-xs font-medium">{symbol || "TKN"}</span>
+    </span>
+  );
+}
 
 export default function Page() {
   // Background
@@ -201,9 +202,9 @@ export default function Page() {
       {NeonOverlay}
 
       <div className="mx-auto max-w-xl p-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 relative">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xs opacity-80">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-3 relative">
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-[11px] opacity-80">
               Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -212,12 +213,12 @@ export default function Page() {
             </div>
           </div>
 
+          {/* You pay */}
           <div className="flex items-center justify-between mb-1">
-  <div className="text-[11px] opacity-80">You pay</div>
-  <TokenChip chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
-</div>
-
-<TokenRow
+            <div className="text-[11px] opacity-80">You pay</div>
+            <TokenChip chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
+          </div>
+          <TokenRow
             title="You pay"
             token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
             amount={payAmount}
@@ -226,16 +227,16 @@ export default function Page() {
             showMax
           />
 
-          <div className="flex items-center justify-between my-2">
+          <div className="flex items-center justify-between my-1">
             <button onClick={flip} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title="Flip tokens and amounts">Flip</button>
             <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
           </div>
 
+          {/* You receive */}
           <div className="flex items-center justify-between mb-1">
             <div className="text-[11px] opacity-80">You receive</div>
             <TokenChip chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
           </div>
-
           <TokenRow
             title="You receive"
             token={{ ...receiveToken, chainId: receiveToken.chainId, symbol: receiveToken.symbol ?? "DST" } as any}
@@ -245,13 +246,19 @@ export default function Page() {
             showMax
           />
 
-          <QuotePanel
-            chainId={chainId}
-            src={payToken as any}
-            dst={receiveToken as any}
-            amount={mode === "pay" ? payAmount : receiveAmount}
-            defaultSlippageBps={50}
-          />
+          {/* Collapsible quote details */}
+          <details className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+            <summary className="select-none cursor-pointer text-xs px-3 py-2 bg-white/5 hover:bg-white/10">Quote details</summary>
+            <div className="px-3 py-2">
+              <QuotePanel
+                chainId={chainId}
+                src={payToken as any}
+                dst={receiveToken as any}
+                amount={mode === "pay" ? payAmount : receiveAmount}
+                defaultSlippageBps={50}
+              />
+            </div>
+          </details>
 
           {/* Picker Overlay + Centered Tray */}
           {picker && (
@@ -270,8 +277,8 @@ export default function Page() {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex gap-2">
-                    <button onClick={()=>setFamily("evm")} className={`px-3 py-1 border rounded ${family==="evm"?"bg-white/10":""}`}>EVM</button>
-                    <button onClick={()=>setFamily("solana")} className={`px-3 py-1 border rounded ${family==="solana"?"bg-white/10":""}`}>Solana</button>
+                    <button onClick={()=>setFamily("evm")} className={cx("px-3 py-1 border rounded", family==="evm" && "bg-white/10")}>EVM</button>
+                    <button onClick={()=>setFamily("solana")} className={cx("px-3 py-1 border rounded", family==="solana" && "bg-white/10")}>Solana</button>
                   </div>
                   {family==="evm" && (
                     <div className="flex items-center gap-2">
@@ -327,7 +334,7 @@ export default function Page() {
                     </button>
                   ))}
 
-                  {/* Solana results (UI only, selection later in 5E) */}
+                  {/* Solana results (UI only, selection later) */}
                   {family==="solana" && results.map((t: any, i: number)=>(
                     <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5 opacity-70">
                       <div className="flex items-center gap-3">
