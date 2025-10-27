@@ -43,21 +43,47 @@ function useDebounced<T>(value: T, ms = 180) {
 }
 function isEvmAddr(s: string) { return /^0x[a-fA-F0-9]{40}$/.test((s||"").trim()); }
 
-// Tiny token chip (logo + symbol) shown above each row
-function TokenChip({ chainId, address, symbol, name, logoURI, className }:{
-  chainId:number; address: string; symbol?: string; name?: string; logoURI?: string | null; className?: string;
+// Token chip shown above rows — supports EVM or Solana preview
+function TokenChip({
+  family,
+  chainId,
+  address,
+  symbol,
+  name,
+  logoURI,
+  mint,
+  onClear,
+  className
+}:{
+  family:"evm"|"sol";
+  chainId?: number;
+  address?: string;
+  symbol?: string;
+  name?: string;
+  logoURI?: string | null;
+  mint?: string;
+  onClear?: () => void;
+  className?: string;
 }) {
   return (
     <span className={cx("inline-flex items-center gap-2 px-2 py-1 rounded-lg border border-white/10 bg-white/5", className)}>
-      <InlineRowLogoInjector
-        address={address as any}
-        chainId={chainId}
-        symbol={symbol}
-        name={name}
-        logoURI={logoURI || undefined}
-        size={16}
-      />
-      <span className="text-xs font-medium">{symbol || "TKN"}</span>
+      {family === "evm" ? (
+        <InlineRowLogoInjector
+          address={(address || "") as any}
+          chainId={chainId!}
+          symbol={symbol}
+          name={name}
+          logoURI={logoURI || undefined}
+          size={16}
+        />
+      ) : (
+        <SolRowLogo mint={mint || ""} size={16} />
+      )}
+      <span className="text-xs font-medium">{symbol || (family==="sol" ? "SOL" : "TKN")}</span>
+      {family === "sol" && <span className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/30">Solana preview</span>}
+      {onClear && (
+        <button onClick={onClear} title="Clear" className="text-[10px] px-1 rounded hover:bg-white/10">×</button>
+      )}
     </span>
   );
 }
@@ -95,6 +121,10 @@ export default function Page() {
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // NEW: Solana preview (UI-only)
+  const [solPay, setSolPay] = useState<any | null>(null);
+  const [solReceive, setSolReceive] = useState<any | null>(null);
 
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -157,10 +187,19 @@ export default function Page() {
     if (picker === "pay") {
       setPayToken(picked);
       if (picked.chainId !== chainId) setChainId(picked.chainId);
+      setSolPay(null); // clear sol preview if any
     } else if (picker === "receive") {
       setReceiveToken(picked);
       if (picked.chainId !== chainId) setChainId(picked.chainId);
+      setSolReceive(null); // clear sol preview if any
     }
+    setPicker(null);
+  };
+
+  // NEW: Apply Solana preview (UI-only — does NOT affect EVM rows/quotes)
+  const applySolPreview = (t: any) => {
+    if (picker === "pay") setSolPay(t);
+    if (picker === "receive") setSolReceive(t);
     setPicker(null);
   };
 
@@ -194,12 +233,27 @@ export default function Page() {
     setReceiveToken(payToken);
     setPayAmount(receiveAmount || "");
     setReceiveAmount(payAmount || "");
+    // keep Solana previews with their rows
+    const sp = solPay; const sr = solReceive;
+    setSolPay(sr); setSolReceive(sp);
   };
+
+  const solNotice = (solPay || solReceive) ? (
+    <div className="mt-2 text-[11px] px-2 py-1 rounded border border-yellow-500/30 bg-yellow-500/10">
+      Solana token selected in {solPay ? "Pay" : ""}{solPay && solReceive ? " & " : ""}{solReceive ? "Receive" : ""} — EVM quotes shown only. Solana swaps coming soon.
+    </div>
+  ) : null;
 
   return (
     <>
-      {HeroBg}
-      {NeonOverlay}
+      {/* Background */}
+      <div aria-hidden style={{
+        position:"fixed", inset:0, zIndex:-6,
+        backgroundImage:"url(/swap-hero.jpg)", backgroundSize:"cover",
+        backgroundPosition:"center 55%", backgroundRepeat:"no-repeat",
+        filter:"saturate(115%) brightness(0.95)", pointerEvents:"none"
+      }}/>
+      <div className="swap-vfx" aria-hidden />
 
       <div className="mx-auto max-w-xl p-4">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-3 relative">
@@ -216,7 +270,11 @@ export default function Page() {
           {/* You pay */}
           <div className="flex items-center justify-between mb-1">
             <div className="text-[11px] opacity-80">You pay</div>
-            <TokenChip chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
+            {solPay ? (
+              <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
+            ) : (
+              <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
+            )}
           </div>
           <TokenRow
             title="You pay"
@@ -235,7 +293,11 @@ export default function Page() {
           {/* You receive */}
           <div className="flex items-center justify-between mb-1">
             <div className="text-[11px] opacity-80">You receive</div>
-            <TokenChip chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
+            {solReceive ? (
+              <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
+            ) : (
+              <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
+            )}
           </div>
           <TokenRow
             title="You receive"
@@ -246,7 +308,9 @@ export default function Page() {
             showMax
           />
 
-          {/* Collapsible quote details */}
+          {solNotice}
+
+          {/* Collapsible quote details (EVM) */}
           <details className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
             <summary className="select-none cursor-pointer text-xs px-3 py-2 bg-white/5 hover:bg-white/10">Quote details</summary>
             <div className="px-3 py-2">
@@ -334,9 +398,14 @@ export default function Page() {
                     </button>
                   ))}
 
-                  {/* Solana results (UI only, selection later) */}
+                  {/* Solana results (UI-only selectable preview) */}
                   {family==="solana" && results.map((t: any, i: number)=>(
-                    <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5 opacity-70">
+                    <button
+                      key={`${t.mint||i}`}
+                      onClick={()=>applySolPreview(t)}
+                      className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
+                      title={`Preview on ${picker==="pay"?"Pay":"Receive"}`}
+                    >
                       <div className="flex items-center gap-3">
                         <SolRowLogo mint={t.mint} size={28} />
                         <div className="flex-1 min-w-0">
@@ -346,7 +415,7 @@ export default function Page() {
                           <div className="text-xs text-white/60">Solana • mint: <code className="opacity-80">{t.mint}</code></div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
 
                   {!loading && results.length===0 && (
