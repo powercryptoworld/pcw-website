@@ -8,6 +8,27 @@ import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
 import { SolRowLogo } from "@/components/sol/SolRowLogo";
 import { EVM_CHAINS } from "@/lib/chains";
 import { normalizeList } from "@/lib/normalizeList";
+const cx = (...a: (string | undefined | false | null)[]) => a.filter(Boolean).join(" ");
+
+
+// Tiny token chip for logos/symbols above rows (UI only)
+function TokenChip({ chainId, address, symbol, name, logoURI, className }:{
+  chainId:number; address: string; symbol?: string; name?: string; logoURI?: string | null; className?: string;
+}) {
+  return (
+    <span className={cx("inline-flex items-center gap-2 px-2 py-1 rounded-lg border border-white/10 bg-white/5", className)}>;
+      <InlineRowLogoInjector
+        address={address as any}
+        chainId={chainId}
+        symbol={symbol}
+        name={name}
+        logoURI={logoURI || undefined}
+        size={16}
+      />
+      <span className="text-xs font-medium">{symbol || "TKN"}</span>
+    </span>
+  );
+}
 import { useEvmQuote } from "@/hooks/useEvmQuote";
 
 type Addr = `0x${string}`;
@@ -191,7 +212,12 @@ export default function Page() {
             </div>
           </div>
 
-          <TokenRow
+          <div className="flex items-center justify-between mb-1">
+  <div className="text-[11px] opacity-80">You pay</div>
+  <TokenChip chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
+</div>
+
+<TokenRow
             title="You pay"
             token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
             amount={payAmount}
@@ -203,6 +229,11 @@ export default function Page() {
           <div className="flex items-center justify-between my-2">
             <button onClick={flip} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title="Flip tokens and amounts">Flip</button>
             <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
+          </div>
+
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-[11px] opacity-80">You receive</div>
+            <TokenChip chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
           </div>
 
           <TokenRow
