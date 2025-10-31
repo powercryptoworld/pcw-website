@@ -676,3 +676,59 @@ select.input{ appearance: none; }
 .swapCard code, .swapCard pre{
   white-space: pre-wrap;
 }
+
+/* ===== ui-step1: Quote details & tray polish (CSS-only) ===== */
+
+/* Keep the centered picker tray a touch tighter up top on desktop */
+@media (min-width: 769px){
+  .swapCard .top-tray{ top: 0.75rem; } /* optional hook if you add 'top-tray' later */
+}
+
+/* Containment + readable wrapping for any advanced preview text */
+.swapCard details,
+.swapCard details *{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Inputs inside Quote details: consistent height + padding */
+.swapCard details input[type="text"],
+.swapCard details input[type="number"],
+.swapCard details input[type="search"]{
+  height: 32px;
+  padding: 0 .5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(220,235,255,.14);
+  background: rgba(255,255,255,.05);
+  color: #eaf1ff;
+}
+
+/* Buttons inside Quote details: no wrapping, rectangular, neat */
+.swapCard details button{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 .6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(220,235,255,.16);
+  background: rgba(255,255,255,.08);
+  color: #eaf1ff;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;        /* << stops “Stan-dard / Fa-st / Inst-ant” line breaks */
+  letter-spacing: .2px;
+}
+
+/* Optional subtle hover so pills feel intentional */
+.swapCard details button:hover{
+  background: rgba(255,255,255,.12);
+}
+
+/* Small visual spacing between clusters if they stack/wrap */
+.swapCard details .px-3 > *{ margin-right: 6px; margin-bottom: 6px; }
+
+/* Code-like blocks (spender, calldata) remain tidy */
+.swapCard code, .swapCard pre{
+  white-space: pre-wrap;
+}

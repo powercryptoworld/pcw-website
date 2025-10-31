@@ -335,7 +335,7 @@ export default function Page() {
               />
               {/* tray */}
               <div
-                className="absolute left-1/2 top-6 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-xl rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
+                className="absolute left-1/2 top-3 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-xl rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
                 role="dialog"
                 aria-modal="true"
               >
