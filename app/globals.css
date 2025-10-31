@@ -644,3 +644,35 @@ select.input{ appearance: none; }
   .container{ max-width:360px; padding: 0 10px; }
   .glass{ border-radius:14px; }
 }
+
+/* ui-6B.2 — Swap card placement helper (uses existing .glass style) */
+.swapCard{
+  max-width: 480px;
+  margin: 84px auto 24px;  /* clears header a bit; centered within page container */
+  padding: 12px;
+}
+@media (max-width: 768px){
+  .swapCard{
+    max-width: 100%;
+    margin: 72px 12px 20px;
+    padding: 12px;
+  }
+}
+
+/* ui-6B.2b — scale card to 720px and keep details inside */
+.swapCard{
+  max-width: 720px;        /* ~1.5× previous size */
+  overflow: hidden;        /* nothing bleeds past the rounded glass */
+}
+
+/* Ensure long hashes/addresses/calldata wrap inside Quote details */
+.swapCard details,
+.swapCard details *{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Optional: keep code blobs tidy if present */
+.swapCard code, .swapCard pre{
+  white-space: pre-wrap;
+}
