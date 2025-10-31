@@ -807,3 +807,68 @@ select.input{ appearance: none; }
 @media (max-width: 768px){
   .flip-fab{ width: 30px; height: 30px; left: 58%; }
 }
+
+/* ui-flipcss — Reposition existing Flip row without touching JSX */
+
+/* The middle row: <div class="flex items-center justify-between my-1"> ... */
+.swapCard .flex.items-center.justify-between.my-1{
+  position: relative;      /* anchor for absolute children */
+  height: 38px;            /* give a stable lane height */
+}
+
+/* First button in that row = the Flip control */
+.swapCard .flex.items-center.justify-between.my-1 > button:first-child{
+  position: absolute;
+  left: 60%;               /* push toward the amount side; tweak 55–65% as you like */
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1px solid rgba(220,235,255,.18);
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: #eaf1ff;
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.35),
+    inset 0 0 10px rgba(255,255,255,.06);
+  padding: 0;              /* remove text padding */
+  font-size: 0;            /* hide original "Flip" label */
+}
+
+/* Put a neat ⇄ glyph inside the circle */
+.swapCard .flex.items-center.justify-between.my-1 > button:first-child::after{
+  content: "⇄";
+  font-size: 16px;
+}
+
+/* Hover/active polish */
+.swapCard .flex.items-center.justify-between.my-1 > button:first-child:hover{
+  background: rgba(255,255,255,.12);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.45),
+    0 0 18px rgba(0,224,255,.18),
+    0 0 18px rgba(153,69,255,.16);
+}
+.swapCard .flex.items-center.justify-between.my-1 > button:first-child:active{
+  transform: translate(-50%, -50%) scale(.98);
+}
+
+/* Second button in that row = mode toggle ("⇄ Set output|input") — pin to the right */
+.swapCard .flex.items-center.justify-between.my-1 > button:last-child{
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Slightly smaller on mobile so it doesn’t crowd */
+@media (max-width: 768px){
+  .swapCard .flex.items-center.justify-between.my-1{ height: 36px; }
+  .swapCard .flex.items-center.justify-between.my-1 > button:first-child{ width: 30px; height: 30px; left: 58%; }
+}
