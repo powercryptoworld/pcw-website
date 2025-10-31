@@ -773,7 +773,7 @@ select.input{ appearance: none; }
 /* ui-flipfab — Floating circular Flip button between rows, biased to the amounts side */
 .flip-fab{
   position: absolute;
-  left: 60%;                 /* push it toward the amounts side; tweak 55–65% to taste */
+  left: 58%;                 /* push it toward the amounts side; tweak 55–65% to taste */
   top: 50%;
   transform: translate(-50%, -50%);
   width: 34px;
@@ -819,7 +819,7 @@ select.input{ appearance: none; }
 /* First button in that row = the Flip control */
 .swapCard .flex.items-center.justify-between.my-1 > button:first-child{
   position: absolute;
-  left: 60%;               /* push toward the amount side; tweak 55–65% as you like */
+  left: 58%;               /* push toward the amount side; tweak 55–65% as you like */
   top: 50%;
   transform: translate(-50%, -50%);
   width: 34px;
