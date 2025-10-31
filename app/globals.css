@@ -740,3 +740,14 @@ select.input{ appearance: none; }
 /* ui-step2a.1 — icon-only chip when used before the row label */
 .chip-icon-only .text-xs{ display: none; }               /* hides SYMBOL text inside TokenChip */
 .chip-icon-only [class*="text-[10px]"]{ display: none; } /* hides tiny badges like "Solana preview" */
+
+/* ui-step2a.2 — Double the header logo size (icon-only chip) */
+.chip-icon-only{
+  transform: scale(1.95);           /* ~2× the original 16px */
+  transform-origin: left center;     /* grow from the left so text alignment holds */
+  margin-right: 8px;                 /* breathing room before the label */
+}
+/* Keep it a touch smaller on narrow screens */
+@media (max-width: 768px){
+  .chip-icon-only{ transform: scale(1.7); margin-right: 6px; }
+}
