@@ -113,22 +113,33 @@ export default function TokenRow({
     <div className="rounded-2xl p-4 bg-black/20 border border-white/10 shadow-sm">
       <div className="flex items-center justify-between text-sm opacity-80">
         <span>{title}</span>
-        <span>Balance: {balStr}</span>
       </div>
 
-      <div className="mt-3 flex items-center gap-3">
-        <input
-          value={amount}
-          onChange={(e)=> onAmount(e.target.value)}
-          disabled={!!readOnlyAmount}
-          inputMode="decimal"
-          placeholder="0.0"
-          className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
-        />
-        <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
-        {showMax && (
-  <button onClick={onMaxClick} disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0} title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")} className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed">MAX</button>
-)}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <input
+            value={amount}
+            onChange={(e)=> onAmount(e.target.value)}
+            disabled={!!readOnlyAmount}
+            inputMode="decimal"
+            placeholder="0.0"
+            className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
+          />
+          <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
+        </div>
+        <div className="ml-4 shrink-0 flex items-center gap-2 w-[210px]">
+          <span className="text-sm opacity-80 relative top-[1px] tabular-nums font-mono">Balance: {balStr}</span>
+          {showMax && (
+            <button
+              onClick={onMaxClick}
+              disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0}
+              title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")}
+              className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed"
+            >
+              MAX
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
