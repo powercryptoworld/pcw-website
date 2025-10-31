@@ -751,3 +751,21 @@ select.input{ appearance: none; }
 @media (max-width: 768px){
   .chip-icon-only{ transform: scale(1.7); margin-right: 6px; }
 }
+
+/* ui-step2a.3 — Breathing room so enlarged logos don't collide */
+.swapCard > .flex:first-child{
+  /* The first header row inside the card (Network: …) */
+  margin-bottom: 10px;      /* was ~4px via mb-1; add extra space below */
+}
+
+/* The Flip row uses .my-1. Give it more space so the lower logo doesn't touch it */
+.swapCard .my-1{
+  margin-top: 12px;         /* increase vertical gap above */
+  margin-bottom: 12px;      /* and below */
+}
+
+/* Align large icon chips nicely on the text baseline */
+.chip-icon-only{
+  position: relative;
+  top: 1px;                 /* subtle baseline nudge so label text sits clean */
+}
