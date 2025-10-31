@@ -268,11 +268,19 @@ export default function Page() {
           </div>
 
           {/* You pay */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
-              <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
-            ) : (
-              <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
-            )}</button><div className="text-[11px] opacity-80">You pay</div></div></div>
+          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2 mb-1">
+  {solPay ? (
+    <TokenChip family="sol" symbol={solPay?.symbol} name={solPay?.name} mint={solPay?.mint} onClear={() => setSolPay(null)} />
+  ) : (
+    <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
+  )}
+  <button
+    onClick={() => setPicker("pay")}
+    className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10"
+  >
+    Pay token
+  </button>
+</div></div></div>
           <TokenRow
             title="You pay"
             token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
@@ -288,11 +296,19 @@ export default function Page() {
           </div>
 
           {/* You receive */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
-              <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
-            ) : (
-              <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
-            )}</button><div className="text-[11px] opacity-80">You receive</div></div></div>
+          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2 mb-1">
+  {solReceive ? (
+    <TokenChip family="sol" symbol={solReceive?.symbol} name={solReceive?.name} mint={solReceive?.mint} onClear={() => setSolReceive(null)} />
+  ) : (
+    <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
+  )}
+  <button
+    onClick={() => setPicker("receive")}
+    className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10"
+  >
+    Receive token
+  </button>
+</div></div></div>
           <TokenRow
             title="You receive"
             token={{ ...receiveToken, chainId: receiveToken.chainId, symbol: receiveToken.symbol ?? "DST" } as any}
