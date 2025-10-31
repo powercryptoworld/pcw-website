@@ -732,3 +732,7 @@ select.input{ appearance: none; }
 .swapCard code, .swapCard pre{
   white-space: pre-wrap;
 }
+
+/* ui-step2a — make the token chip act as the selector without button chrome */
+.token-chip-btn{ all: unset; cursor: pointer; display: inline-flex; align-items: center; }
+.token-chip-btn:focus-visible{ outline: 2px solid rgba(255,255,255,.30); outline-offset: 2px; border-radius: 10px; }
