@@ -287,9 +287,6 @@ export default function Page() {
             showMax
           />
             <button onClick={flip} className="flip-center" title="Flip tokens and amounts">⇄</button>
-            <div className="flex items-center justify-end my-1">
-            <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
-          </div>
 
           {/* You receive */}
           <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
