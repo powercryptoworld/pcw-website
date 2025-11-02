@@ -792,6 +792,3 @@ select.input{ appearance: none; }
   top: calc(50% + 16px) !important;/* align with "Receive token" row; smaller number = higher */
   z-index: 6;
 }
-
-/* centerfix 2025-11-02 — align QuotePanel labels */
-.swapCard .qp-label{display:inline-flex;align-items:center;height:32px;line-height:32px;margin-top:2px;margin-right:.5rem;white-space:nowrap}
