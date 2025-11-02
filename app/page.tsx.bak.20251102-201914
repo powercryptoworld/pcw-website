@@ -209,7 +209,7 @@ export default function Page() {
     src: { address: (src.address as Addr), decimals: src.decimals, symbol: src.symbol },
     dst: { address: (dst.address as Addr), decimals: dst.decimals, symbol: dst.symbol },
     amount: humanAmount || "0",
-    SlippageBps: 50,
+    slippageBps: 50,
     includeProtocols: true,
     gasSpeed: "fast",
   });
