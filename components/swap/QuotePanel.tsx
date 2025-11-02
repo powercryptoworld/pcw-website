@@ -253,9 +253,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       <div className="flex items-center gap-2 flex-wrap">
         <div className="opacity-70">Quote details</div>
 
-          <div className="ml-3 flex flex-col">
-            <div className="opacity-70">Slippage</div>
-            <div className="flex items-center gap-2">
+        <div className="ml-3 opacity-70">Slippage</div>
 
         <input
           className="ml-2 w-16 rounded bg-white/10 px-1 text-right"
@@ -270,10 +268,8 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(50)}>0.50%</button>
         <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(100)}>1.00%</button>
         <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(defaultSlippageBps)}>Reset</button>
-          </div>
-        </div>
 
-        <div className="ml-4 opacity-70">Speed</div>
+        <div className="ml-4 opacity-70">%Speed</div>
         <button className={`ml-1 rounded px-2 ${speed==="standard"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("standard")}>Standard</button>
         <button className={`ml-1 rounded px-2 ${speed==="fast"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("fast")}>Fast</button>
         <button className={`ml-1 rounded px-2 ${speed==="instant"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("instant")}>Instant</button>
