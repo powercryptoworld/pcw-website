@@ -257,27 +257,14 @@ export default function Page() {
 
       <div className="mx-auto max-w-3xl p-4">
         <div className="glass swapCard relative">
-            {/* right-side Set output/input control (centered) */}
-            <button
-              onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-              title={mode === "pay" ? "Switch: set output" : "Switch: set input"}
-            >
-              {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-          <div className="flex items-center justify-between mb-1">
-            <div className="text-[11px] opacity-80">
-              Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>
-            </div>
-            <div className="flex items-center gap-2"></div>
-                <button
-                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-              </button>
-            </div>
-          </div>
-          {/* You pay */}
+  <div className="flex items-center justify-between mb-1">
+    <div className="text-[11px] opacity-80">
+      Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId `}</span>
+    </div>
+    <button onClick={() => setMode((m) => (m === \"pay\" ? \"receive\" : \"pay\"))} className=\"text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20\" title={mode === \"pay\" ? \"Switch: set output\" : \"Switch: set input\"}>{mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}</button>
+  </div>
+
+  {/* You pay */}
           <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
   <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
 ) : (
