@@ -264,16 +264,27 @@ export default function Page() {
               title={mode === "pay" ? "Switch: set output" : "Switch: set input"}
             >
               {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-            </button>
           <div className="flex items-center justify-between mb-1">
             <div className="text-[11px] opacity-80">
               Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>
             </div>
             <div className="flex items-center gap-2"></div>
+                <button
+                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
+                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
+                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
+                </button>
           </div>
 
           {/* You pay */}
           <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
+                <button
+                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
+                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
+                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
+                </button>
               <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
             ) : (
               <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
@@ -290,6 +301,12 @@ export default function Page() {
 
           {/* You receive */}
           <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
+                <button
+                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
+                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
+                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
+                </button>
               <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
             ) : (
               <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
@@ -341,6 +358,12 @@ export default function Page() {
                   </div>
                   {family==="evm" && (
                     <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
+                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
+                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
+                </button>
                       <span className="text-sm opacity-80">Chain</span>
                       <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
                     </div>
