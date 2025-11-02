@@ -795,11 +795,3 @@ select.input{ appearance: none; }
 
 /* centerfix 2025-11-02 — align QuotePanel labels */
 .swapCard .qp-label{display:inline-flex;align-items:center;height:32px;line-height:32px;margin-top:2px;margin-right:.5rem;white-space:nowrap}
-
-/* centerrow 2025-11-02 — keep flip + set-output centered and steady */
-.flip-center-row{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:.5rem;align-items:center;z-index:6;pointer-events:none}
-.flip-center-row .flip-center,.flip-center-row .set-output-btn{pointer-events:auto}
-.flip-center-row .flip-center{position:static !important;transform:none !important}
-
-/* centerrow-guard 2025-11-02 — hide legacy right-aligned Set output row if present */
-.swapCard .flex.items-center.justify-end.my-1{display:none}
