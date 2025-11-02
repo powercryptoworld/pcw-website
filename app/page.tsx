@@ -274,7 +274,6 @@ export default function Page() {
                   className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
                   {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-                </button>
           </div>
 
           {/* You pay */}
