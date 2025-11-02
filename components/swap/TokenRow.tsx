@@ -34,7 +34,6 @@ export default function TokenRow({
   const [runtimeDecimals, setRuntimeDecimals] = useState<number>(token.decimals ?? 18);
   const [err, setErr] = useState<string>("");
 
-  // fetch balance + authoritative decimals
   useEffect(() => {
     let mounted = true;
     async function go() {
@@ -69,13 +68,10 @@ export default function TokenRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token.address, token.chainId, native.data?.value]);
 
-  // Price source: token address OR wrapped-native (for native coins)
   const priceAddr = (token.address as Address|undefined) ?? wrappedAddressFor(token.chainId);
-  // IMPORTANT: pass runtimeDecimals (authoritative) not the static token.decimals
   const usd = useUsdQuote(token.chainId, priceAddr, runtimeDecimals);
   const stableHere = isKnownStable(token.chainId, token.address as any);
 
-  // USD display (with $1 stable fallback)
   const usdLine = useMemo(() => {
     if (!amount) return "";
     const amt = Number(amount);
@@ -87,7 +83,6 @@ export default function TokenRow({
     return `≈ $${(amt * p).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   }, [amount, usd.priceUsd, stableHere]);
 
-  // simple validation: amount <= balance (only meaningful when editable)
   useEffect(() => {
     const a = Number(amount || "0");
     if (a > balNum) setErr("Amount exceeds balance");
@@ -95,7 +90,6 @@ export default function TokenRow({
   }, [amount, balNum]);
 
   function onMaxClick() {
-    // ERC-20: full balance; Native: subtract gas buffer
     if (!token.address) {
       const v = native.data?.value;
       const dec = native.data?.decimals ?? runtimeDecimals;
@@ -111,41 +105,50 @@ export default function TokenRow({
 
   return (
     <div className="rounded-2xl p-4 bg-black/20 border border-white/10 shadow-sm">
-      {/* Header row — keep it simple: just the title.
-          (Balances show on the card’s right side; no MAX here) */}
-      <div className="flex items-center justify-between text-sm opacity-80"><span className="whitespace-nowrap">{title}</span><span className="tabular-nums font-mono text-sm opacity-80 w-[148px] text-right">Balance: {balStr}</span>
+      {/* small row title only (no balance here) */}
+      <div className="flex items-center justify-between text-sm opacity-80">
+        <span className="whitespace-nowrap">{title}</span>
+        <span aria-hidden />
       </div>
 
-      <div className="mt-3 flex items-center gap-3">
-        <input
-          value={amount}
-          onChange={(e)=> onAmount(e.target.value)}
-          disabled={!!readOnlyAmount}
-          inputMode="decimal"
-          placeholder="0.0"
-          className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
-        />
-        <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
-        {showMax && (
-          <button
-            onClick={onMaxClick}
-            disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0}
-            title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")}
-            className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed"
-          >
-            MAX
-          </button>
-        )}
+      {/* amount line + right-aligned balance (vertically centered with MAX) */}
+      <div className="mt-3 relative">
+        {/* keep space on the right so content never overlaps the balance label */}
+        <div className="flex items-center gap-3 pr-44">
+          <input
+            value={amount}
+            onChange={(e)=> onAmount(e.target.value)}
+            disabled={!!readOnlyAmount}
+            inputMode="decimal"
+            placeholder="0.0"
+            className={`w-full bg-transparent text-2xl outline-none ${(!readOnlyAmount && err) ? "text-red-400" : ""}`}
+          />
+          <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
+          {showMax && (
+            <button
+              onClick={onMaxClick}
+              disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0}
+              title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")}
+              className="ml-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed"
+            >
+              MAX
+            </button>
+          )}
+        </div>
+
+        {/* aligned balance label */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 tabular-nums font-mono text-sm opacity-80 text-right w-[148px]">
+          Balance: {balStr}
+        </div>
       </div>
 
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
 
-      {/* DEBUG — hidden by default; show only if NEXT_PUBLIC_LAB_DEBUG="1" */}
       {process.env.NEXT_PUBLIC_LAB_DEBUG === "1" && (
         <div className="mt-1 text-[11px] opacity-70">
           priceDbg • chain:{token.chainId} • addr:{String(priceAddr||"native")}
-          {" "}• price:{usd.priceUsd ?? "n/a"} • source:{usd.source ?? "n/a"}
-          {" "}• runtimeDecimals:{runtimeDecimals} • stable:{stableHere ? "yes" : "no"}
+          {' '}• price:{usd.priceUsd ?? "n/a"} • source:{usd.source ?? "n/a"}
+          {' '}• runtimeDecimals:{runtimeDecimals} • stable:{stableHere ? "yes" : "no"}
         </div>
       )}
 
