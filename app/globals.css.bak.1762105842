@@ -784,11 +784,3 @@ select.input{ appearance: none; }
   top: calc(50% + 56px);   /* was 50%; move ~56px downward to the receive row */
   transform: translateY(-50%);
 }
-/* --- set-output alignment tweak (receive row) --- */
-.swapCard button[title="Switch: set output"],
-.swapCard button[title="Switch: set input"] {
-  position: absolute;
-  right: 1rem !important;          /* between the balances */
-  top: calc(50% + 16px) !important;/* align with "Receive token" row; smaller number = higher */
-  z-index: 6;
-}
