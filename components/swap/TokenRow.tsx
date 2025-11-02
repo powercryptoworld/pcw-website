@@ -113,9 +113,7 @@ export default function TokenRow({
     <div className="rounded-2xl p-4 bg-black/20 border border-white/10 shadow-sm">
       {/* Header row — keep it simple: just the title.
           (Balances show on the card’s right side; no MAX here) */}
-      <div className="flex items-center justify-between text-sm opacity-80">
-        <span className="whitespace-nowrap">{title}</span>
-        <span aria-hidden />
+      <div className="flex items-center justify-between text-sm opacity-80"><span className="whitespace-nowrap">{title}</span><span className="tabular-nums font-mono text-sm opacity-80 w-[148px] text-right">Balance: {balStr}</span>
       </div>
 
       <div className="mt-3 flex items-center gap-3">
