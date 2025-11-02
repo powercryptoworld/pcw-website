@@ -273,7 +273,7 @@ export default function Page() {
                   onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
                   className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+                {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
               </button>
             </div>
           </div>
@@ -283,19 +283,19 @@ export default function Page() {
                   onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
                   className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+                {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
               </button>
             </div>
           </div>
           {/* You pay */}
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+                {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
               </button>
             </div>
           </div>
           {/* You pay */}
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+                {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
               </button>
             </div>
           </div>
