@@ -273,137 +273,30 @@ export default function Page() {
                   onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
                   className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
+                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+              </button>
+            </div>
           </div>
-
           {/* You pay */}
           <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
                 <button
                   onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
                   className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-                </button>
-              <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
-            ) : (
-              <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
-            )}</button><button onClick={()=>setPicker("pay")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Pay token</button></div></div>
-          <TokenRow
-            title=""
-            token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
-            amount={payAmount}
-            onAmount={(v: string) => { setMode("pay"); setPayAmount(v); }}
-            onComputedBalance={() => {}}
-            showMax
-          />
-            <button onClick={flip} className="flip-center" title="Flip tokens and amounts">⇄</button>
-
-          {/* You receive */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
-                <button
-                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-                </button>
-              <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
-            ) : (
-              <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
-            )}</button><button onClick={()=>setPicker("receive")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Receive token</button></div></div>
-          <TokenRow
-            title=""
-            token={{ ...receiveToken, chainId: receiveToken.chainId, symbol: receiveToken.symbol ?? "DST" } as any}
-            amount={receiveAmount}
-            onAmount={(v: string) => { setMode("receive"); setReceiveAmount(v); }}
-            onComputedBalance={() => {}}
-            showMax
-          />
-
-          {solNotice}
-
-          {/* Collapsible quote details (EVM) */}
-          <details className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-            <summary className="select-none cursor-pointer text-xs px-3 py-2 bg-white/5 hover:bg-white/10">Quote details</summary>
-            <div className="px-3 py-2">
-              <QuotePanel
-                chainId={chainId}
-                src={payToken as any}
-                dst={receiveToken as any}
-                amount={mode === "pay" ? payAmount : receiveAmount}
-                defaultSlippageBps={50}
-              />
+                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+              </button>
             </div>
-          </details>
-
-          {/* Picker Overlay + Centered Tray */}
-          {picker && (
-            <>
-              {/* dim backdrop */}
-              <div
-                className="absolute inset-0 z-20 bg-black/40 rounded-2xl"
-                onClick={()=>setPicker(null)}
-                aria-hidden
-              />
-              {/* tray */}
-              <div
-                className="absolute left-1/2 top-3 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-xl rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
-                role="dialog"
-                aria-modal="true"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex gap-2">
-                    <button onClick={()=>setFamily("evm")} className={cx("px-3 py-1 border rounded", family==="evm" && "bg-white/10")}>EVM</button>
-                    <button onClick={()=>setFamily("solana")} className={cx("px-3 py-1 border rounded", family==="solana" && "bg-white/10")}>Solana</button>
-                  </div>
-                  {family==="evm" && (
-                    <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+          </div>
+          {/* You pay */}
                   title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
-                  {mode === "pay" ? "⇄ Set output" : "⇄ Set input"}
-                </button>
-                      <span className="text-sm opacity-80">Chain</span>
-                      <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
-                    </div>
-                  )}
-                  <div className="ml-auto flex items-center gap-2">
-                    <button className="px-3 py-1 border rounded" onClick={()=>setPicker(null)}>Close</button>
-                  </div>
-                </div>
-
-                <div className="mt-2 flex gap-2">
-                  <input
-                    ref={searchRef}
-                    className="flex-1 border rounded px-3 py-2"
-                    placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"}
-                    value={searchText}
-                    onChange={(e)=>setSearchText(e.target.value)}
-                    onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }}
-                  />
-                  <button className="px-4 py-2 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
-                </div>
-
-                <div className="mt-3 space-y-2 max-h-72 overflow-auto pr-1">
-                  {/* EVM results (selectable) */}
-                  {family==="evm" && results.map((t: any, i: number)=>(
-                    <button
-                      key={`${t.address||i}-${t.chainId??selectedChainId}`}
-                      onClick={()=>applyEvmSelection(t)}
-                      className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
-                      title={`Apply to ${picker==="pay"?"Pay":"Receive"}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <InlineRowLogoInjector
-                          address={t.address}
-                          chainId={t.chainId ?? selectedChainId}
-                          symbol={t.symbol}
-                          name={t.name}
-                          logoURI={t.logoURI}
-                          size={28}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">
-                            {t.symbol || "UNKNOWN"} <span className="text-xs text-white/60">— {t.name || "Token"}</span>
-                          </div>
-                          <div className="text-xs text-white/60">
+                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+              </button>
+            </div>
+          </div>
+          {/* You pay */}
+                  title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>
+                {mode === \"pay\" ? \"⇄ Set output\" : \"⇄ Set input\"}
+              </button>
+            </div>
+          </div>
+          {/* You pay */}
