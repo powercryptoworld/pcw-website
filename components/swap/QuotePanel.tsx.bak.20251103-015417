@@ -271,9 +271,9 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         </div>
 
         <div className="ml-4 flex items-center"><div className="opacity-70 text-xs whitespace-nowrap mr-2 mt-0.5" style={{overflowWrap:"normal",wordBreak:"normal",whiteSpace:"nowrap"}}>Speed</div><div className="mt-0 flex items-center ml-2">
-        <button className={`ml-1 rounded px-2 speed-pill ${speed==="standard"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("standard")}>Standard</button>
-        <button className={`ml-1 rounded px-2 speed-pill ${speed==="fast"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("fast")}>Fast</button>
-        <button className={`ml-1 rounded px-2 speed-pill ${speed==="instant"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("instant")}>Instant</button>
+        <button className={`ml-1 rounded px-2 ${speed==="standard"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("standard")}>Standard</button>
+        <button className={`ml-1 rounded px-2 ${speed==="fast"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("fast")}>Fast</button>
+        <button className={`ml-1 rounded px-2 ${speed==="instant"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("instant")}>Instant</button>
           </div>
         </div>
       </div>

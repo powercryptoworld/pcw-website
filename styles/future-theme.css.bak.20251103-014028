@@ -298,33 +298,3 @@
 
 /* Keep the pill rows tidy and prevent wrapping weirdness */
 .theme-future .swapCard .px-3{ display:flex; gap:10px; flex-wrap:wrap; }
-/* === PCW FUTURE THEME — sticky active glow for slippage/speed pills === */
-.theme-future .swapCard .px-3{ display:flex; flex-wrap:wrap; gap:8px; }
-
-.theme-future .swapCard .px-3 button{
-  display:inline-flex; align-items:center; justify-content:center;
-  height:32px; padding:0 .9rem;
-  border-radius:9999px;
-  border:1px solid rgba(153,69,255,.45);
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  color:#EAF4FF; font-weight:600; letter-spacing:.2px;
-  box-shadow:0 0 0 0 rgba(0,0,0,0);
-  transition:transform .12s ease, box-shadow .25s ease, border-color .2s ease, background .2s ease;
-}
-
-.theme-future .swapCard .px-3 button:hover,
-.theme-future .swapCard .px-3 button:focus-visible{
-  transform:translateY(-1px) scale(1.02);
-  border-color:rgba(90,255,240,.60);
-  box-shadow:0 0 16px rgba(20,241,149,.25), 0 0 22px rgba(153,69,255,.25);
-}
-
-/* Make the currently selected pill stay glowing.
-   We cover common states: aria-pressed, .active, and .pill-active */
-.theme-future .swapCard .px-3 button[aria-pressed="true"],
-.theme-future .swapCard .px-3 button.active,
-.theme-future .swapCard .px-3 .pill-active{
-  border-color:rgba(90,255,240,.75);
-  background:radial-gradient(120% 120% at 50% 0%, rgba(153,69,255,.22), rgba(20,241,149,.14));
-  box-shadow:0 0 22px rgba(153,69,255,.35), 0 0 28px rgba(20,241,149,.25), inset 0 1px rgba(255,255,255,.10);
-}
