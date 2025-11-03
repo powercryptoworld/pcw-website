@@ -2,6 +2,7 @@ import NavClientOnly from "@/components/NavClientOnly";
 import AppKitInit from "../components/AppKitInit";
 import "./globals.css";
 import "./pill-override.css";
+import ProbeStyle from "./ProbeStyle";
 import "./pill-override.css";
 import type { Metadata } from "next";
 
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="theme-future"><div id="noise-overlay" />
         <Providers>
+          <ProbeStyle />
           <NavClientOnly />
           <main
             className="mx-auto max-w-6xl px-5 py-10"

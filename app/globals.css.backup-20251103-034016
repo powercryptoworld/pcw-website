@@ -1572,6 +1572,7 @@ select.input{ appearance: none; }
 }
 /* === PCW FUTURE PILL SKIN — END ========================================== */
 
+/* PROBE 2025-11-02 */
 .swapCard .pill{outline:2px solid magenta !important}
 
 /* PROBE2 */
@@ -1758,61 +1759,5 @@ button{outline:3px solid lime !important}
 }
 /* === END v3 === */
 
+/* PROBE-GLASS 2025-11-02 */
 .theme-future .glass .pill{outline:3px solid lime !important}
-/* ==== PCW NEON UI v2 — scoped, high-specificity, important ==== */
-.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill){
-  position:relative !important;
-  border-radius:9999px !important;
-  border:1px solid rgba(122,92,255,.70) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)),
-    radial-gradient(120% 140% at 0% 0%, rgba(52,255,214,.22), transparent 60%) !important;
-  color:#eaf2ff !important;
-  padding:.48rem .9rem !important;
-  line-height:1 !important;
-  letter-spacing:.2px !important;
-  backdrop-filter: blur(8px) !important;
-  transition: transform .14s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease !important;
-  box-shadow:
-    inset 0 0 1px rgba(255,255,255,.28),
-    0 0 14px rgba(52,255,214,.34),
-    0 0 22px rgba(122,92,255,.24) !important;
-}
-
-.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill):hover,
-.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill):focus-visible{
-  transform: translateY(-1px) !important;
-  border-color:#7a5cff !important;
-  box-shadow:
-    inset 0 0 1px rgba(255,255,255,.30),
-    0 0 18px rgba(52,255,214,.42),
-    0 0 28px rgba(122,92,255,.32) !important;
-  color:#ffffff !important;
-}
-
-.theme-future .glass.swapCard :is(.pill-active,.active,[aria-pressed="true"]){
-  border-color:#b29aff !important;
-  background:
-    linear-gradient(180deg, rgba(52,255,214,.26), rgba(122,92,255,.34)),
-    radial-gradient(120% 140% at 100% 0%, rgba(255,47,176,.24), transparent 62%) !important;
-  box-shadow:
-    inset 0 0 1px rgba(255,255,255,.32),
-    0 0 20px rgba(52,255,214,.36),
-    0 0 30px rgba(122,92,255,.30) !important;
-  color:#fff !important;
-}
-
-/* Inputs to match the glass card */
-.theme-future .glass.swapCard :is(input,select){
-  border-radius:12px !important;
-  border:1px solid rgba(122,92,255,.55) !important;
-  background: rgba(0,0,0,.30) !important;
-  color:#f6f9ff !important;
-  box-shadow: inset 0 0 1px rgba(255,255,255,.24), 0 0 10px rgba(52,255,214,.16) !important;
-}
-.theme-future .glass.swapCard :is(input,select):focus{
-  outline:none !important;
-  border-color:#7a5cff !important;
-  box-shadow: inset 0 0 1px rgba(255,255,255,.30), 0 0 16px rgba(122,92,255,.28) !important;
-}
-/* ==== end PCW NEON UI v2 ==== */

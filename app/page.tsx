@@ -256,7 +256,7 @@ export default function Page() {
       <div className="swap-vfx" aria-hidden />
 
       <div className="mx-auto max-w-3xl p-4">
-        <div className="glass swapCard relative">
+        <div className="glass swapCard relative" id="pcwSwapCard">
           <div className="flex items-center justify-between mb-1">
             <div className="text-[11px] opacity-80">
               Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>

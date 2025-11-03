@@ -1,0 +1,65 @@
+:root{ --sol-cyan:#34ffd6; --sol-purple:#7a5cff; --neon-pink:#ff2fb0; }
+
+/* Nuke any pseudo spotlight or probes */
+.theme-future .glass.swapCard::before,
+.theme-future .glass.swapCard::after{ content:none !important; background:none !important; box-shadow:none !important; }
+
+/* Card — subtle glass, no blobs */
+.theme-future .glass.swapCard{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025)) !important;
+  border: 1px solid rgba(122,92,255,.25) !important;
+  box-shadow:
+    inset 0 0 1px rgba(255,255,255,.18),
+    0 10px 26px rgba(0,0,0,.28),
+    0 0 26px rgba(122,92,255,.14),
+    0 0 20px rgba(52,255,214,.10) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Pills & small buttons */
+.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]){
+  border-radius:9999px!important;
+  border:1px solid rgba(122,92,255,.45)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035))!important;
+  color:#eaf2ff!important;
+  padding:.42rem .8rem!important; line-height:1!important; letter-spacing:.2px!important;
+  backdrop-filter:blur(4px)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.22)!important;
+  transition:transform .14s, box-shadow .18s, background .18s, border-color .18s!important;
+}
+.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):hover,
+.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):focus-visible{
+  transform:translateY(-1px);
+  border-color:rgba(122,92,255,.70)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.28), 0 0 14px rgba(52,255,214,.28), 0 0 20px rgba(122,92,255,.22)!important;
+  outline:none;
+}
+.theme-future .glass.swapCard :is(.pill-active,.active,[aria-pressed="true"]){
+  border-color:rgba(122,92,255,.85)!important;
+  background:linear-gradient(180deg,rgba(52,255,214,.20),rgba(122,92,255,.22))!important;
+  color:#fff!important;
+  box-shadow:inset 0 0 1px rgba(255,255,255,.30), 0 0 16px rgba(52,255,214,.30), 0 0 24px rgba(122,92,255,.24)!important;
+}
+
+/* Inputs */
+.theme-future .glass.swapCard input[type="text"],
+.theme-future .glass.swapCard input[type="number"],
+.theme-future .glass.swapCard input:not([type]),
+.theme-future .glass.swapCard .input,
+.theme-future .glass.swapCard .field{
+  border-radius:12px!important;
+  border:1px solid rgba(122,92,255,.35)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03))!important;
+  color:#eaf2ff!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.18)!important;
+}
+.theme-future .glass.swapCard input:focus{
+  border-color:rgba(122,92,255,.60)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.26), 0 0 12px rgba(52,255,214,.22)!important;
+}
+
+/* Remove dashed quote block look, if any */
+.theme-future .glass.swapCard .quote-block,
+.theme-future .glass.swapCard .quoteDetails{
+  border:none!important; background:transparent!important; box-shadow:none!important;
+}

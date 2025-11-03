@@ -5,7 +5,7 @@ import ClearFeeOnAmountChange from "@/components/ClearFeeOnAmountChange";
 
 export default function SwapCard() {
   return (
-    <section className="swapCard swapCard container pt-12 pb-28">
+    <section className="swapCard container pt-12 pb-28">
       <div
         className="glass"
         style={{

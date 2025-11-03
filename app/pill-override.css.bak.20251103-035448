@@ -1,0 +1,103 @@
+/* === PCW Futuristic Neon UI for the swap card === */
+:root{
+  --sol-cyan: #34ffd6;
+  --sol-purple: #7a5cff;
+  --neon-pink: #ff2fb0;
+}
+
+.theme-future .glass.swapCard{
+  /* subtle glass upgrade on the card itself */
+  background:
+    radial-gradient(120% 160% at 10% 0%, rgba(52,255,214,.10), transparent 60%),
+    radial-gradient(120% 160% at 100% 0%, rgba(122,92,255,.12), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border: 1px solid color-mix(in oklab, var(--sol-cyan) 24%, white 0%);
+  box-shadow:
+    inset 0 0 1px rgba(255,255,255,.20),
+    0 10px 30px rgba(0,0,0,.35),
+    0 0 36px color-mix(in oklab, var(--sol-purple) 16%, transparent),
+    0 0 26px color-mix(in oklab, var(--sol-cyan) 14%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+/* --- Universal "pill/button" treatment inside the card --- */
+.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]){
+  position: relative;
+  border-radius: 9999px !important;
+  border: 1px solid color-mix(in oklab, var(--sol-cyan) 45%, white 0%) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04)),
+    radial-gradient(130% 150% at 0% 0%, color-mix(in oklab, var(--sol-cyan) 22%, transparent), transparent 60%) !important;
+  color: #eaf2ff !important;
+  padding: .44rem .84rem !important;
+  line-height: 1 !important;
+  letter-spacing: .2px !important;
+  backdrop-filter: blur(6px) !important;
+  box-shadow:
+    inset 0 0 0.5px rgba(255,255,255,.24),
+    0 0 0 rgba(0,0,0,0) !important;
+  transition: transform .14s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hover / focus */
+.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):hover,
+.theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):focus-visible{
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--sol-purple) 60%, white 0%) !important;
+  box-shadow:
+    inset 0 0 0.5px rgba(255,255,255,.30),
+    0 0 16px color-mix(in oklab, var(--sol-cyan) 32%, transparent),
+    0 0 24px color-mix(in oklab, var(--sol-purple) 28%, transparent) !important;
+  outline: none;
+}
+
+/* Active / selected (covers .pill-active and aria-pressed) */
+.theme-future .glass.swapCard :is(.pill-active,.active,[aria-pressed="true"]){
+  border-color: color-mix(in oklab, var(--sol-purple) 72%, white 0%) !important;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--sol-cyan) 26%, transparent), color-mix(in oklab, var(--sol-purple) 36%, transparent)),
+    radial-gradient(120% 140% at 100% 0%, color-mix(in oklab, var(--neon-pink) 22%, transparent), transparent 62%) !important;
+  color:#fff !important;
+  box-shadow:
+    inset 0 0 1px rgba(255,255,255,.32),
+    0 0 18px color-mix(in oklab, var(--sol-cyan) 34%, transparent),
+    0 0 28px color-mix(in oklab, var(--sol-purple) 28%, transparent) !important;
+}
+
+/* Inputs inside the card (amount boxes, etc.) */
+.theme-future .glass.swapCard input[type="text"],
+.theme-future .glass.swapCard input[type="number"],
+.theme-future .glass.swapCard input:not([type]),
+.theme-future .glass.swapCard .input,
+.theme-future .glass.swapCard .field{
+  border-radius: 12px !important;
+  border: 1px solid color-mix(in oklab, var(--sol-cyan) 28%, white 0%) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)),
+    radial-gradient(130% 150% at 0% 0%, color-mix(in oklab, var(--sol-cyan) 16%, transparent), transparent 60%) !important;
+  color: #eaf2ff !important;
+  outline: none !important;
+  box-shadow: inset 0 0 0.5px rgba(255,255,255,.2) !important;
+}
+.theme-future .glass.swapCard input:focus{
+  border-color: color-mix(in oklab, var(--sol-purple) 52%, white 0%) !important;
+  box-shadow:
+    inset 0 0 0.5px rgba(255,255,255,.28),
+    0 0 14px color-mix(in oklab, var(--sol-cyan) 26%, transparent) !important;
+}
+
+/* Group spacing for pill rows */
+.theme-future .glass.swapCard .pillset,
+.theme-future .glass.swapCard .speed-pills,
+.theme-future .glass.swapCard .quote-pills{
+  display:flex; flex-wrap:wrap; gap:10px;
+}
+
+/* Optional: the "Quote details" block outline (subtle) */
+.theme-future .glass.swapCard .quote-block,
+.theme-future .glass.swapCard .quoteDetails{
+  border: 1px dashed color-mix(in oklab, var(--sol-cyan) 25%, white 0%);
+  border-radius: 14px;
+  padding: 10px;
+}

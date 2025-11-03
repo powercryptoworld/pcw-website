@@ -1,8 +1,6 @@
 import NavClientOnly from "@/components/NavClientOnly";
 import AppKitInit from "../components/AppKitInit";
 import "./globals.css";
-import "./pill-override.css";
-import "./pill-override.css";
 import type { Metadata } from "next";
 
 import Providers from "./providers";
@@ -20,7 +18,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="theme-future"><div id="noise-overlay" />
+      <body className="theme-future">
+        <style id="probe-pill" dangerouslySetInnerHTML={{__html: `/* WIDE PROBE */ 
+.theme-future button{outline:3px solid yellow !important}
+.theme-future [role="button"]{outline:3px solid orange !important}
+.theme-future .swapCard *{outline-offset:2px}
+`}} />
+        <div id="noise-overlay" />
         <Providers>
           <NavClientOnly />
           <main

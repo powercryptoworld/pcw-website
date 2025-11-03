@@ -1,0 +1,159 @@
+:root{ --sol-cyan:#34ffd6; --sol-purple:#7a5cff; --neon-pink:#ff2fb0; }
+
+/* Kill any leftover spotlight blobs on the glass card */
+.theme-future .swapCard .glass::before,
+.theme-future .swapCard .glass::after{
+  content:none !important; background:none !important; box-shadow:none !important; filter:none !important;
+}
+
+/* Glass card look + sizing */
+.theme-future .swapCard .glass{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025)) !important;
+  border: 1px solid rgba(122,92,255,.25) !important;
+  box-shadow:
+    inset 0 0 1px rgba(255,255,255,.18),
+    0 10px 26px rgba(0,0,0,.28),
+    0 0 26px rgba(122,92,255,.14),
+    0 0 20px rgba(52,255,214,.10) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 18px !important;
+  width: clamp(560px, 62vw, 920px) !important;
+  padding: 22px !important;
+}
+
+/* --- Neon pill/buttons (explicit selectors; no :is()) --- */
+.theme-future .swapCard button,
+.theme-future .swapCard [role="button"],
+.theme-future .swapCard .pill,
+.theme-future .swapCard .speed-pill,
+.theme-future .swapCard .px-3,
+.theme-future .swapCard [class*="pill"],
+.theme-future .swapCard [class*="chip"]{
+  border-radius:9999px!important;
+  border:1px solid rgba(122,92,255,.70)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035))!important;
+  color:#eaf2ff!important;
+  padding:.44rem .86rem!important;
+  line-height:1!important;
+  letter-spacing:.2px!important;
+  backdrop-filter:blur(6px)!important;
+  box-shadow:
+    inset 0 0 .5px rgba(255,255,255,.24),
+    0 0 14px rgba(52,255,214,.30),
+    0 0 20px rgba(122,92,255,.22)!important;
+  transition:transform .14s, box-shadow .18s, background .18s, border-color .18s!important;
+}
+
+/* Hover/focus */
+.theme-future .swapCard button:hover,
+.theme-future .swapCard [role="button"]:hover,
+.theme-future .swapCard .pill:hover,
+.theme-future .swapCard .speed-pill:hover,
+.theme-future .swapCard .px-3:hover,
+.theme-future .swapCard [class*="pill"]:hover,
+.theme-future .swapCard [class*="chip"]:hover,
+.theme-future .swapCard button:focus-visible,
+.theme-future .swapCard [role="button"]:focus-visible,
+.theme-future .swapCard .pill:focus-visible,
+.theme-future .swapCard .speed-pill:focus-visible,
+.theme-future .swapCard .px-3:focus-visible,
+.theme-future .swapCard [class*="pill"]:focus-visible,
+.theme-future .swapCard [class*="chip"]:focus-visible{
+  transform: translateY(-1px);
+  border-color:#7a5cff!important;
+  box-shadow:
+    inset 0 0 .5px rgba(255,255,255,.30),
+    0 0 18px rgba(52,255,214,.42),
+    0 0 28px rgba(122,92,255,.32)!important;
+  color:#fff!important;
+  outline: none;
+}
+
+/* Active/pressed */
+.theme-future .swapCard .pill-active,
+.theme-future .swapCard .active,
+.theme-future .swapCard [aria-pressed="true"]{
+  border-color:#b29aff!important;
+  background:linear-gradient(180deg,rgba(52,255,214,.24),rgba(122,92,255,.30))!important;
+  color:#fff!important;
+}
+
+/* Inputs inside the card */
+.theme-future .swapCard input[type="text"],
+.theme-future .swapCard input[type="number"],
+.theme-future .swapCard input:not([type]),
+.theme-future .swapCard .input,
+.theme-future .swapCard .field{
+  border-radius:12px!important;
+  border:1px solid rgba(122,92,255,.35)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03))!important;
+  color:#eaf2ff!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.18)!important;
+}
+.theme-future .swapCard input:focus{
+  border-color:rgba(122,92,255,.60)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.26), 0 0 12px rgba(52,255,214,.22)!important;
+  outline: none;
+}
+
+/* == OVERRIDE 2025-11-02 — nuke any child pseudo-elements inside the swap card == */
+.theme-future .swapCard .glass *::before,
+.theme-future .swapCard .glass *::after{
+  content: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  outline: 0 !important;
+}
+
+/* Slightly wider card to match the background scale */
+.theme-future .swapCard .glass{
+  width: clamp(700px, 68vw, 980px) !important;
+}
+
+/* === OVERRIDE 2025-11-02B — remove the oval / spotlight everywhere in swap card === */
+.theme-future .swapCard::before,
+.theme-future .swapCard::after,
+.theme-future .swapCard *::before,
+.theme-future .swapCard *::after{
+  content: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  outline: 0 !important;
+}
+
+/* If any quote wrapper adds its own bg, strip it */
+.theme-future .swapCard :is(.quote-block,.quoteDetails,.quote-details,.quote, [class*="quote"]) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Slightly wider card for breathing room */
+.theme-future .swapCard .glass{
+  width: clamp(760px, 72vw, 1100px) !important;
+}
+
+/* === DIAG NUKE — remove any hidden blob/spotlight anywhere inside the card === */
+.theme-future .swapCard,
+.theme-future .swapCard *,
+.theme-future .swapCard *::before,
+.theme-future .swapCard *::after{
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+}
+
+/* make the card body obvious so we know overrides are active */
+.theme-future .swapCard .glass{
+  background: rgba(14,18,38,.80) !important;
+  border: 1px solid rgba(122,92,255,.35) !important;
+}

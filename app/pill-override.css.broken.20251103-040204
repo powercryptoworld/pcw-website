@@ -1,0 +1,121 @@
+:root{ --sol-cyan:#34ffd6; --sol-purple:#7a5cff; --neon-pink:#ff2fb0; }
+
+/* Nuke any pseudo spotlight or probes */
+.theme-future .swapCard .glass::before,
+.theme-future .swapCard .glass::after{ content:none !important; background:none !important; box-shadow:none !important; }
+
+/* Card — subtle glass, no blobs */
+.theme-future .swapCard .glass{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025)) !important;
+  border: 1px solid rgba(122,92,255,.25) !important;
+  box-shadow:
+    inset 0 0 1px rgba(255,255,255,.18),
+    0 10px 26px rgba(0,0,0,.28),
+    0 0 26px rgba(122,92,255,.14),
+    0 0 20px rgba(52,255,214,.10) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Pills & small buttons */
+.theme-future .swapCard .glass :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]){
+  border-radius:9999px!important;
+  border:1px solid rgba(122,92,255,.45)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035))!important;
+  color:#eaf2ff!important;
+  padding:.42rem .8rem!important; line-height:1!important; letter-spacing:.2px!important;
+  backdrop-filter:blur(4px)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.22)!important;
+  transition:transform .14s, box-shadow .18s, background .18s, border-color .18s!important;
+}
+.theme-future .swapCard .glass :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):hover,
+.theme-future .swapCard .glass :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):focus-visible{
+  transform:translateY(-1px);
+  border-color:rgba(122,92,255,.70)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.28), 0 0 14px rgba(52,255,214,.28), 0 0 20px rgba(122,92,255,.22)!important;
+  outline:none;
+}
+.theme-future .swapCard .glass :is(.pill-active,.active,[aria-pressed="true"]){
+  border-color:rgba(122,92,255,.85)!important;
+  background:linear-gradient(180deg,rgba(52,255,214,.20),rgba(122,92,255,.22))!important;
+  color:#fff!important;
+  box-shadow:inset 0 0 1px rgba(255,255,255,.30), 0 0 16px rgba(52,255,214,.30), 0 0 24px rgba(122,92,255,.24)!important;
+}
+
+/* Inputs */
+.theme-future .swapCard .glass input[type="text"],
+.theme-future .swapCard .glass input[type="number"],
+.theme-future .swapCard .glass input:not([type]),
+.theme-future .swapCard .glass .input,
+.theme-future .swapCard .glass .field{
+  border-radius:12px!important;
+  border:1px solid rgba(122,92,255,.35)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03))!important;
+  color:#eaf2ff!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.18)!important;
+}
+.theme-future .swapCard .glass input:focus{
+  border-color:rgba(122,92,255,.60)!important;
+  box-shadow:inset 0 0 .5px rgba(255,255,255,.26), 0 0 12px rgba(52,255,214,.22)!important;
+}
+
+/* Remove dashed quote block look, if any */
+.theme-future .swapCard .glass .quote-block,
+.theme-future .swapCard .glass .quoteDetails{
+  border:none!important; background:transparent!important; box-shadow:none!important;
+}
+
+/* ==== FIX SCOPE & LOOK — applies to section.swapCard > div.glass ==== */
+.theme-future .swapCard .glass{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025)) !important;
+  border: 1px solid rgba(122,92,255,.25) !important;
+  box-shadow:
+    inset 0 0 1px rgba(255,255,255,.18),
+    0 10px 26px rgba(0,0,0,.28),
+    0 0 26px rgba(122,92,255,.14),
+    0 0 20px rgba(52,255,214,.10) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 18px !important;
+  width: clamp(560px, 62vw, 920px) !important;
+  padding: 22px !important;
+}
+
+/* Nuke any leftover spotlight/ovals */
+.theme-future .swapCard .glass::before,
+.theme-future .swapCard .glass::after{
+  content: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Futuristic neon pills/buttons INSIDE the swap card */
+.theme-future .swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]){
+  border-radius:9999px!important;
+  border:1px solid rgba(122,92,255,.70)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035))!important;
+  color:#eaf2ff!important;
+  padding:.44rem .86rem!important;
+  line-height:1!important;
+  letter-spacing:.2px!important;
+  backdrop-filter:blur(6px)!important;
+  box-shadow:
+    inset 0 0 .5px rgba(255,255,255,.24),
+    0 0 14px rgba(52,255,214,.30),
+    0 0 20px rgba(122,92,255,.22)!important;
+  transition:transform .14s, box-shadow .18s, background .18s, border-color .18s!important;
+}
+.theme-future .swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):hover,
+.theme-future .swapCard :is(button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]):focus-visible){
+  transform: translateY(-1px);
+  border-color:#7a5cff!important;
+  box-shadow:
+    inset 0 0 .5px rgba(255,255,255,.30),
+    0 0 18px rgba(52,255,214,.42),
+    0 0 28px rgba(122,92,255,.32)!important;
+  color:#fff!important;
+}
+.theme-future .swapCard :is(.pill-active,.active,[aria-pressed="true"]){
+  border-color:#b29aff!important;
+  background:linear-gradient(180deg,rgba(52,255,214,.24),rgba(122,92,255,.30))!important;
+}
+/* ==== END FIX ==== */
