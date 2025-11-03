@@ -2,8 +2,6 @@ import NavClientOnly from "@/components/NavClientOnly";
 import AppKitInit from "../components/AppKitInit";
 import "./globals.css";
 import "./pill-override.css";
-
-import "./no-neon-outside.css";
 import type { Metadata } from "next";
 
 import Providers from "./providers";

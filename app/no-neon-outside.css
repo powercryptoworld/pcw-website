@@ -1,0 +1,63 @@
+/* === NO NEON OUTSIDE GLASS (authoritative) === */
+
+/* Header + nav tabs (everything inside header/nav) */
+:root body.theme-future header *:not(.glass):not(.glass *),
+:root body.theme-future nav *:not(.glass):not(.glass *){
+  box-shadow: none !important;
+  text-shadow: none !important;
+  outline: none !important;
+  border-color: rgba(255,255,255,.16) !important;
+  background-image: none !important;
+  background: rgba(10,12,16,.60) !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Their pseudo-elements too */
+:root body.theme-future header *::before,
+:root body.theme-future header *::after,
+:root body.theme-future nav *::before,
+:root body.theme-future nav *::after{
+  content: none !important;
+  box-shadow: none !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-mask: none !important; mask: none !important;
+  filter: none !important;
+}
+
+/* SocialDock + ContactDock + any *Dock*, *contact* */
+:root body.theme-future :is([class*="Dock"], [class*="dock"], [class*="Contact"], [class*="contact"]) * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  outline: none !important;
+  border-color: rgba(255,255,255,.16) !important;
+  background: rgba(10,12,16,.60) !important;
+  background-image: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root body.theme-future :is([class*="Dock"], [class*="dock"], [class*="Contact"], [class*="contact"]) *::before,
+:root body.theme-future :is([class*="Dock"], [class*="dock"], [class*="Contact"], [class*="contact"]) *::after{
+  content: none !important;
+  box-shadow: none !important;
+  background: none !important;
+  background-image: none !important;
+  -webkit-mask: none !important; mask: none !important;
+  filter: none !important;
+}
+
+/* Catch-all for any button/link/pill NOT inside the glass swap card */
+:root body.theme-future :not(.glass.swapCard) :is(a,button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"]){
+  box-shadow: none !important; text-shadow: none !important; outline: none !important;
+  border-color: rgba(255,255,255,.16) !important; background: rgba(10,12,16,.60) !important;
+  background-image: none !important; filter: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+:root body.theme-future :not(.glass.swapCard) :is(a,button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"])::before,
+:root body.theme-future :not(.glass.swapCard) :is(a,button,[role="button"],.pill,.speed-pill,.px-3,[class*="pill"],[class*="chip"])::after{
+  content: none !important; box-shadow: none !important; background: none !important; background-image: none !important;
+  -webkit-mask: none !important; mask: none !important; filter: none !important;
+}
+/* === END === */

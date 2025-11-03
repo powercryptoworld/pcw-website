@@ -2,19 +2,20 @@ import NavClientOnly from "@/components/NavClientOnly";
 import AppKitInit from "../components/AppKitInit";
 import "./globals.css";
 import "./pill-override.css";
-
-import "./no-neon-outside.css";
 import type { Metadata } from "next";
 
 import Providers from "./providers";
+
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 import SocialDock from "../components/SocialDock";
 import ContactDock from "../components/ContactDock";
+
 export const metadata: Metadata = {
   title: "PCW – Swap",
   description: "Power Crypto World",
 };
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">

@@ -1757,6 +1757,8 @@ button{outline:3px solid lime !important}
   color:#fff !important;
 }
 /* === END v3 === */
+
+.theme-future .glass .pill{outline:3px solid lime !important}
 /* ==== PCW NEON UI v2 — scoped, high-specificity, important ==== */
 .theme-future .glass.swapCard :is(button,[role="button"],.pill,.speed-pill){
   position:relative !important;
