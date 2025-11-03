@@ -1,0 +1,13 @@
+/* PCW future theme — minimal seed */
+.theme-future{--pcw-text:#EAF4FF}
+.theme-future .swapCard{background:rgba(11,15,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(90,255,240,.18);border-radius:22px;box-shadow:0 0 24px rgba(20,241,149,.22),0 0 48px rgba(124,58,237,.18),inset 0 1px rgba(255,255,255,.06);color:var(--pcw-text)}
+
+/* Stronger selector for your current card container */
+.theme-future .glass.swapCard{background:rgba(11,15,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(90,255,240,.18);border-radius:22px;box-shadow:0 0 24px rgba(20,241,149,.22),0 0 48px rgba(124,58,237,.18),inset 0 1px rgba(255,255,255,.06);color:#EAF4FF}
+
+/* Theme overrides: Quote details inputs + buttons */
+.theme-future .swapCard details input[type="text"],
+.theme-future .swapCard details input[type="number"],
+.theme-future .swapCard details input[type="search"]{background:rgba(14,20,34,.66);border:1px solid rgba(90,255,240,.24);color:#EAF4FF;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.theme-future .swapCard details button{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid rgba(90,255,240,.22);color:#EAF4FF;border-radius:10px;box-shadow:0 0 12px rgba(20,241,149,.18)}
+  .theme-future .swapCard details button:hover{background:radial-gradient(120% 120% at 0% 0%,rgba(20,241,149,.18),rgba(124,58,237,.12))}

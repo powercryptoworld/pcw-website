@@ -1,0 +1,105 @@
+/* PCW future theme — minimal seed */
+.theme-future{--pcw-text:#EAF4FF}
+.theme-future .swapCard{background:rgba(11,15,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(90,255,240,.18);border-radius:22px;box-shadow:0 0 24px rgba(20,241,149,.22),0 0 48px rgba(124,58,237,.18),inset 0 1px rgba(255,255,255,.06);color:var(--pcw-text)}
+
+/* Stronger selector for your current card container */
+.theme-future .glass.swapCard{background:rgba(11,15,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(90,255,240,.18);border-radius:22px;box-shadow:0 0 24px rgba(20,241,149,.22),0 0 48px rgba(124,58,237,.18),inset 0 1px rgba(255,255,255,.06);color:#EAF4FF}
+
+/* Theme overrides: Quote details inputs + buttons */
+.theme-future .swapCard details input[type="text"],
+.theme-future .swapCard details input[type="number"],
+.theme-future .swapCard details input[type="search"]{background:rgba(14,20,34,.66);border:1px solid rgba(90,255,240,.24);color:#EAF4FF;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.theme-future .swapCard details button{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid rgba(90,255,240,.22);color:#EAF4FF;border-radius:10px;box-shadow:0 0 12px rgba(20,241,149,.18)}
+  .theme-future .swapCard details button:hover{background:radial-gradient(120% 120% at 0% 0%,rgba(20,241,149,.18),rgba(124,58,237,.12))}
+
+/* Theme overrides for components/SwapCard.tsx */
+.theme-future .glass{background:rgba(11,15,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(90,255,240,.18);border-radius:22px;box-shadow:0 0 24px rgba(20,241,149,.22),0 0 48px rgba(124,58,237,.18),inset 0 1px rgba(255,255,255,.06);color:#EAF4FF}
+.theme-future .glass .label{color:#9EB1C8}
+.theme-future .glass .input{display:flex;align-items:center;gap:12px;background:rgba(14,20,34,.66);border:1px solid rgba(90,255,240,.24);border-radius:14px;padding:10px 12px;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+  .theme-future .glass .input input{background:transparent;border:0;outline:none;color:#EAF4FF;width:100%;text-align:right;font-weight:700;font-size:clamp(20px,3vw,36px)}.theme-future .glass .pill{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:9999px;border:1px solid rgba(90,255,240,.22);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));color:#EAF4FF;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.theme-future .glass .pill:hover{background:radial-gradient(120% 120% at 0% 0%,rgba(20,241,149,.18),rgba(124,58,237,.12))}
+.theme-future .glass .pill-active{background:radial-gradient(120% 120% at 50% 0%,rgba(20,241,149,.22),rgba(124,58,237,.16));box-shadow:0 0 14px rgba(20,241,149,.25)}
+.theme-future .glass .tabs{display:inline-flex;gap:10px;padding:6px;border-radius:9999px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06)}
+
+.theme-future .glass .btn.btn--swap{position:relative;width:100%;border-radius:9999px;padding:16px 20px;font-weight:800;letter-spacing:.2px;color:#102019;background:linear-gradient(180deg,#53FFCF,#14F195);box-shadow:0 8px 28px rgba(20,241,149,.35),inset 0 1px rgba(255,255,255,.65);border:0;transition:transform .12s ease,box-shadow .2s ease}
+.theme-future .glass .btn.btn--swap:hover{transform:translateY(-1px) scale(1.01)}
+
+/* Stronger overrides for Quote details inputs + buttons */
+.theme-future .glass.swapCard details input[type="text"],
+.theme-future .glass.swapCard details input[type="number"],
+.theme-future .glass.swapCard details input[type="search"]{background:rgba(14,20,34,.66)!important;border:1px solid rgba(90,255,240,.28)!important;color:#EAF4FF!important;box-shadow:inset 0 1px rgba(255,255,255,.06)!important}
+.theme-future .glass.swapCard details button{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03))!important;border:1px solid rgba(90,255,240,.28)!important;color:#EAF4FF!important;border-radius:10px!important;box-shadow:0 0 12px rgba(20,241,149,.18)!important}
+  .theme-future .glass.swapCard details button:hover{background:radial-gradient(120% 120% at 0% 0%,rgba(20,241,149,.18),rgba(124,58,237,.12))!important}
+.theme-future .glass .input{background:#0e1422;border:1px solid rgba(90,255,240,.28)}
+.theme-future .glass .pill{background:rgba(255,255,255,.06);border:1px solid rgba(90,255,240,.28)}
+.theme-future .glass .btn--swap{background:#14F195;color:#102019;border:1px solid rgba(20,241,149,.6)}
+
+.theme-future .swapCard .text-xs.px-2.py-1.rounded{background:#0e1422;border:1px solid rgba(90,255,240,.28)}
+.theme-future .swapCard .mt-2.rounded-xl.border{border-color:rgba(90,255,240,.28)}
+
+/* === FUTURE THEME — Neon Tabs =============================== */
+.theme-future .swapCard .tabs{
+  display:inline-flex;
+  gap:10px;
+  padding:8px;
+  border-radius:9999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  backdrop-filter: blur(8px) saturate(130%);
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.25) inset,
+    0 6px 22px rgba(20,241,149,.18),
+    0 4px 18px rgba(124,58,237,.16);
+}
+
+.theme-future .swapCard .tabs .pill{
+  display:inline-flex;
+  align-items:center; justify-content:center;
+  height:34px; padding:0 14px;
+  border-radius:9999px;
+  border:1px solid rgba(90,255,240,.26);
+  background:
+    radial-gradient(120% 140% at 50% -30%,
+      rgba(255,255,255,.20),
+      rgba(255,255,255,.06) 60%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  color:#EAF4FF;
+  font-weight:600; font-size:12px; letter-spacing:.2px;
+  white-space:nowrap;
+  transition:transform .12s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+  box-shadow:
+    0 0 10px rgba(20,241,149,.12),
+    0 0 14px rgba(59,167,255,.09);
+}
+
+.theme-future .swapCard .tabs .pill:hover{
+  transform: translateY(-1px);
+  border-color: rgba(90,255,240,.36);
+  background:
+    radial-gradient(140% 160% at 10% 0%,
+      rgba(20,241,149,.20),
+      rgba(124,58,237,.12) 55%,
+      rgba(255,255,255,.06) 70%),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  box-shadow:
+    0 0 14px rgba(20,241,149,.25),
+    0 0 18px rgba(124,58,237,.20);
+}
+
+.theme-future .swapCard .tabs .pill-active,
+.theme-future .swapCard .tabs .pill[aria-current="true"]{
+  border-color: rgba(124,58,237,.45);
+  color:#101a21;
+  background:
+    linear-gradient(180deg, #53FFCF, #14F195) padding-box,
+    radial-gradient(120% 160% at 10% 10%, #7C3AED, #00C2FF 60%, transparent 70%) border-box;
+  box-shadow:
+    0 0 20px rgba(83,255,207,.35),
+    0 0 30px rgba(124,58,237,.25);
+}
+
+/* keep tiny “speed” pills from wrapping and squashing */
+.theme-future .swapCard .tabs .pill,
+.theme-future .swapCard .tabs > * { white-space: nowrap; }
