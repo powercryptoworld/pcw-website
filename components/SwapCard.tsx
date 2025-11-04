@@ -72,6 +72,7 @@ export default function SwapCard() {
         {/* Slippage pills */}
         <div className="mb-4">
           <p className="label mb-2">Slippage</p>
+          <p className="label mb-2">Speed</p>
         {/* Network fee row (local wallet estimate) */}
         <div className="flex items-center justify-between text-sm mt-2">
           <div className="opacity-80">Network fee (est., BNB)</div><span id="wallet-fee" className="text-xs opacity-90 ml-2"></span><span id="wallet-fee" className="text-xs opacity-90 ml-2"></span>

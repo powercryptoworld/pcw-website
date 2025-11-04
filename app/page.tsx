@@ -303,7 +303,7 @@ export default function Page() {
           {/* Collapsible quote details (EVM) */}
           <details className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
             <summary className="select-none cursor-pointer text-xs px-3 py-2 bg-white/5 hover:bg-white/10">Quote details</summary>
-            <div className="px-3 py-2">
+            <div className="px-3 pt-4 pb-2">
               <QuotePanel
                 chainId={chainId}
                 src={payToken as any}
