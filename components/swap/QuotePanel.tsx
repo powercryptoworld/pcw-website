@@ -275,7 +275,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       </div>
 
       <div className="mt-2">
-        <div className="opacity-70">Price impact</div>
+        <div className="opacity-70" style={{marginTop:"16px"}}>Price impact</div>
         <div className="text-base">
           {dstAmtStr
             ? (priceImpact.loading ? "…" : (priceImpact.value == null ? "—" : `${priceImpact.value.toFixed(2)}%`))
