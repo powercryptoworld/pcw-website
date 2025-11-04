@@ -275,6 +275,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       </div>
 
       <div className="mt-2">
+        <div className="mt-6"></div>
         <div className="opacity-70">Price impact</div>
         <div className="text-base">
           {dstAmtStr
