@@ -323,9 +323,9 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       {/* Execution (preview) */}
       <div className="mt-4 border-t border-white/10 pt-3">
         <div className="opacity-70">Execution (preview)</div>
-        <div className="mt-1 text-sm">
-          <div>Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
-          <div>
+        <div className="mt-3 text-sm">
+          <div className="mb-5">Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
+          <div className="mt-4">
             Spender: {spender
               ? <span className="font-mono">{`${(spender as string).slice(0,6)}…${(spender as string).slice(-4)}`}</span>
               : "—"}
