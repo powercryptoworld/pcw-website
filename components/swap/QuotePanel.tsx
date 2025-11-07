@@ -46,6 +46,9 @@ function parseAmountToWei(amount: string, decimals: number) {
 }
 
 export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageBps = 50 }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const { address: wallet } = useAccount();
 
   const [slippageBps, setSlippageBps] = useState<number>(defaultSlippageBps);
@@ -324,10 +327,9 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       <div className="mt-4 border-t border-white/10 pt-3">
         <div className="opacity-70">Execution (preview)</div>
         <div className="mt-1 text-sm">
-          <div>Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
+          <div>Wallet: { (mounted && wallet) ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
           <div>
-            Spender: {spender
-              ? <span className="font-mono">{`${(spender as string).slice(0,6)}…${(spender as string).slice(-4)}`}</span>
+            Spender: { (mounted && spender) ? <span className="font-mono">{`${(spender as string).slice(0,6)}…${(spender as string).slice(-4)}`}</span>
               : "—"}
           </div>
           <div>

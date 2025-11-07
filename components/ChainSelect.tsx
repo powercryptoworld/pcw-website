@@ -37,9 +37,9 @@ export function ChainSelect({ value, onChange }: Props) {
     : fallbackBadge("CH");
 
   return (
-    <div ref={rootRef} className="relative inline-flex items-center gap-2">
+    <div ref={rootRef} className="relative inline-flex items-center gap-2 whitespace-nowrap">
       {/* Current logo */}
-      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/30 bg-white/5 overflow-hidden">
+      <span className="hidden inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/30 bg-white/5 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentLogo}
@@ -54,11 +54,11 @@ export function ChainSelect({ value, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="px-2 py-2 rounded bg-black/30 border border-white/10 text-sm leading-none min-w-[220px] text-left flex items-center justify-between gap-2"
+        className="h-8 px-2 py-0 rounded bg-black/30 border border-white/10 text-sm leading-none whitespace-nowrap min-w-[160px] max-w-[180px] truncate shrink text-left flex items-center justify-between gap-2"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className="truncate">
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-white/20 bg-white/5 overflow-hidden mr-2"><img src={currentLogo} alt={chain?.short || "CH"} width="16" height="16" style={{ display: "block", width: 16, height: 16, objectFit: "contain" }} /></span><span className="truncate">
           {chain ? `${chain.name} (${chain.id})` : "Select chain"}
         </span>
         <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
