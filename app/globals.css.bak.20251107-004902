@@ -1,0 +1,794 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+
+/* -------------------------------------------------------
+   PCW — Global Styles (Endless Neon Energy Flow + Glossy Glass)
+   ------------------------------------------------------- */
+
+/* Base reset */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  color: #e8eef9;
+  background: #06090e;
+  font-family: "Sora", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  letter-spacing: .1px;
+}
+
+/* Theme tokens */
+:root{
+  --bg: #06090e;
+
+  /* glass */
+  --glass-top: rgba(22,26,36,.78);
+  --glass-bot: rgba(12,16,24,.62);
+  --stroke: rgba(255,255,255,.10);
+  --text: #e8eef9;
+  --muted: #b7c5e3;
+
+  /* neons */
+  --sol-purple: #9945ff;
+  --sol-green:  #14f195;
+  --sol-cyan:   #00e0ff;
+  --neon-pink:  #ff49c1;
+  --neon-blue:  #49b2ff;
+}
+
+/* =======================================================
+   BACKGROUND STACK (z-index < 0 so UI stays above)
+   ======================================================= */
+
+/* 0) AURORA BASE */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-6;
+  background:
+    radial-gradient(1200px 900px at 12% -6%,   rgba(153,69,255,.26), transparent 60%),
+    radial-gradient(1200px 900px at 88% 10%,   rgba(0,224,255,.26),  transparent 62%),
+    radial-gradient(1400px 1000px at 50% 108%, rgba(20,241,149,.22), transparent 58%),
+    linear-gradient(180deg, #0a1016 0%, #06090e 100%);
+  filter: saturate(145%) contrast(110%);
+  pointer-events:none;
+}
+
+/* 1) ENDLESS ENERGY RIBBONS */
+@keyframes drift-cyan { 0% { transform: translateX(0); } 100% { transform: translateX(-33.333%); } }
+@keyframes drift-purple { 0% { transform: translateX(0); } 100% { transform: translateX(-33.333%); } }
+
+html::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-5;
+  pointer-events:none;
+  overflow:hidden;
+  display:block;
+}
+
+html::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-5;
+  pointer-events:none;
+
+  width: 300%;
+  height: 100%;
+  left: 0; top: 0;
+
+  background:
+    /* CYAN A (upper) */
+    linear-gradient(14deg,
+      transparent 34%,
+      rgba(0,224,255,.20) 36%,
+      rgba(0,224,255,.42) 38.5%,
+      rgba(0,224,255,.20) 41%,
+      transparent 43%
+    ),
+    /* CYAN B (offset) */
+    linear-gradient(14deg,
+      transparent 34%,
+      rgba(0,224,255,.20) 36%,
+      rgba(0,224,255,.42) 38.5%,
+      rgba(0,224,255,.20) 41%,
+      transparent 43%
+    ),
+
+    /* PURPLE A (lower) */
+    linear-gradient(-12deg,
+      transparent 58%,
+      rgba(153,69,255,.22) 60%,
+      rgba(153,69,255,.44) 62.5%,
+      rgba(153,69,255,.22) 65%,
+      transparent 67%
+    ),
+    /* PURPLE B (offset) */
+    linear-gradient(-12deg,
+      transparent 58%,
+      rgba(153,69,255,.22) 60%,
+      rgba(153,69,255,.44) 62.5%,
+      rgba(153,69,255,.22) 65%,
+      transparent 67%
+    );
+
+  background-repeat: repeat-x, repeat-x, repeat-x, repeat-x;
+  background-size: 150% 100%, 150% 100%, 150% 100%, 150% 100%;
+  background-position: 0% 0, 50% 0, 0% 0, 50% 0;
+
+  box-shadow:
+    inset 0 0 80px rgba(0,224,255,.12),
+    inset 0 0 80px rgba(153,69,255,.12);
+
+  filter: blur(8px) saturate(142%);
+  mix-blend-mode: screen;
+
+  animation:
+    drift-cyan 56s linear infinite,
+    drift-purple 72s linear infinite;
+}
+
+/* 2) SUBTLE SWEEPS + VIGNETTE */
+@keyframes sweep-beams {
+  0%   { background-position: 0% 0%, 50% 120%, 50% -20%; }
+  50%  { background-position: 8% 0%, 50% 120%, 50% -20%; }
+  100% { background-position: 0% 0%, 50% 120%, 50% -20%; }
+}
+body::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index:-4;
+  pointer-events:none;
+  background:
+    radial-gradient(1400px 900px at 60% 40%, rgba(0,224,255,.08), transparent 60%),
+    radial-gradient(1400px 900px at 50% 120%, rgba(0,0,0,.58), transparent 58%),
+    radial-gradient(1400px 900px at 50% -20%, rgba(0,0,0,.42), transparent 52%);
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  animation: sweep-beams 28s ease-in-out infinite;
+}
+
+/* 3) NOISE + SOFT GRID */
+#noise-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(255,255,255,.55) 0.5px, transparent 0.5px),
+    repeating-linear-gradient( 0deg,  rgba(255,255,255,.05), rgba(255,255,255,.05) 1px, transparent 1px, transparent 24px),
+    repeating-linear-gradient(90deg,  rgba(255,255,255,.05), rgba(255,255,255,.05) 1px, transparent 1px, transparent 24px),
+    radial-gradient(800px 600px at 70% 70%, rgba(0,224,255,.10), transparent 60%),
+    radial-gradient(900px 700px at 22% 30%, rgba(153,69,255,.10), transparent 60%);
+  background-size: 2px 2px, 24px 24px, 24px 24px, auto, auto;
+  mix-blend-mode: overlay;
+  opacity: .10;
+}
+
+/* =======================================================
+   TYPOGRAPHY
+   ======================================================= */
+.h1{
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.15;
+  background: linear-gradient(90deg, #f6f8ff 0%, #cfe1ff 45%, #e6d7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.subtle{
+  margin: 6px 0 0;
+  color: #bcd1ff;
+  font-size: 14px;
+  opacity: .92;
+  letter-spacing: .1px;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+}
+
+/* =======================================================
+   LAYOUT
+   ======================================================= */
+.container { max-width: 1200px; margin: 0 auto; }
+
+/* =======================================================
+   GLASS PANELS
+   ======================================================= */
+.glass{
+  position: relative;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bot));
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(200,220,255,.14);
+  box-shadow:
+    0 0 0 1px rgba(153,69,255,.10),
+    0 22px 70px rgba(0,0,0,.65),
+    0 10px 30px rgba(0,0,0,.35) inset;
+}
+.glass::before{
+  content:"";
+  position:absolute; inset: 1px 1px auto 1px; height: 42px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0));
+  pointer-events:none;
+  filter: blur(0.2px);
+}
+.glass::after{
+  content:"";
+  position:absolute; inset:-1px;
+  border-radius:22px;
+  pointer-events:none;
+  box-shadow:
+    0 0 24px rgba(0,224,255,.14),
+    0 0 28px rgba(153,69,255,.12);
+  background:
+    radial-gradient(320px 80px at 50% 108%, rgba(0,224,255,.25), transparent 70%),
+    radial-gradient(380px 90px at 50% 112%, rgba(153,69,255,.22), transparent 75%);
+}
+
+/* =======================================================
+   FORM PIECES
+   ======================================================= */
+.input{
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid rgba(220,235,255,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  color: #fff;
+  padding: 0 .9rem;
+  display: flex;
+  align-items: center;
+  box-shadow:
+    inset 0 -1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(0,0,0,.15);
+}
+.input::placeholder{ color:#9aa7b8; }
+select.input{ appearance: none; }
+
+.row{ display: grid; gap: 12px; margin-bottom: 12px; }
+.label{ font-size: 12px; color: #a8c3ff; opacity: .96; }
+
+/* =======================================================
+   PILLS / BUTTONS
+   ======================================================= */
+.pill{
+  padding: .46rem .78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(220,235,255,.12);
+  background: rgba(255,255,255,.06);
+  color: #e6eeff;
+  font-size: .85rem;
+  transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+}
+.pill:hover{
+  background: rgba(255,255,255,.10);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 12px rgba(0,224,255,.18),
+    0 0 12px inset rgba(153,69,255,.12);
+}
+.pill-active{
+  border-color: rgba(153,69,255,.46);
+  background: linear-gradient(180deg, rgba(0,224,255,.26), rgba(153,69,255,.34));
+  color: #fff;
+  box-shadow:
+    0 0 24px rgba(0,224,255,.22),
+    0 0 22px rgba(153,69,255,.20);
+}
+
+.tabs{ display:flex; flex-wrap:wrap; gap:8px; margin:0; padding:0; list-style:none; }
+
+.btn{
+  border-radius: 12px;
+  border: 1px solid rgba(220,235,255,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+  color: #fff;
+  padding: .64rem 1rem;
+  font-weight: 600;
+  transition: background .15s ease, transform .06s ease, box-shadow .15s ease;
+}
+.btn:hover{
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.10));
+  box-shadow:
+    0 0 18px rgba(0,224,255,.18),
+    0 0 18px rgba(153,69,255,.16);
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn--swap{
+  border: 1px solid rgba(200,230,255,.22);
+  background: linear-gradient(180deg, #d7fbff 0%, #bdf4ff 40%, #98ecdf 100%);
+  color: #071016;
+  text-shadow: 0 1px 0 rgba(255,255,255,.38);
+  box-shadow:
+    0 12px 34px rgba(0,224,255,.18),
+    0 12px 34px rgba(153,69,255,.14);
+}
+
+/* Swap bar neon bloom */
+.swap-bar{ position: relative; overflow: hidden; }
+.swap-bar::after{
+  content:"";
+  position:absolute; left:3%; right:3%; bottom:-9px; height:10px;
+  border-radius:999px; filter: blur(12px);
+  background: linear-gradient(90deg, var(--sol-green), var(--sol-cyan), var(--sol-purple), var(--neon-pink));
+  opacity: .86;
+}
+
+/* =======================================================
+   DOCKS (social + contact)
+   ======================================================= */
+.dock{
+  display:inline-flex; width:max-content; gap:.5rem; align-items:center;
+  padding:.55rem .6rem; border-radius:999px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(220,235,255,.14);
+  box-shadow: 0 12px 36px rgba(0,0,0,.38);
+}
+.dock a{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:999px;
+  border:1px solid rgba(220,235,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#e5e7eb; text-decoration:none;
+}
+.dock a:hover{
+  box-shadow:
+    0 0 14px rgba(0,224,255,.18),
+    0 0 14px rgba(153,69,255,.16) inset;
+}
+.dock img, .dock svg{ width:18px; height:18px; display:block; }
+
+/* =======================================================
+   CONTACT PAGE V-BEAM OVERLAY
+   ======================================================= */
+.contact-vfx{
+  position: fixed;
+  inset: 0;
+  z-index: -3;            /* above html::after (-5) & body::after (-4) */
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: .85;
+
+  background:
+    /* Outer aqua/blue arms */
+    linear-gradient(135deg, rgba(0,240,255,.26) 0%, rgba(0,240,255,.42) 14%, rgba(0,240,255,0) 22%) left / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(61,169,255,.26) 0%, rgba(61,169,255,.42) 14%, rgba(61,169,255,0) 22%) right / 50% 100% no-repeat,
+
+    /* Inner magenta/pink arms */
+    linear-gradient(135deg, rgba(255,80,200,.28) 0%, rgba(255,80,200,.45) 10%, rgba(255,80,200,0) 18%) left / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(255,120,255,.26) 0%, rgba(255,120,255,.42) 10%, rgba(255,120,255,0) 18%) right / 50% 100% no-repeat;
+  filter: blur(0.6px) saturate(140%);
+}
+.contact-vfx::after{
+  content:"";
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  bottom:14%;
+  width: 62vw;  height: 9vw;
+  border-radius: 999px;
+  background:
+    radial-gradient(60% 160% at 50% 42%,
+      rgba(255,255,255,.70),
+      rgba(0,240,255,.50) 35%,
+      rgba(255,80,200,.42) 60%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  opacity: .9;
+}
+@keyframes vfx-breathe {
+  0%, 100% { filter: blur(0.6px) saturate(140%); opacity:.85; }
+  50%      { filter: blur(1px)   saturate(165%); opacity:.92; }
+}
+.contact-vfx{ animation: vfx-breathe 10s ease-in-out infinite; }
+@media (max-width: 768px){
+  .contact-vfx::after{
+    width: 82vw; height: 12vw; bottom: 18%;
+    filter: blur(20px);
+    opacity: .85;
+  }
+}
+
+/* ===== CONTACT FORM GLOW (halo around the card) ===== */
+.contact-glow{
+  position: relative;
+  z-index: 0;
+}
+.contact-glow::after{
+  content:"";
+  position:absolute;
+  inset:-28px;
+  border-radius: 26px;
+  pointer-events:none;
+  z-index:-1;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(60% 100% at 50% 40%,
+      rgba(255,255,255,.55),
+      rgba(0,224,255,.40) 35%,
+      rgba(153,69,255,.36) 62%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(28px) saturate(145%);
+  opacity:.9;
+  animation: contactGlowPulse 7s ease-in-out infinite;
+}
+@keyframes contactGlowPulse{
+  0%,100%{ filter: blur(26px) saturate(145%); opacity:.85; }
+  50%   { filter: blur(34px) saturate(165%); opacity:.98; }
+}
+
+/* =======================================================
+   SWAP PAGE V-BEAM OVERLAY
+   ======================================================= */
+.swap-vfx{
+  position: fixed;
+  inset: 0;
+  z-index: -3;              /* above html::after (-5) & body::after (-4) */
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: .85;
+
+  background:
+    /* diagonal color arms */
+    linear-gradient(135deg, rgba(0,224,255,.22) 0%, rgba(0,224,255,.38) 12%, rgba(0,224,255,0) 22%) left / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(153,69,255,.22) 0%, rgba(153,69,255,.38) 12%, rgba(153,69,255,0) 22%) right / 50% 100% no-repeat,
+    radial-gradient(1200px 500px at 50% 80%, rgba(0,224,255,.18), transparent 70%),
+    radial-gradient(1200px 520px at 50% 20%, rgba(153,69,255,.16), transparent 72%);
+  filter: blur(.6px) saturate(140%);
+}
+.swap-vfx::after{
+  content:"";
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  bottom:14%;
+  width: 60vw;  height: 9vw;
+  border-radius: 999px;
+  background:
+    radial-gradient(60% 160% at 50% 42%,
+      rgba(255,255,255,.65),
+      rgba(0,224,255,.48) 35%,
+      rgba(153,69,255,.38) 60%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  opacity: .9;
+}
+@keyframes swap-breathe {
+  0%, 100% { filter: blur(.6px) saturate(140%); opacity:.85; }
+  50%      { filter: blur(1px) saturate(165%);  opacity:.92; }
+}
+.swap-vfx{ animation: swap-breathe 10s ease-in-out infinite; }
+@media (max-width: 768px){
+  .swap-vfx::after{
+    width: 82vw; height: 12vw; bottom: 18%;
+    filter: blur(20px);
+    opacity: .85;
+  }
+}
+
+/* =======================================================
+   BUY PCW V-BEAM OVERLAY
+   ======================================================= */
+.buy-vfx{
+  position: fixed;
+  inset: 0;
+  z-index: -3;             /* above the hero image, below content */
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: .88;
+
+  background:
+    linear-gradient(135deg, rgba(255,60,200,.28) 0%, rgba(255,60,200,.45) 12%, rgba(255,60,200,0) 22%) left / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(0,224,255,.26) 0%, rgba(0,224,255,.42) 12%, rgba(0,224,255,0) 22%) right / 50% 100% no-repeat,
+    radial-gradient(1000px 420px at 50% 80%, rgba(255,60,200,.16), transparent 72%),
+    radial-gradient(1000px 420px at 50% 20%, rgba(0,224,255,.14), transparent 74%);
+  filter: blur(.6px) saturate(150%);
+}
+.buy-vfx::after{
+  content:"";
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  bottom:16%;
+  width: 62vw; height: 9vw;
+  border-radius: 999px;
+  background:
+    radial-gradient(60% 160% at 50% 42%,
+      rgba(255,255,255,.70),
+      rgba(255,60,200,.45) 35%,
+      rgba(0,224,255,.42) 60%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  opacity: .9;
+}
+@keyframes buy-breathe {
+  0%, 100% { filter: blur(.6px) saturate(150%); opacity:.88; }
+  50%      { filter: blur(1px)  saturate(175%); opacity:.95; }
+}
+.buy-vfx{ animation: buy-breathe 10s ease-in-out infinite; }
+
+@media (max-width: 768px){
+  .buy-vfx::after{
+    width: 82vw; height: 12vw; bottom: 18%;
+    filter: blur(20px);
+    opacity: .85;
+  }
+}
+
+/* =======================================================
+   BUY PCW — COIN GLOW
+   ======================================================= */
+.coin-wrap{
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(460px, 80vw);
+  aspect-ratio: 1 / 1;
+}
+.coin-wrap::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side,
+      rgba(255,255,255,.75),
+      rgba(0,224,255,.45) 38%,
+      rgba(153,69,255,.35) 62%,
+      rgba(255,73,193,.28) 78%,
+      transparent 82%);
+  filter: blur(26px);
+  opacity: .95;
+  mix-blend-mode: screen;
+  animation: coin-breathe 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes coin-breathe{
+  0%,100% { transform: scale(1);   filter: blur(24px); opacity:.95; }
+  50%     { transform: scale(1.05); filter: blur(28px); opacity:1; }
+}
+.coin-img{
+  filter:
+    drop-shadow(0 0 14px rgba(0,224,255,.35))
+    drop-shadow(0 0 22px rgba(153,69,255,.28));
+}
+
+/* =======================================================
+   UTILITIES
+   ======================================================= */
+.text-xs{ font-size:.75rem; }
+.text-sm{ font-size:.875rem; }
+.text-base{ font-size:1rem; }
+.text-white{ color:#fff; }
+.text-muted{ color: var(--muted); }
+.leading-tight{ line-height:1.15; }
+
+.mt-2{ margin-top:.5rem; }
+.mb-1{ margin-bottom:.25rem; }
+.mb-2{ margin-bottom:.5rem; }
+.mb-4{ margin-bottom:1rem; }
+.mb-5{ margin-bottom:1.25rem; }
+.mt-6{ margin-top:1.5rem; }
+.pt-12{ padding-top:3rem; }
+.pb-28{ padding-bottom:7rem; }
+.p-4{ padding:1rem; }
+.p-6{ padding:1.5rem; }
+.px-3{ padding-left:.75rem; padding-right:.75rem; }
+.px-4{ padding-left:1rem; padding-right:1rem; }
+.px-6{ padding-left:1.5rem; padding-right:1.5rem; }
+
+.rounded-lg{ border-radius:12px; }
+.rounded-xl{ border-radius:16px; }
+.rounded-full{ border-radius:999px; }
+
+.flex{ display:flex; }
+.items-center{ align-items:center; }
+.justify-between{ justify-content:space-between; }
+.gap-1{ gap:.25rem; }
+.gap-2{ gap:.5rem; }
+
+.max-w-4xl{ max-width:56rem; }
+.mx-auto{ margin-left:auto; margin-right:auto; }
+
+.hidden{ display:none !important; }
+
+/* =======================================================
+   CONTACT: Solid card + inputs  (OPT-IN VARIANT)
+   Use class 'contact-card--solid' on a wrapper if you want the solid look.
+   ======================================================= */
+.contact-card--solid{
+  background: #0f141d !important;            /* solid */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: rgba(200,220,255,.18) !important;
+  box-shadow:
+    0 0 0 1px rgba(153,69,255,.18),
+    0 20px 60px rgba(0,0,0,.70),
+    0 2px 0 rgba(255,255,255,.04) inset;
+}
+.contact-card--solid::before{
+  height: 36px;
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
+}
+.contact-card--solid .input{
+  background: #131a24 !important;
+  border-color: rgba(210,230,255,.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.35),
+    0 0 0 0 transparent;
+}
+.contact-card--solid .input::placeholder{ color:#a6b4c7; }
+.contact-card--solid textarea.input{ height: 120px; padding-top: 10px; }
+
+/* =======================================================
+   RESPONSIVE
+   ======================================================= */
+@media (max-width:1280px){
+  .container{ max-width:1000px; }
+}
+@media (max-width:1024px){
+  .container{ max-width:900px; }
+  .glass{ border-radius:18px; }
+}
+@media (max-width:768px){
+  .container{ max-width:680px; }
+  .glass{ border-radius:16px; }
+}
+@media (max-width:390px){
+  .container{ max-width:360px; padding: 0 10px; }
+  .glass{ border-radius:14px; }
+}
+
+/* ui-6B.2 — Swap card placement helper (uses existing .glass style) */
+.swapCard{
+  max-width: 480px;
+  margin: 84px auto 24px;  /* clears header a bit; centered within page container */
+  padding: 12px;
+}
+@media (max-width: 768px){
+  .swapCard{
+    max-width: 100%;
+    margin: 72px 12px 20px;
+    padding: 12px;
+  }
+}
+
+/* ui-6B.2b — scale card to 720px and keep details inside */
+.swapCard{
+  max-width: 720px;        /* ~1.5× previous size */
+  overflow: hidden;        /* nothing bleeds past the rounded glass */
+}
+
+/* Ensure long hashes/addresses/calldata wrap inside Quote details */
+.swapCard details,
+.swapCard details *{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Optional: keep code blobs tidy if present */
+.swapCard code, .swapCard pre{
+  white-space: pre-wrap;
+}
+
+/* ===== ui-step1: Quote details & tray polish (CSS-only) ===== */
+
+/* Keep the centered picker tray a touch tighter up top on desktop */
+@media (min-width: 769px){
+  .swapCard .top-tray{ top: 0.75rem; } /* optional hook if you add 'top-tray' later */
+}
+
+/* Containment + readable wrapping for any advanced preview text */
+.swapCard details,
+.swapCard details *{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Inputs inside Quote details: consistent height + padding */
+.swapCard details input[type="text"],
+.swapCard details input[type="number"],
+.swapCard details input[type="search"]{
+  height: 32px;
+  padding: 0 .5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(220,235,255,.14);
+  background: rgba(255,255,255,.05);
+  color: #eaf1ff;
+}
+
+/* Buttons inside Quote details: no wrapping, rectangular, neat */
+.swapCard details button{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 .6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(220,235,255,.16);
+  background: rgba(255,255,255,.08);
+  color: #eaf1ff;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;        /* << stops “Stan-dard / Fa-st / Inst-ant” line breaks */
+  letter-spacing: .2px;
+}
+
+/* Optional subtle hover so pills feel intentional */
+.swapCard details button:hover{
+  background: rgba(255,255,255,.12);
+}
+
+/* Small visual spacing between clusters if they stack/wrap */
+.swapCard details .px-3 > *{ margin-right: 6px; margin-bottom: 6px; }
+
+/* Code-like blocks (spender, calldata) remain tidy */
+.swapCard code, .swapCard pre{
+  white-space: pre-wrap;
+}
+
+/* ui-step2a — make the token chip act as the selector without button chrome */
+.token-chip-btn{ all: unset; cursor: pointer; display: inline-flex; align-items: center; }
+.token-chip-btn:focus-visible{ outline: 2px solid rgba(255,255,255,.30); outline-offset: 2px; border-radius: 10px; }
+
+/* ui-step2a.1 — icon-only chip when used before the row label */
+.chip-icon-only .text-xs{ display: none; }               /* hides SYMBOL text inside TokenChip */
+.chip-icon-only [class*="text-[10px]"]{ display: none; } /* hides tiny badges like "Solana preview" */
+
+
+/* Centered circular flip control */
+.flip-center{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -20%);
+  width:42px;
+  height:42px;
+  border-radius:9999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  line-height:1;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.10);
+  box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 12px rgba(255,255,255,.08);
+  backdrop-filter:saturate(120%) blur(2px);
+  transition:transform .15s ease, background .15s ease, box-shadow .15s ease;
+  z-index:15; /* above content inside the glass card */
+}
+.flip-center:hover{
+  background:rgba(255,255,255,.18);
+  box-shadow:0 8px 22px rgba(0,0,0,.45), inset 0 0 14px rgba(255,255,255,.12);
+}
+.flip-center:active{
+  transform:translate(-50%, -20%) scale(.97);
+}
+/* === side switch: pin the Set input/output button on the right, mid-card === */
+.glass.swapCard { position: relative; }
+.glass.swapCard button[title^="Switch:"]{
+  position: absolute;
+  right: 18px;              /* align with balances/MAX */
+  top: 50%;                 /* between the two rows */
+  transform: translateY(-50%);
+  z-index: 5;
+}
+/* Align the Set input/output pill with the Receive row */
+.glass.swapCard button[title^="Switch:"]{
+  top: calc(50% + 56px);   /* was 50%; move ~56px downward to the receive row */
+  transform: translateY(-50%);
+}
+/* --- set-output alignment tweak (receive row) --- */
+.swapCard button[title="Switch: set output"],
+.swapCard button[title="Switch: set input"] {
+  position: absolute;
+  right: 1rem !important;          /* between the balances */
+  top: calc(50% + 16px) !important;/* align with "Receive token" row; smaller number = higher */
+  z-index: 6;
+}
