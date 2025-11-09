@@ -411,7 +411,7 @@ export default function Page() {
                   ))}
 
                   {!loading && results.length===0 && (
-                    <div className="text-sm opacity-70">No matches yet. Try a different term or paste an address/mint.</div>
+                    <div className="text-sm opacity-70"></div>
                   )}
                 </div>
               </div>
