@@ -270,7 +270,6 @@ export default function Page() {
             ) : (
               <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
             )}</button><button onClick={()=>setPicker("pay")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Pay token</button></div></div>
-            <div className="flip-wrap">
           <TokenRow
             title=""
             token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
@@ -298,7 +297,6 @@ export default function Page() {
             onComputedBalance={() => {}}
             showMax
           />
-            </div>
 
           {solNotice}
 

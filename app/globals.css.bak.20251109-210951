@@ -792,17 +792,3 @@ select.input{ appearance: none; }
   top: calc(50% + 16px) !important;/* align with "Receive token" row; smaller number = higher */
   z-index: 6;
 }
-
-/* keep flip centered between rows only */
-.flip-wrap{position:relative}
-.flip-wrap .flip-center{ top: 46%; }
-/* --- keep flip button centered between rows & stable --- */
-.flip-wrap{ position: relative; }
-.flip-wrap .flip-center{
-  top: 46%;              /* a touch above 50% so it visually sits in the Receive zone */
-  transform: translate(-50%, -20%);
-  z-index: 15;           /* stay above the rows */
-  pointer-events: auto;  /* ensure it’s clickable even over overlays */
-}
-/* fine-tune: sit a bit higher, visually centered in the Receive row */
-.flip-wrap .flip-center{ top: 42%; }
