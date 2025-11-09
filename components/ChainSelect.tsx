@@ -70,8 +70,9 @@ export function ChainSelect({ value, onChange }: Props) {
       {open && (
         <ul
           role="listbox"
-          className="absolute top-[calc(100%+8px)] left-0 z-[10000] w-[280px] max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
-        >
+          className="absolute top-full left-0 translate-y-2 z-[10000] w-[280px] max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
+  style={{ position: "absolute" }}
+>
           {EVM_CHAINS.map((c) => {
             const logo = chainLogoFor(c.id) || fallbackBadge(c.short);
             const selected = c.id === value;
