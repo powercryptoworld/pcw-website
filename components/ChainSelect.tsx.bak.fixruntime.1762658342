@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { createPortal } from "react-dom";
 import { EVM_CHAINS } from "@/lib/chains";
 import { chainLogoFor } from "@/lib/chainLogos";
 
@@ -9,7 +10,9 @@ export function ChainSelect({ value, onChange }: Props) {
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
 
-  const chain = EVM_CHAINS.find((c) => c.id === value);
+  
+    const [coords, setCoords] = React.useState<{left:number; top:number; width:number}>({ left: 0, top: 0, width: 280 });
+const chain = EVM_CHAINS.find((c) => c.id === value);
 
   // Click-outside to close
   React.useEffect(() => {
@@ -20,6 +23,20 @@ export function ChainSelect({ value, onChange }: Props) {
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
+  // Compute dropdown screen position anchored to the trigger
+
+  React.useEffect(() => {
+    if (!open) return;
+    updateCoords();
+    const onScroll = () => updateCoords();
+    const onResize = () => updateCoords();
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [open, updateCoords]);
 
   const fallbackBadge = (short: string) => {
     const svg = encodeURIComponent(
@@ -38,17 +55,18 @@ export function ChainSelect({ value, onChange }: Props) {
 
   return (
     <div ref={rootRef} className="relative inline-flex items-center gap-2 whitespace-nowrap">
-      {/* Current logo (hidden for now, kept for future use) */}
+      {/* Current logo */}
       <span className="hidden inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/30 bg-white/5 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentLogo}
           alt={chain?.short || "CH"}
           width={24}
-          height={24}/>
+          height={24}
+        />
       </span>
 
-      {/* Trigger */}
+      {/* Button that opens the list */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -56,17 +74,7 @@ export function ChainSelect({ value, onChange }: Props) {
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-white/20 bg-white/5 overflow-hidden mr-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={currentLogo}
-            alt={chain?.short || "CH"}
-            width={16}
-            height={16}
-            style={{ display: "block", width: 16, height: 16, objectFit: "contain" }}
-          />
-        </span>
-        <span className="truncate">
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-white/20 bg-white/5 overflow-hidden mr-2"><img src={currentLogo} alt={chain?.short || "CH"} width="16" height="16" /></span><span className="truncate">
           {chain ? `${chain.name} (${chain.id})` : "Select chain"}
         </span>
         <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
@@ -74,12 +82,12 @@ export function ChainSelect({ value, onChange }: Props) {
         </svg>
       </button>
 
-      {/* Listbox (inline absolute overlay; scroll; no layout shift) */}
-      {open && (
-        <ul
+      {/* Listbox */}
+      {open && createPortal(
+          <ul
           role="listbox"
           className="absolute top-full left-0 translate-y-2 z-[10000] w-[280px] max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
-        >
+>
           {EVM_CHAINS.map((c) => {
             const logo = chainLogoFor(c.id) || fallbackBadge(c.short);
             const selected = c.id === value;
@@ -103,7 +111,6 @@ export function ChainSelect({ value, onChange }: Props) {
                   alt={c.short}
                   width={20}
                   height={20}
-                  style={{ display: "block", width: 20, height: 20, objectFit: "contain" }}
                   className="rounded-full border border-white/20 bg-white/5"
                 />
                 <div className="flex-1 min-w-0">
@@ -117,9 +124,11 @@ export function ChainSelect({ value, onChange }: Props) {
                 )}
               </li>
             );
-          })}
-        </ul>
-      )}
+          })} 
+          </ul>,
+          document.body
+        )
+        }
     </div>
   );
 }

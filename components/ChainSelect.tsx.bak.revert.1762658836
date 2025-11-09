@@ -45,7 +45,9 @@ export function ChainSelect({ value, onChange }: Props) {
           src={currentLogo}
           alt={chain?.short || "CH"}
           width={24}
-          height={24}/>
+          height={24}
+          style={{ display: "block", width: 24, height: 24, objectFit: "contain" }}
+        />
       </span>
 
       {/* Trigger */}
@@ -78,7 +80,9 @@ export function ChainSelect({ value, onChange }: Props) {
       {open && (
         <ul
           role="listbox"
-          className="absolute top-full left-0 translate-y-2 z-[10000] w-[280px] max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
+          className="absolute top-full left-0 translate-y-2 z-[10000]
+                     w-[280px] max-h-72 overflow-y-auto
+                     rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
         >
           {EVM_CHAINS.map((c) => {
             const logo = chainLogoFor(c.id) || fallbackBadge(c.short);
