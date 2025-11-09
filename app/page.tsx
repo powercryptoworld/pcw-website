@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";import TokenRow from "@/components/swap/TokenRow";import QuotePanel from "@/components/swap/QuotePanel";
 import { createPortal } from "react-dom";
 import { ChainSelect } from "@/components/ChainSelect";
-import ChainPickerInline from "@/components/ChainPickerInline";
 import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
 import { SolRowLogo } from "@/components/sol/SolRowLogo";
 import { EVM_CHAINS } from "@/lib/chains";
@@ -129,20 +128,22 @@ export default function Page() {
   useEffect(() => {
     if (picker) {
       try { window.scrollTo(0, 0); } catch {}
-      const r = cardRef?.current?.getBoundingClientRect();
+      document.documentElement.style.overflow = "hidden";
+    const r = cardRef?.current?.getBoundingClientRect();
     if (r) { setPickerTop(Math.max(8, Math.floor(r.top))); }
 
       const _t = (cardRef && cardRef.current) ? cardRef.current.getBoundingClientRect().top : 24;
       document.documentElement.style.setProperty('--picker-top', String(Math.max(8, Math.floor(_t))) + 'px');
     } else {
-      }
-    return () => { };
+      document.documentElement.style.overflow = "";
+    }
+    return () => { document.documentElement.style.overflow = ""; };
   }, [picker]);
 
   // Also lock <body> to prevent mobile bounce
   useEffect(() => {
-    if (picker) { } else { }
-    return () => { };
+    if (picker) { document.body.style.overflow = "hidden"; } else { document.body.style.overflow = ""; }
+    return () => { document.body.style.overflow = ""; };
   }, [picker]);
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -277,7 +278,7 @@ export default function Page() {
       <div className="swap-vfx" aria-hidden />
 
       <div className="mx-auto max-w-3xl p-4 relative">
-        <div ref={cardRef} className="glass swapCard relative" style={{ overflow: picker ? "visible" : undefined }}>
+        <div ref={cardRef} className={cx("glass swapCard relative", picker && "overflow-visible")}>
             {/* picker — wrapper-anchored, always at the very top */}
             {picker && (
               <>
@@ -288,29 +289,21 @@ export default function Page() {
                   aria-hidden
                 />
                 {/* tray pinned to top of wrapper */}
-                
-   <div
-     className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl max-h-[78vh] overflow-auto rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
-     role="dialog"
-     aria-modal="true"
-      style={{ touchAction: "auto" }}
-   >
+                <div
+                  className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl relative"
+                  role="dialog"
+                  aria-modal="true"
+                >
                   <div className="picker-header flex items-center gap-2 w-full flex-nowrap">
   <div className="flex items-center gap-2">
     <button onClick={()=>setFamily("evm")} className={cx("h-8 px-3 py-0 border rounded", family==="evm" && "bg-white/10")}>EVM</button>
     <button onClick={()=>setFamily("solana")} className={cx("h-8 px-3 py-0 border rounded", family==="solana" && "bg-white/10")}>Solana</button>
   </div>
-  
-{family==="evm" && (
-  <div className="min-w-0">
-    <ChainPickerInline
-      value={selectedChainId}
-      onChange={setSelectedChainId}
-      className="mt-1"
-    />
-  </div>
-)}
-
+  {family==="evm" && (<div className="flex items-center gap-2 min-w-0 h-8">
+      <span className="text-sm opacity-80 h-8 flex items-center">Chain</span>
+      <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
+    </div>
+  )}
   <div className="flex items-center gap-2 ml-auto shrink-0 whitespace-nowrap"><input ref={searchRef} className="h-8 border rounded px-3 py-0 w-48" placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"} value={searchText} onChange={(e)=>setSearchText(e.target.value)} onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }} />
     <button className="h-8 px-4 py-0 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
     <button className="h-8 px-3 py-0 border rounded" onClick={()=>setPicker(null)}>Close</button>

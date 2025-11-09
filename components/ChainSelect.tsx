@@ -38,17 +38,19 @@ export function ChainSelect({ value, onChange }: Props) {
 
   return (
     <div ref={rootRef} className="relative inline-flex items-center gap-2 whitespace-nowrap">
-      {/* Current logo (hidden for now, kept for future use) */}
+      {/* Current logo */}
       <span className="hidden inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/30 bg-white/5 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentLogo}
           alt={chain?.short || "CH"}
           width={24}
-          height={24}/>
+          height={24}
+          style={{ display: "block", width: 24, height: 24, objectFit: "contain" }}
+        />
       </span>
 
-      {/* Trigger */}
+      {/* Button that opens the list */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -56,16 +58,7 @@ export function ChainSelect({ value, onChange }: Props) {
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-white/20 bg-white/5 overflow-hidden mr-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={currentLogo}
-            alt={chain?.short || "CH"}
-            width={16}
-            height={16}
-          />
-        </span>
-        <span className="truncate">
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-white/20 bg-white/5 overflow-hidden mr-2"><img src={currentLogo} alt={chain?.short || "CH"} width="16" height="16" style={{ display: "block", width: 16, height: 16, objectFit: "contain" }} /></span><span className="truncate">
           {chain ? `${chain.name} (${chain.id})` : "Select chain"}
         </span>
         <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
@@ -73,11 +66,11 @@ export function ChainSelect({ value, onChange }: Props) {
         </svg>
       </button>
 
-      {/* Listbox (inline absolute overlay; scroll; no layout shift) */}
+      {/* Listbox */}
       {open && (
         <ul
           role="listbox"
-          className="mt-2 w-72 max-h-64 overflow-auto overscroll-contain rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-2xl"
+          className="absolute z-50 mt-2 w-[280px] max-h-72 overflow-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
         >
           {EVM_CHAINS.map((c) => {
             const logo = chainLogoFor(c.id) || fallbackBadge(c.short);
@@ -102,6 +95,7 @@ export function ChainSelect({ value, onChange }: Props) {
                   alt={c.short}
                   width={20}
                   height={20}
+                  style={{ display: "block", width: 20, height: 20, objectFit: "contain" }}
                   className="rounded-full border border-white/20 bg-white/5"
                 />
                 <div className="flex-1 min-w-0">
