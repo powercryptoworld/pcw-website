@@ -59,7 +59,7 @@ export function ChainSelect({ value, onChange }: Props) {
         aria-expanded={open}
       >
         <span className="truncate">
-          {chain ? `${chain.name}` : "Select chain"}
+          {chain ? `${chain.name} (${chain.id})` : "Select chain"}
         </span>
         <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M5 7l5 6 5-6H5z" fill="currentColor" />
@@ -100,6 +100,7 @@ export function ChainSelect({ value, onChange }: Props) {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm leading-tight truncate">{c.name}</div>
+                  <div className="text-[10px] opacity-70">ID: {c.id} • {c.short}</div>
                 </div>
                 {selected && (
                   <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
