@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";import TokenRow from "@/components/swap/TokenRow";import QuotePanel from "@/components/swap/QuotePanel";
 import { createPortal } from "react-dom";
 import { ChainSelect } from "@/components/ChainSelect";
-import ChainPickerInline from "@/components/ChainPickerInline";
 import InlineRowLogoInjector from "@/components/evm/InlineRowLogoInjector";
 import { SolRowLogo } from "@/components/sol/SolRowLogo";
 import { EVM_CHAINS } from "@/lib/chains";
@@ -300,17 +299,11 @@ export default function Page() {
     <button onClick={()=>setFamily("evm")} className={cx("h-8 px-3 py-0 border rounded", family==="evm" && "bg-white/10")}>EVM</button>
     <button onClick={()=>setFamily("solana")} className={cx("h-8 px-3 py-0 border rounded", family==="solana" && "bg-white/10")}>Solana</button>
   </div>
-  
-{family==="evm" && (
-  <div className="min-w-0">
-    <ChainPickerInline
-      value={selectedChainId}
-      onChange={setSelectedChainId}
-      className="mt-1"
-    />
-  </div>
-)}
-
+  {family==="evm" && (<div className="flex items-center gap-2 min-w-0 h-8">
+      <span className="text-sm opacity-80 h-8 flex items-center">Chain</span>
+      <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
+    </div>
+  )}
   <div className="flex items-center gap-2 ml-auto shrink-0 whitespace-nowrap"><input ref={searchRef} className="h-8 border rounded px-3 py-0 w-48" placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"} value={searchText} onChange={(e)=>setSearchText(e.target.value)} onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }} />
     <button className="h-8 px-4 py-0 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
     <button className="h-8 px-3 py-0 border rounded" onClick={()=>setPicker(null)}>Close</button>
