@@ -116,7 +116,7 @@ export default function Page() {
 
   // === Picker (inside the card) ===
   const [picker, setPicker] = useState<"pay" | "receive" | null>("pay");
-  const [family, setFamily] = useState<"evm" | "solana">("solana");
+  const [family, setFamily] = useState<"evm" | "solana">("evm");
   const [selectedChainId, setSelectedChainId] = useState<number>(56);
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
