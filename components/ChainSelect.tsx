@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { createPortal } from "react-dom";
 import { EVM_CHAINS } from "@/lib/chains";
 import { chainLogoFor } from "@/lib/chainLogos";
 
@@ -9,7 +10,9 @@ export function ChainSelect({ value, onChange }: Props) {
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
 
-  const chain = EVM_CHAINS.find((c) => c.id === value);
+  
+    const [coords, setCoords] = React.useState<{left:number; top:number; width:number}>({ left: 0, top: 0, width: 280 });
+const chain = EVM_CHAINS.find((c) => c.id === value);
 
   // Click-outside to close
   React.useEffect(() => {
@@ -67,10 +70,10 @@ export function ChainSelect({ value, onChange }: Props) {
       </button>
 
       {/* Listbox */}
-      {open && (
-        <ul
+      {open && createPortal(
+          <ul
           role="listbox"
-          className="absolute top-full left-0 translate-y-2 z-[10000] w-[280px] max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
+          className="z-[10000] max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-lg"
   style={{ position: "absolute" }}
 >
           {EVM_CHAINS.map((c) => {
@@ -110,9 +113,11 @@ export function ChainSelect({ value, onChange }: Props) {
                 )}
               </li>
             );
-          })}
-        </ul>
-      )}
+          })} 
+          </ul>,
+          document.body
+        )
+        }
     </div>
   );
 }
