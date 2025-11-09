@@ -284,9 +284,7 @@ export default function Page() {
             <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
           </div>
 
-          
-            <button onClick={flip} className="flip-center" title="Flip tokens and amounts">⇄</button>
-{/* You receive */}
+          {/* You receive */}
           <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
               <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
             ) : (
@@ -323,7 +321,7 @@ export default function Page() {
             <>
               {/* dim backdrop */}
               <div
-                className="fixed inset-0 z-40 bg-black/40"
+                className="absolute inset-0 z-20 bg-black/40 rounded-2xl"
                 onClick={()=>setPicker(null)}
                 aria-hidden
               />

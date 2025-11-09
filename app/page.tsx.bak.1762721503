@@ -323,7 +323,7 @@ export default function Page() {
             <>
               {/* dim backdrop */}
               <div
-                className="fixed inset-0 z-40 bg-black/40"
+                className="absolute inset-0 z-20 bg-black/40 rounded-2xl"
                 onClick={()=>setPicker(null)}
                 aria-hidden
               />
