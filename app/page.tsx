@@ -278,7 +278,7 @@ export default function Page() {
       <div className="swap-vfx" aria-hidden />
 
       <div className="mx-auto max-w-3xl p-4 relative">
-        <div ref={cardRef} className={cx("glass swapCard relative", picker && "overflow-visible")}>
+        <div ref={cardRef} className={cx("glass swapCard relative", picker && "swapCard--open")}>
             {/* picker — wrapper-anchored, always at the very top */}
             {picker && (
               <>

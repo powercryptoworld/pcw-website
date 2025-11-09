@@ -867,3 +867,9 @@ select.input{ appearance: none; }
   position: relative;
   top: -1px;   /* if still a hair low, change to -2px */
 }
+
+/* --- picker: let the tray escape the glass --- */
+.swapCard--open{
+  overflow: visible !important;   /* beat .swapCard { overflow: hidden } */
+  isolation: isolate;             /* create a new context so z-index works cleanly */
+}
