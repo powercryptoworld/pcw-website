@@ -63,7 +63,6 @@ export function ChainSelect({ value, onChange }: Props) {
             alt={chain?.short || "CH"}
             width={16}
             height={16}
-            style={{ display: "block", width: 16, height: 16, objectFit: "contain" }}
           />
         </span>
         <span className="truncate">
@@ -78,7 +77,7 @@ export function ChainSelect({ value, onChange }: Props) {
       {open && (
         <ul
           role="listbox"
-          className="absolute left-0 top-8 z-50 w-72 max-h-64 overflow-auto overscroll-contain rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-2xl"
+          className="mt-2 w-72 max-h-64 overflow-auto overscroll-contain rounded-xl border border-white/10 bg-black/80 backdrop-blur p-1 shadow-2xl"
         >
           {EVM_CHAINS.map((c) => {
             const logo = chainLogoFor(c.id) || fallbackBadge(c.short);
@@ -103,7 +102,6 @@ export function ChainSelect({ value, onChange }: Props) {
                   alt={c.short}
                   width={20}
                   height={20}
-                  style={{ display: "block", width: 20, height: 20, objectFit: "contain" }}
                   className="rounded-full border border-white/20 bg-white/5"
                 />
                 <div className="flex-1 min-w-0">
