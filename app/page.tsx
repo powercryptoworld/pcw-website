@@ -115,8 +115,8 @@ export default function Page() {
   const humanAmount = mode === "pay" ? debouncedPay : debouncedReceive;
 
   // === Picker (inside the card) ===
-  const [picker, setPicker] = useState<"pay" | "receive" | null>(null);
-  const [family, setFamily] = useState<"evm" | "solana">("evm");
+  const [picker, setPicker] = useState<"pay" | "receive" | null>("pay");
+  const [family, setFamily] = useState<"evm" | "solana">("solana");
   const [selectedChainId, setSelectedChainId] = useState<number>(56);
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -303,7 +303,7 @@ export default function Page() {
           {solNotice}
 
           {/* Collapsible quote details (EVM) */}
-          <details className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+          <details open className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
             <summary className="select-none cursor-pointer text-xs px-3 py-2 bg-white/5 hover:bg-white/10">Quote details</summary>
             <div className="px-3 pt-10 pb-2">
               <QuotePanel
