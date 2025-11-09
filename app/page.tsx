@@ -128,22 +128,20 @@ export default function Page() {
   useEffect(() => {
     if (picker) {
       try { window.scrollTo(0, 0); } catch {}
-      document.documentElement.style.overflow = "hidden";
-    const r = cardRef?.current?.getBoundingClientRect();
+      const r = cardRef?.current?.getBoundingClientRect();
     if (r) { setPickerTop(Math.max(8, Math.floor(r.top))); }
 
       const _t = (cardRef && cardRef.current) ? cardRef.current.getBoundingClientRect().top : 24;
       document.documentElement.style.setProperty('--picker-top', String(Math.max(8, Math.floor(_t))) + 'px');
     } else {
-      document.documentElement.style.overflow = "";
-    }
-    return () => { document.documentElement.style.overflow = ""; };
+      }
+    return () => { };
   }, [picker]);
 
   // Also lock <body> to prevent mobile bounce
   useEffect(() => {
-    if (picker) { document.body.style.overflow = "hidden"; } else { document.body.style.overflow = ""; }
-    return () => { document.body.style.overflow = ""; };
+    if (picker) { } else { }
+    return () => { };
   }, [picker]);
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -294,8 +292,6 @@ export default function Page() {
      className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl max-h-[78vh] overflow-auto overscroll-contain rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
      role="dialog"
      aria-modal="true"
-     onWheel={(e)=>e.stopPropagation()}
-     onTouchMove={(e)=>e.stopPropagation()}
    >
                   <div className="picker-header flex items-center gap-2 w-full flex-nowrap">
   <div className="flex items-center gap-2">
