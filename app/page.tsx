@@ -289,7 +289,7 @@ export default function Page() {
                 {/* tray pinned to top of wrapper */}
                 
    <div
-     className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl max-h-[78vh] overflow-auto overscroll-contain rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
+     className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl max-h-[78vh] overflow-auto rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
      role="dialog"
      aria-modal="true"
    >
