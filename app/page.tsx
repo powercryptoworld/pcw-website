@@ -289,11 +289,14 @@ export default function Page() {
                   aria-hidden
                 />
                 {/* tray pinned to top of wrapper */}
-                <div
-                  className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl max-h-[78vh] overflow-auto overscroll-contain rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl relative"
-                  role="dialog"
-                  aria-modal="true"
-                >
+                
+   <div
+     className="absolute left-1/2 top-0 -translate-x-1/2 z-[9999] w-[calc(100%-1.5rem)] max-w-xl max-h-[78vh] overflow-auto overscroll-contain rounded-2xl border border-white/15 bg-black/70 backdrop-blur p-3 shadow-2xl"
+     role="dialog"
+     aria-modal="true"
+     onWheel={(e)=>e.stopPropagation()}
+     onTouchMove={(e)=>e.stopPropagation()}
+   >
                   <div className="picker-header flex items-center gap-2 w-full flex-nowrap">
   <div className="flex items-center gap-2">
     <button onClick={()=>setFamily("evm")} className={cx("h-8 px-3 py-0 border rounded", family==="evm" && "bg-white/10")}>EVM</button>
