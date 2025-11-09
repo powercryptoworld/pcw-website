@@ -258,7 +258,7 @@ export default function Page() {
       <div className="mx-auto max-w-3xl p-4">
         <div className="glass swapCard relative">
           <div className="flex items-center justify-between mb-1">
-            <div className="hidden text-[11px] opacity-80">
+            <div className="text-[11px] opacity-80">
               Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>
             </div>
             <div className="flex items-center gap-2"></div>

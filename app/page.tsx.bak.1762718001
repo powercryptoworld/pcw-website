@@ -257,15 +257,15 @@ export default function Page() {
 
       <div className="mx-auto max-w-3xl p-4">
         <div className="glass swapCard relative">
-          <div className="flex items-center justify-between mb-1">
-            <div className="hidden text-[11px] opacity-80">
+          <div className="hidden items-center justify-between mb-1">
+            <div className="text-[11px] opacity-80">
               Network: <span className="font-mono">{EVM_CHAINS.find(c=>c.id===chainId)?.name || `chainId ${chainId}`}</span>
             </div>
             <div className="flex items-center gap-2"></div>
           </div>
 
           {/* You pay */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
+          <div className="hidden items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
               <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
             ) : (
               <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
@@ -284,7 +284,7 @@ export default function Page() {
           </div>
 
           {/* You receive */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
+          <div className="hidden items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
               <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
             ) : (
               <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
