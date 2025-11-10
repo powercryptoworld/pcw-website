@@ -301,8 +301,8 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
 
       <div className="mt-2">
         <div className="mt-6"></div>
-        <div className="opacity-70 text-right">Price impact</div>
-        <div className="text-base text-right">
+        <div className="opacity-70">Price impact</div>
+        <div className="text-base">
           {dstAmtStr
             ? (priceImpact.loading ? "…" : (priceImpact.value == null ? "—" : `${priceImpact.value.toFixed(2)}%`))
             : "—"}
@@ -319,8 +319,8 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       </div>
 
       <div className="mt-2">
-        <div className="opacity-70 text-right">Estimated gas</div>
-        <div className="text-base text-right">
+        <div className="opacity-70">Estimated gas</div>
+        <div className="text-base">
           {dstAmtStr ? (gasUsd != null ? formatUsd(gasUsd) : "—") : "—"}
         </div>
         <div className="hidden mt-1 text-[11px] opacity-60">
