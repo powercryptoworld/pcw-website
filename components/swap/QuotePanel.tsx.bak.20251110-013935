@@ -77,9 +77,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   const nativeAddr = wrappedAddressFor(chainId);
   const nativeUsd = useUsdQuote(chainId, nativeAddr, 18).priceUsd;
 
-  
-    const hasHumanAmount = useMemo(() => !!amount && Number(amount) > 0, [amount]);
-// Gas tiers from our lab helper
+  // Gas tiers from our lab helper
   const [gas, setGas] = useState<GasTiers>({});
   useEffect(() => {
     let alive = true;
@@ -180,7 +178,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   }, [selectedGasWei]);
 
   const gasUsd = useMemo(() => {
-    if (!hasHumanAmount || !gasUnits || !selectedGasWei || !nativeUsd || nativeUsd <= 0) return undefined;
+    if (!gasUnits || !selectedGasWei || !nativeUsd) return undefined;
     const native = (Number(selectedGasWei) * gasUnits) / 1e18;
     const usd = native * nativeUsd;
     return Number.isFinite(usd) ? usd : undefined;
@@ -188,7 +186,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
 
   useEffect(() => {
     try {
-      console.log("gas-debug", {
+      console.debug("gas-debug", {
         chainId,
         nativeAddr,
         nativeUsd,
@@ -328,16 +326,6 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         </div>
       </div>
 
-        <div className="mt-3">
-          <button
-            className="rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20 disabled:opacity-50"
-            disabled
-            title="Execution disabled in lab"
-          >
-            Execute
-          </button>
-        </div>
-
       <div className="mt-2 hidden">
         <div className="opacity-70">Route</div>
         <div className="mt-1 flex flex-wrap gap-1">
@@ -349,9 +337,9 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         </div>
       </div>
 
-      {/* Execution (preview) */}
-      <div className="mt-4 border-t border-white/10 pt-3 hidden">
-        <div className="opacity-70">Execution (preview)</div>
+      {/* Execution (disabled in lab) */}
+      <div className="mt-4 border-t border-white/10 pt-3">
+        <div className="opacity-70">Execution (disabled in lab)</div>
         <div className="mt-3 text-sm">
           <div className="mb-5">Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
           <div className="mt-4">

@@ -78,7 +78,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   const nativeUsd = useUsdQuote(chainId, nativeAddr, 18).priceUsd;
 
   
-    const hasHumanAmount = useMemo(() => !!amount && Number(amount) > 0, [amount]);
+    const hasAmount = useMemo(() => !!amount && Number(amount) > 0, [amount]);
 // Gas tiers from our lab helper
   const [gas, setGas] = useState<GasTiers>({});
   useEffect(() => {
@@ -180,7 +180,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   }, [selectedGasWei]);
 
   const gasUsd = useMemo(() => {
-    if (!hasHumanAmount || !gasUnits || !selectedGasWei || !nativeUsd || nativeUsd <= 0) return undefined;
+    if (!gasUnits || !selectedGasWei || !nativeUsd) return undefined;
     const native = (Number(selectedGasWei) * gasUnits) / 1e18;
     const usd = native * nativeUsd;
     return Number.isFinite(usd) ? usd : undefined;

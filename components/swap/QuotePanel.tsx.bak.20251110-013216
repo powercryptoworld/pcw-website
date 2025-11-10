@@ -51,12 +51,6 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   const [slippageBps, setSlippageBps] = useState<number>(defaultSlippageBps);
   const [speed, setSpeed] = useState<"standard" | "fast" | "instant">("standard");
 
-    const hasAmount = useMemo(() => {
-      const n = Number(amount);
-      return !!amount && Number.isFinite(n) && n > 0;
-    }, [amount]);
-
-
   // Quote (read-only)
   const q = useEvmQuote({
     chainId,
@@ -77,9 +71,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   const nativeAddr = wrappedAddressFor(chainId);
   const nativeUsd = useUsdQuote(chainId, nativeAddr, 18).priceUsd;
 
-  
-    const hasHumanAmount = useMemo(() => !!amount && Number(amount) > 0, [amount]);
-// Gas tiers from our lab helper
+  // Gas tiers from our lab helper
   const [gas, setGas] = useState<GasTiers>({});
   useEffect(() => {
     let alive = true;
@@ -180,7 +172,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   }, [selectedGasWei]);
 
   const gasUsd = useMemo(() => {
-    if (!hasHumanAmount || !gasUnits || !selectedGasWei || !nativeUsd || nativeUsd <= 0) return undefined;
+    if (!gasUnits || !selectedGasWei || !nativeUsd) return undefined;
     const native = (Number(selectedGasWei) * gasUnits) / 1e18;
     const usd = native * nativeUsd;
     return Number.isFinite(usd) ? usd : undefined;
@@ -188,7 +180,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
 
   useEffect(() => {
     try {
-      console.log("gas-debug", {
+      console.debug("gas-debug", {
         chainId,
         nativeAddr,
         nativeUsd,
@@ -327,16 +319,6 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
           {(!quoteGasStr) && "Network tier used when quote lacks gasPrice."}
         </div>
       </div>
-
-        <div className="mt-3">
-          <button
-            className="rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20 disabled:opacity-50"
-            disabled
-            title="Execution disabled in lab"
-          >
-            Execute
-          </button>
-        </div>
 
       <div className="mt-2 hidden">
         <div className="opacity-70">Route</div>

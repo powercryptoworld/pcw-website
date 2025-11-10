@@ -65,9 +65,7 @@ export async function GET(req: NextRequest) {
     const usdc = USDC_BY_CHAIN[chainId];
     if (ONEINCH_API_KEY && usdc) {
       try {
-        
-          const weiAmount = (1n * (10n ** BigInt(decimals))).toString();
-          const params = new URLSearchParams({
+        const params = new URLSearchParams({
           src: token,
           dst: usdc.address,
           amount: "1",                    // 1 token unit (human)
@@ -82,7 +80,7 @@ export async function GET(req: NextRequest) {
         const j = await r.json().catch(() => ({} as any));
         if (r.ok && j?.dstAmount) {
           const usd = num(Number(j.dstAmount) / 10 ** usdc.decimals);
-          if (usd && usd > 1e-8) return ok({ ok: true, usd, source: "1inch" });
+          if (usd) return ok({ ok: true, usd, source: "1inch" });
         }
       } catch { /* ignore and try fallbacks */ }
     }

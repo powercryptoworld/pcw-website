@@ -180,7 +180,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   }, [selectedGasWei]);
 
   const gasUsd = useMemo(() => {
-    if (!hasHumanAmount || !gasUnits || !selectedGasWei || !nativeUsd || nativeUsd <= 0) return undefined;
+    if (!gasUnits || !selectedGasWei || !nativeUsd) return undefined;
     const native = (Number(selectedGasWei) * gasUnits) / 1e18;
     const usd = native * nativeUsd;
     return Number.isFinite(usd) ? usd : undefined;
