@@ -7,7 +7,7 @@ import { wrappedAddressFor } from "@/hooks/useWrappedMap";
 import { useEvmQuote } from "@/hooks/useEvmQuote";
 import { useAllowance } from "@/hooks/useAllowance";
 import { useAccount } from "wagmi";
-import { getMetaMaskProvider } from "@/lib/evm";
+import { getMetaMaskProvider } from "../../lib/evm";
 
 // Minimal token shape from the lab page
 type TokenRef = { address?: `0x${string}`; decimals: number; symbol?: string; name?: string };
@@ -270,135 +270,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
     return () => { alive = false; };
   }, [chainId, wallet, src?.address, src?.decimals, dst?.address, amount, slippageBps]);
 
-  
-    const canSwap =
-      !!wallet &&
-      !!src?.address &&
-      !!dst?.address &&
-      !!amount &&
-      Number(amount) > 0;
-
-    async function handleSwapClick() {
-      try {
-        if (!wallet) {
-          alert("Connect wallet first");
-          return;
-        }
-        if (!amount || Number(amount) <= 0) {
-          alert("Enter an amount");
-          return;
-        }
-        if (!src?.address || !dst?.address) {
-          alert("Choose tokens");
-          return;
-        }
-
-        const meta = (window as any).ethereum;
-        if (!meta || !meta.request) {
-          alert("No EVM wallet (MetaMask) found.");
-          return;
-        }
-
-        // Try to switch to the right chain (ok if this fails)
-        try {
-          const chainHex = "0x" + Number(chainId).toString(16);
-          await meta.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: chainHex }],
-          });
-        } catch (err) {
-          console.warn("chain switch skipped/failed", err);
-        }
-
-        const u = new URL("/api/swap/oneinch", window.location.origin);
-        u.searchParams.set("chainId", String(chainId));
-        u.searchParams.set("from", String(wallet));
-        u.searchParams.set("src", String(src.address));
-        u.searchParams.set("dst", String(dst.address));
-        u.searchParams.set("amount", String(amount));
-        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
-        u.searchParams.set("slippageBps", String(slippageBps));
-        const r = await fetch(u.toString(), { cache: "no-store" });
-        const j = await r.json();
-        if (!j || !j.ok || !j.tx) {
-          console.error("swap tx error", j);
-          alert("Swap tx not available");
-          return;
-        }
-
-        const tx = j.tx;
-
-        await meta.request({
-          method: "eth_sendTransaction",
-          params: [
-            {
-              from: wallet,
-              to: tx.to,
-              data: tx.data,
-              value: tx.value ?? "0x0",
-            },
-          ],
-        });
-      } catch (err) {
-        console.error("swap send failed", err);
-        alert("Swap send failed");
-      }
-    }
-
-
-//     const canSwap =
-      !!wallet &&
-      !!src?.address &&
-      !!dst?.address &&
-      !!amount &&
-      Number(amount) > 0;
-
-    async function handleSwapClick() {
-      try {
-        const meta = getMetaMaskProvider();
-        if (!meta?.request) {
-          alert("No EVM wallet (MetaMask) found.");
-          return;
-        }
-
-        const u = new URL("/api/swap/oneinch", window.location.origin);
-        u.searchParams.set("chainId", String(chainId));
-        u.searchParams.set("from", String(wallet ?? ""));
-        u.searchParams.set("src", String(src.address));
-        u.searchParams.set("dst", String(dst.address));
-        u.searchParams.set("amount", String(amount));
-        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
-        u.searchParams.set("slippageBps", String(slippageBps));
-
-        const r = await fetch(u.toString(), { cache: "no-store" });
-        const j = await r.json();
-        if (!j?.ok || !j?.tx) {
-          console.error("Swap tx error", j);
-          alert("Swap quote not available.");
-          return;
-        }
-
-        const tx = j.tx;
-
-        await meta.request({
-          method: "eth_sendTransaction",
-          params: [
-            {
-              from: wallet,
-              to: tx.to,
-              data: tx.data,
-              value: tx.value ?? "0x0",
-              gas: tx.gas,
-              gasPrice: tx.gasPrice,
-            },
-          ],
-        });
-      } catch (err) {
-        console.error("swap failed", err);
-      }
-    }
-
-// Amount needed in wei for approval compare
+  // Amount needed in wei for approval compare
   const amountWeiNeeded = useMemo(() => parseAmountToWei(amount, src.decimals ?? 18), [amount, src.decimals]);
   const approvalNeeded = !!(src.address && wallet && spender) && (allowance.allowanceWei ?? 0n) < amountWeiNeeded;
 
@@ -460,9 +332,8 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         <div className="mt-4 mb-8">
           <button
             className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60"
-            disabled={!canSwap}
-            onClick={canSwap ? handleSwapClick : undefined}
-            title={canSwap ? "Execute swap" : "Enter amount and connect wallet"}
+            disabled
+            title="Execution disabled in lab"
           >
             SWAP
           </button>
@@ -485,7 +356,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       <div className="mt-4 border-t border-white/10 pt-3 hidden">
         <div className="opacity-70">Execution (preview)</div>
         <div className="mt-3 text-sm">
-          <div className="mb-5">Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
+          <div className="mb-5" suppressHydrationWarning>Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
           <div className="mt-4">
             Spender: {spender
               ? <span className="font-mono">{`${(spender as string).slice(0,6)}…${(spender as string).slice(-4)}`}</span>

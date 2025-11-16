@@ -7,7 +7,7 @@ import { wrappedAddressFor } from "@/hooks/useWrappedMap";
 import { useEvmQuote } from "@/hooks/useEvmQuote";
 import { useAllowance } from "@/hooks/useAllowance";
 import { useAccount } from "wagmi";
-import { getMetaMaskProvider } from "@/lib/evm";
+import { getMetaMaskProvider } from "../../lib/evm";
 
 // Minimal token shape from the lab page
 type TokenRef = { address?: `0x${string}`; decimals: number; symbol?: string; name?: string };
@@ -40,6 +40,243 @@ function parseAmountToWei(amount: string, decimals: number) {
   const d = Math.max(0, Math.min(36, decimals || 0));
   const pad = (f + "0".repeat(d)).slice(0, d);
   try {
+
+    const canSwap =
+      !!wallet &&
+      !!src &&
+      !!dst &&
+      !!amount &&
+      Number(amount) > 0 &&
+      !!txPreview &&
+      !!txPreview.to;  // minimal sanity
+
+    const toHex = (v: bigint) => "0x" + v.toString(16);
+
+    async function handleSwapClick() {
+      try {
+        setSwapError(null);
+        if (!wallet) { setSwapError("Connect wallet first"); return; }
+        if (!amount || Number(amount) <= 0) { setSwapError("Enter an amount"); return; }
+        if (!src?.address || !dst?.address) { setSwapError("Choose tokens"); return; }
+
+        const meta = getMetaMaskProvider();
+        if (!meta?.request) {
+          setSwapError("MetaMask not found. Check browser wallet settings.");
+          return;
+        }
+
+        setSending(true);
+
+        // Ensure correct chain in MetaMask
+        try {
+          const chainHex = "0x" + Number(chainId).toString(16);
+          await meta.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainHex }],
+          });
+        } catch (_):
+          # user might reject or already be on this chain; that's ok
+          pass
+
+        // Build fresh tx from backend (avoid stale preview)
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(wallet));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j?.ok || !j?.tx) {
+          setSwapError(j?.error || "Swap build failed");
+          return;
+        }
+
+        const tx = j.tx;
+        const valueBigInt = BigInt(tx.value or "0");
+        const valueHex = toHex(valueBigInt);
+
+        const params = [{
+          "from": wallet,
+          "to": tx.to,
+          "data": tx.data,
+          "value": valueHex,
+        }];
+
+        const hash = await meta.request({
+          "method": "eth_sendTransaction",
+          "params": params,
+        });
+
+        console.log("swap sent", hash);
+      } catch (e):
+        console.error("swap error", e);
+        try:
+          msg = e.get("message") if isinstance(e, dict) else str(e)
+        except Exception:
+          msg = "Swap failed"
+        setSwapError(msg)
+      finally:
+        setSending(false);
+      }
+    }
+
+
+    const canSwap =
+      !!wallet &&
+      !!src &&
+      !!dst &&
+      !!amount &&
+      Number(amount) > 0 &&
+      !!txPreview &&
+      !!txPreview.to;
+
+    const toHex = (v: bigint) => "0x" + v.toString(16);
+
+    async function handleSwapClick() {
+      try {
+        setSwapError(null);
+        if (!wallet) { setSwapError("Connect wallet first"); return; }
+        if (!amount || Number(amount) <= 0) { setSwapError("Enter an amount"); return; }
+        if (!src?.address || !dst?.address) { setSwapError("Choose tokens"); return; }
+
+        const meta = getMetaMaskProvider();
+        if (!meta?.request) {
+          setSwapError("MetaMask not found. Check browser wallet settings.");
+          return;
+        }
+
+        setSending(true);
+
+        try {
+          const chainHex = "0x" + Number(chainId).toString(16);
+          await meta.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainHex }],
+          });
+        } catch (err) {
+          // user may reject; we still try with current chain
+        }
+
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(wallet));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j?.ok || !j?.tx) {
+          setSwapError(j?.error || "Swap build failed");
+          return;
+        }
+
+        const tx = j.tx;
+        const valueBigInt = BigInt(tx.value || "0");
+        const valueHex = toHex(valueBigInt);
+
+        const params = [{
+          from: wallet,
+          to: tx.to,
+          data: tx.data,
+          value: valueHex,
+        }];
+
+        const hash = await meta.request({
+          method: "eth_sendTransaction",
+          params,
+        });
+
+        console.log("swap sent", hash);
+      } catch (e: any) {
+        console.error("swap error", e);
+        setSwapError(e?.message || "Swap failed");
+      } finally {
+        setSending(false);
+      }
+    }
+
+
+    const canSwap =
+      !!wallet &&
+      !!src &&
+      !!dst &&
+      !!amount &&
+      Number(amount) > 0 &&
+      !!txPreview &&
+      !!txPreview.to;
+
+    const toHex = (v: bigint) => "0x" + v.toString(16);
+
+    async function handleSwapClick() {
+      try {
+        setSwapError(null);
+        if (!wallet) { setSwapError("Connect wallet first"); return; }
+        if (!amount || Number(amount) <= 0) { setSwapError("Enter an amount"); return; }
+        if (!src?.address || !dst?.address) { setSwapError("Choose tokens"); return; }
+
+        const meta = getMetaMaskProvider();
+        if (!meta?.request) {
+          setSwapError("MetaMask not found. Check browser wallet settings.");
+          return;
+        }
+
+        setSending(true);
+
+        try {
+          const chainHex = "0x" + Number(chainId).toString(16);
+          await meta.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainHex }],
+          });
+        } catch (err) {
+          // user may reject; we still try with current chain
+        }
+
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(wallet));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j?.ok || !j?.tx) {
+          setSwapError(j?.error || "Swap build failed");
+          return;
+        }
+
+        const tx = j.tx;
+        const valueBigInt = BigInt(tx.value || "0");
+        const valueHex = toHex(valueBigInt);
+
+        const params = [{
+          from: wallet,
+          to: tx.to,
+          data: tx.data,
+          value: valueHex,
+        }];
+
+        const hash = await meta.request({
+          method: "eth_sendTransaction",
+          params,
+        });
+
+        console.log("swap sent", hash);
+      } catch (e: any) {
+        console.error("swap error", e);
+        setSwapError(e?.message || "Swap failed");
+      } finally {
+        setSending(false);
+      }
+    }
+
     return (BigInt(i || "0") * (10n ** BigInt(d)) + BigInt(pad || "0"));
   } catch {
     return 0n;
@@ -234,8 +471,10 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   // ===== Swap Tx preview (read-only) =====
   const [txPreview, setTxPreview] = useState<{
     to?: string; value?: string; gas?: string; gasPrice?: string; dataLen?: number;
-    routeSummary?: string; dstAmount?: string;
+    routeSummary?: string; dstAmount?: string; data?: string;
   } | null>(null);
+  const [sending, setSending] = useState(false);
+  const [swapError, setSwapError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -270,135 +509,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
     return () => { alive = false; };
   }, [chainId, wallet, src?.address, src?.decimals, dst?.address, amount, slippageBps]);
 
-  
-    const canSwap =
-      !!wallet &&
-      !!src?.address &&
-      !!dst?.address &&
-      !!amount &&
-      Number(amount) > 0;
-
-    async function handleSwapClick() {
-      try {
-        if (!wallet) {
-          alert("Connect wallet first");
-          return;
-        }
-        if (!amount || Number(amount) <= 0) {
-          alert("Enter an amount");
-          return;
-        }
-        if (!src?.address || !dst?.address) {
-          alert("Choose tokens");
-          return;
-        }
-
-        const meta = (window as any).ethereum;
-        if (!meta || !meta.request) {
-          alert("No EVM wallet (MetaMask) found.");
-          return;
-        }
-
-        // Try to switch to the right chain (ok if this fails)
-        try {
-          const chainHex = "0x" + Number(chainId).toString(16);
-          await meta.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: chainHex }],
-          });
-        } catch (err) {
-          console.warn("chain switch skipped/failed", err);
-        }
-
-        const u = new URL("/api/swap/oneinch", window.location.origin);
-        u.searchParams.set("chainId", String(chainId));
-        u.searchParams.set("from", String(wallet));
-        u.searchParams.set("src", String(src.address));
-        u.searchParams.set("dst", String(dst.address));
-        u.searchParams.set("amount", String(amount));
-        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
-        u.searchParams.set("slippageBps", String(slippageBps));
-        const r = await fetch(u.toString(), { cache: "no-store" });
-        const j = await r.json();
-        if (!j || !j.ok || !j.tx) {
-          console.error("swap tx error", j);
-          alert("Swap tx not available");
-          return;
-        }
-
-        const tx = j.tx;
-
-        await meta.request({
-          method: "eth_sendTransaction",
-          params: [
-            {
-              from: wallet,
-              to: tx.to,
-              data: tx.data,
-              value: tx.value ?? "0x0",
-            },
-          ],
-        });
-      } catch (err) {
-        console.error("swap send failed", err);
-        alert("Swap send failed");
-      }
-    }
-
-
-//     const canSwap =
-      !!wallet &&
-      !!src?.address &&
-      !!dst?.address &&
-      !!amount &&
-      Number(amount) > 0;
-
-    async function handleSwapClick() {
-      try {
-        const meta = getMetaMaskProvider();
-        if (!meta?.request) {
-          alert("No EVM wallet (MetaMask) found.");
-          return;
-        }
-
-        const u = new URL("/api/swap/oneinch", window.location.origin);
-        u.searchParams.set("chainId", String(chainId));
-        u.searchParams.set("from", String(wallet ?? ""));
-        u.searchParams.set("src", String(src.address));
-        u.searchParams.set("dst", String(dst.address));
-        u.searchParams.set("amount", String(amount));
-        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
-        u.searchParams.set("slippageBps", String(slippageBps));
-
-        const r = await fetch(u.toString(), { cache: "no-store" });
-        const j = await r.json();
-        if (!j?.ok || !j?.tx) {
-          console.error("Swap tx error", j);
-          alert("Swap quote not available.");
-          return;
-        }
-
-        const tx = j.tx;
-
-        await meta.request({
-          method: "eth_sendTransaction",
-          params: [
-            {
-              from: wallet,
-              to: tx.to,
-              data: tx.data,
-              value: tx.value ?? "0x0",
-              gas: tx.gas,
-              gasPrice: tx.gasPrice,
-            },
-          ],
-        });
-      } catch (err) {
-        console.error("swap failed", err);
-      }
-    }
-
-// Amount needed in wei for approval compare
+  // Amount needed in wei for approval compare
   const amountWeiNeeded = useMemo(() => parseAmountToWei(amount, src.decimals ?? 18), [amount, src.decimals]);
   const approvalNeeded = !!(src.address && wallet && spender) && (allowance.allowanceWei ?? 0n) < amountWeiNeeded;
 
@@ -457,15 +568,20 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         </div>
       </div>
 
-        <div className="mt-4 mb-8">
+        <div className="mt-4 mb-2">
           <button
             className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60"
-            disabled={!canSwap}
-            onClick={canSwap ? handleSwapClick : undefined}
-            title={canSwap ? "Execute swap" : "Enter amount and connect wallet"}
+            onClick={handleSwapClick}
+            disabled={!canSwap || sending}
+            title={!wallet ? "Connect wallet to swap" : (!canSwap ? "Enter amount and wait for quote" : "Swap now")}
           >
-            SWAP
+            {sending ? "Swapping..." : "SWAP"}
           </button>
+          {swapError && (
+            <div className="mt-2 text-xs text-red-300">
+              {swapError}
+            </div>
+          )}
         </div>
 
         <div className="mt-6"></div>
