@@ -265,7 +265,7 @@ export default function Page() {
           </div>
 
           {/* You pay */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
+          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2 -mt-1"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("pay")} title="Choose Pay token">{solPay ? (
               <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
             ) : (
               <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
@@ -285,7 +285,7 @@ export default function Page() {
           </div>
 
           {/* You receive */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
+          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2 -mt-1"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
               <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
             ) : (
               <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
@@ -330,10 +330,10 @@ export default function Page() {
                 role="dialog"
                 aria-modal="true"
               >
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2">
                   <div className="flex gap-2">
-                    <button onClick={()=>setFamily("evm")} className={cx("px-3 py-1 border rounded", family==="evm" && "bg-white/10")}>EVM</button>
-                    <button onClick={()=>setFamily("solana")} className={cx("px-3 py-1 border rounded", family==="solana" && "bg-white/10")}>Solana</button>
+                    <button onClick={()=>setFamily("evm")} className={cx("px-3 py-1 rounded min-w-[120px] bg-black/30 border border-white/10 text-sm leading-none", family==="evm" && "bg-white/10")}>EVM</button>
+                    <button onClick={()=>setFamily("solana")} className={cx("px-3 py-1 rounded min-w-[120px] bg-black/30 border border-white/10 text-sm leading-none", family==="solana" && "bg-white/10")}>Solana</button>
                   </div>
                   {family==="evm" && (
                     <div className="flex items-center gap-2">
