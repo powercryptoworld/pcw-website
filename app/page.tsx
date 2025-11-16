@@ -303,8 +303,7 @@ export default function Page() {
           {solNotice}
 
           {/* Collapsible quote details (EVM) */}
-          <details open className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-            <summary className="select-none cursor-pointer text-xs px-3 py-2 bg-white/5 hover:bg-white/10">Quote details</summary>
+          <div className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
             <div className="px-3 pt-10 pb-2">
               <QuotePanel
                 chainId={chainId}
@@ -314,7 +313,7 @@ export default function Page() {
                 defaultSlippageBps={50}
               />
             </div>
-          </details>
+          </div>
 
           {/* Picker Overlay + Centered Tray */}
           {picker && (
