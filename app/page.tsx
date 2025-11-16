@@ -342,7 +342,6 @@ export default function Page() {
                     </div>
                   )}
                   <div className="ml-auto flex items-center gap-2">
-                    <button className="px-3 py-1 border rounded" onClick={()=>setPicker(null)}>Close</button>
                   </div>
                 </div>
 
