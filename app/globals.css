@@ -598,6 +598,10 @@ select.input{ appearance: none; }
 
 .hidden{ display:none !important; }
 
+.mt-4{ margin-top:1rem; }
+.w-full{ width:100%; }
+.py-3{ padding-top:.75rem; padding-bottom:.75rem; }
+
 /* =======================================================
    CONTACT: Solid card + inputs  (OPT-IN VARIANT)
    Use class 'contact-card--solid' on a wrapper if you want the solid look.

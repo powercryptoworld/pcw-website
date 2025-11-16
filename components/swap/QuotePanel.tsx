@@ -328,15 +328,17 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         </div>
       </div>
 
-        <div className="mt-3">
+        <div className="mt-4 mb-8">
           <button
-            className="rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20 disabled:opacity-50"
+            className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60"
             disabled
             title="Execution disabled in lab"
           >
-            Execute
+            SWAP
           </button>
         </div>
+
+        <div className="mt-6"></div>
 
       <div className="mt-2 hidden">
         <div className="opacity-70">Route</div>

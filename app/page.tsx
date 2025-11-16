@@ -304,7 +304,7 @@ export default function Page() {
 
           {/* Collapsible quote details (EVM) */}
           <div className="mt-2 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-            <div className="px-3 pt-10 pb-2">
+            <div className="px-3 pt-6 pb-6">
               <QuotePanel
                 chainId={chainId}
                 src={payToken as any}
