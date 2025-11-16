@@ -337,7 +337,6 @@ export default function Page() {
                   </div>
                   {family==="evm" && (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm opacity-80">Chain</span>
                       <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
                     </div>
                   )}
