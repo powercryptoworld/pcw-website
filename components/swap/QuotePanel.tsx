@@ -40,6 +40,82 @@ function parseAmountToWei(amount: string, decimals: number) {
   const d = Math.max(0, Math.min(36, decimals || 0));
   const pad = (f + "0".repeat(d)).slice(0, d);
   try {
+    async function handleApproveClickV2() {
+      try {
+        const meta = getMetaMaskProvider();
+        if (!meta?.request) {
+          alert("No EVM wallet (MetaMask) found.");
+          return;
+        }
+        if (!src.address || !spender || !wallet) {
+          alert("Missing token/spender/wallet for approval.");
+          return;
+        }
+
+        // Try to switch to the correct chain (ignore failures)
+        try {
+          const chainHex = "0x" + Number(chainId).toString(16);
+          await meta.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainHex }],
+          });
+        } catch (err) {
+          console.warn("approve chain switch skipped/failed", err);
+        }
+
+        const u = new URL("/api/oneinch/approve", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("token", String(src.address));
+        u.searchParams.set("wallet", String(wallet));
+
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j?.ok || !j?.tx) {
+          console.error("Approve tx error", j);
+          alert("Approve tx not available");
+          return;
+        }
+
+        const tx = j.tx as { to: string; data: string; value?: string };
+
+        // 1inch gives decimal strings; MetaMask wants hex
+        let valueHex = "0x0";
+        try {
+          const raw = tx.value ?? "0";
+          const bn = BigInt(raw);
+          valueHex = "0x" + bn.toString(16);
+        } catch (e) {
+          console.warn("approve value hex fallback", e);
+        }
+
+        await meta.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: wallet,
+              to: tx.to,
+              data: tx.data,
+              value: valueHex,
+            },
+          ],
+        });
+
+        // soft refresh so allowance updates
+        setTimeout(() => {
+          try {
+            (window as any).location?.reload();
+          } catch {}
+        }, 8000);
+      } catch (err) {
+        console.error("approve send failed", err);
+        alert(
+          "Approve send failed: " +
+            (err instanceof Error ? err.message : String(err))
+        );
+      }
+    }
+
+
     return (BigInt(i || "0") * (10n ** BigInt(d)) + BigInt(pad || "0"));
   } catch {
     return 0n;
@@ -293,7 +369,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
           return;
         }
 
-        const meta = (window as any).ethereum;
+        const meta = getMetaMaskProvider();
         if (!meta || !meta.request) {
           alert("No EVM wallet (MetaMask) found.");
           return;
@@ -327,6 +403,10 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         }
 
         const tx = j.tx;
+        const valueHex =
+          tx.value && tx.value !== "0"
+            ? "0x" + BigInt(tx.value).toString(16)
+            : "0x0";
 
         await meta.request({
           method: "eth_sendTransaction",
@@ -335,13 +415,16 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
               from: wallet,
               to: tx.to,
               data: tx.data,
-              value: tx.value ?? "0x0",
+              value: valueHex,
             },
           ],
         });
       } catch (err) {
         console.error("swap send failed", err);
-        alert("Swap send failed");
+        alert(
+          "Swap send failed: " +
+            (err instanceof Error ? err.message : String(err))
+        );
       }
     }
 
@@ -398,9 +481,170 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
       }
     }
 
-// Amount needed in wei for approval compare
-  const amountWeiNeeded = useMemo(() => parseAmountToWei(amount, src.decimals ?? 18), [amount, src.decimals]);
-  const approvalNeeded = !!(src.address && wallet && spender) && (allowance.allowanceWei ?? 0n) < amountWeiNeeded;
+  // Amount needed in wei for approval compare
+  const amountWeiNeeded = useMemo(
+    () => parseAmountToWei(amount, src.decimals ?? 18),
+    [amount, src.decimals]
+  );
+
+  const approvalNeeded =
+    !!src.address &&
+    !!wallet &&
+    !!spender &&
+    (allowance.allowanceWei ?? 0n) < amountWeiNeeded;
+
+    const needsApproval = !isSrcNative && approvalNeeded;
+
+  const canDoPrimary =
+    !!wallet &&
+    !!src?.address &&
+    !!dst?.address &&
+    !!amount &&
+    Number(amount) > 0;
+
+  async function handleApproveClick() {
+    try {
+      const meta = getMetaMaskProvider();
+      if (!meta?.request) {
+        alert("No EVM wallet (MetaMask) found.");
+        return;
+      }
+      if (!src.address || !spender || !wallet) {
+        alert("Missing token/spender/wallet for approval.");
+        return;
+      }
+
+      // Best effort: switch wallet to the correct chain
+      try {
+        const chainHex = "0x" + Number(chainId).toString(16);
+        await meta.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: chainHex }],
+        });
+      } catch (err) {
+        console.warn("approve: chain switch skipped/failed", err);
+      }
+
+      const u = new URL("/api/oneinch/approve", window.location.origin);
+      u.searchParams.set("chainId", String(chainId));
+      u.searchParams.set("token", String(src.address));
+      u.searchParams.set("wallet", String(wallet));
+
+      const r = await fetch(u.toString(), { cache: "no-store" });
+      const j = await r.json();
+      if (!j?.ok || !j?.tx) {
+        console.error("Approve tx error", j);
+        alert("Approve tx not available");
+        return;
+      }
+
+      const tx = j.tx;
+      const valueHex =
+        tx.value && tx.value !== "0"
+          ? "0x" + BigInt(tx.value).toString(16)
+          : "0x0";
+
+      await meta.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: wallet,
+            to: tx.to,
+            data: tx.data,
+            value: valueHex,
+          },
+        ],
+      });
+
+      // give allowance hook time to refresh
+      setTimeout(() => {
+        try {
+          (window as any).location?.reload();
+        } catch {}
+      }, 8000);
+    } catch (err) {
+      console.error("approve send failed", err);
+      alert("Approve send failed");
+    }
+  }
+
+  async function handleSwapClick() {
+    try {
+      const meta = getMetaMaskProvider();
+      if (!meta?.request) {
+        alert("No EVM wallet (MetaMask) found.");
+        return;
+      }
+      if (!wallet) {
+        alert("Connect wallet first");
+        return;
+      }
+      if (!amount || Number(amount) <= 0) {
+        alert("Enter an amount");
+        return;
+      }
+      if (!src?.address || !dst?.address) {
+        alert("Choose tokens");
+        return;
+      }
+
+      // Best effort: switch wallet to the correct chain
+      try {
+        const chainHex = "0x" + Number(chainId).toString(16);
+        await meta.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: chainHex }],
+        });
+      } catch (err) {
+        console.warn("swap: chain switch skipped/failed", err);
+      }
+
+      const u = new URL("/api/swap/oneinch", window.location.origin);
+      u.searchParams.set("chainId", String(chainId));
+      u.searchParams.set("from", String(wallet));
+      u.searchParams.set("src", String(src.address));
+      u.searchParams.set("dst", String(dst.address));
+      u.searchParams.set("amount", String(amount));
+      u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+      u.searchParams.set("slippageBps", String(slippageBps));
+
+      const r = await fetch(u.toString(), { cache: "no-store" });
+      const j = await r.json();
+      if (!j?.ok || !j?.tx) {
+        console.error("Swap tx error", j);
+        alert("Swap tx not available");
+        return;
+      }
+
+      const tx = j.tx;
+      const valueHex =
+        tx.value && tx.value !== "0"
+          ? "0x" + BigInt(tx.value).toString(16)
+          : "0x0";
+
+      await meta.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: wallet,
+            to: tx.to,
+            data: tx.data,
+            value: valueHex,
+          },
+        ],
+      });
+    } catch (err) {
+      console.error("swap send failed", err);
+      alert("Swap send failed");
+    }
+  }
+
+  const primaryLabel =
+    needsApproval && canDoPrimary
+      ? `Approve ${src.symbol ?? "token"}`
+      : "Swap";
+
+  const primaryOnClick = needsApproval ? handleApproveClick : handleSwapClick;
 
   return (
     <div className="mt-3 rounded-2xl bg-black/25 border border-white/10 p-3 text-sm">
@@ -460,11 +704,25 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         <div className="mt-4 mb-8">
           <button
             className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60"
-            disabled={!canSwap}
-            onClick={canSwap ? handleSwapClick : undefined}
-            title={canSwap ? "Execute swap" : "Enter amount and connect wallet"}
+            disabled={!canDoPrimary}
+            onClick={
+                canSwap
+                  ? (!isSrcNative && approvalNeeded
+                      ? handleApproveClick
+                      : handleSwapClick)
+                  : undefined
+              }
+            title={
+                !wallet
+                  ? "Connect wallet to continue"
+                  : !src?.address || !dst?.address
+                  ? "Select tokens to continue"
+                  : (!isSrcNative && approvalNeeded
+                      ? "Approve token first"
+                      : "Execute swap")
+              }
           >
-            SWAP
+            {(!isSrcNative && approvalNeeded) ? `Approve ${src.symbol ?? "token"}` : "SWAP"}
           </button>
         </div>
 
