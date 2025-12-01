@@ -126,6 +126,8 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
   const { address: wallet } = useAccount();
 
   const [slippageBps, setSlippageBps] = useState<number>(defaultSlippageBps);
+  const [slipPreset, setSlipPreset] = useState<"10" | "50" | "100" | null>(null);
+
   const [speed, setSpeed] = useState<"standard" | "fast" | "instant">("standard");
 
     const hasAmount = useMemo(() => {
@@ -650,22 +652,44 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
     <div className="mt-3 rounded-2xl bg-black/25 border border-white/10 p-3 text-sm">
       <div className="space-y-4">
 
-        <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Slippage</div>
+          <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Slippage</div>
 
-        <input
-          className="ml-2 w-16 rounded bg-white/10 px-1 text-right"
-          value={(slippageBps / 100).toFixed(2) + "%"}
-          onChange={(e)=>{
-            const raw = e.target.value.replace(/%/g,"").trim();
-            const n = Number(raw);
-            if (Number.isFinite(n) && n >= 0 && n <= 100) setSlippageBps(Math.round(n*100));
-          }}
-        />
-        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(10)}>0.10%</button>
-        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(50)}>0.50%</button>
-        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(100)}>1.00%</button>
-        <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(defaultSlippageBps)}>Reset</button>
-
+          <input
+            className="ml-2 w-16 rounded bg-white/10 px-1 text-right"
+            value={(slippageBps / 100).toFixed(2) + "%"}
+            onChange={(e)=>{
+              const raw = e.target.value.replace(/%/g,"").trim();
+              const n = Number(raw);
+              if (Number.isFinite(n) && n >= 0 && n <= 100) {
+                setSlippageBps(Math.round(n*100));
+                setSlipPreset(null);
+              }
+            }}
+          />
+          <button
+            className={`ml-1 speed-pill ${slipPreset==="10" ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(10); setSlipPreset("10"); }}
+          >
+            0.10%
+          </button>
+          <button
+            className={`ml-1 speed-pill ${slipPreset==="50" ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(50); setSlipPreset("50"); }}
+          >
+            0.50%
+          </button>
+          <button
+            className={`ml-1 speed-pill ${slipPreset==="100" ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(100); setSlipPreset("100"); }}
+          >
+            1.00%
+          </button>
+          <button
+            className={`ml-1 speed-pill reset-pill ${slipPreset===null && slippageBps===defaultSlippageBps ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(defaultSlippageBps); setSlipPreset(null); }}
+          >
+            Reset
+          </button>
         <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Speed</div>
         <button
           className={`ml-1 speed-pill ${speed==="standard" ? "active" : ""}`}
