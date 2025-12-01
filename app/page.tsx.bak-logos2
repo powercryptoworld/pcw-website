@@ -74,10 +74,10 @@ function TokenChip({
           symbol={symbol}
           name={name}
           logoURI={logoURI || undefined}
-          size={48}
+          size={16}
         />
       ) : (
-        <SolRowLogo mint={mint || ""} size={48} />
+        <SolRowLogo mint={mint || ""} size={16} />
       )}
       <span className="text-xs font-medium">{symbol || (family==="sol" ? "SOL" : "TKN")}</span>
       {family === "sol" && <span className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/30">Solana preview</span>}
