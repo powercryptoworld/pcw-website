@@ -667,9 +667,24 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
         <button className="ml-1 rounded bg-white/10 px-2 hover:bg-white/20" onClick={()=>setSlippageBps(defaultSlippageBps)}>Reset</button>
 
         <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Speed</div>
-        <button className={`ml-1 rounded px-2 ${speed==="standard"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("standard")}>Standard</button>
-        <button className={`ml-1 rounded px-2 ${speed==="fast"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("fast")}>Fast</button>
-        <button className={`ml-1 rounded px-2 ${speed==="instant"?"bg-white/20":"bg-white/10 hover:bg-white/20"}`} onClick={()=>setSpeed("instant")}>Instant</button>
+        <button
+          className={`ml-1 speed-pill ${speed==="standard" ? "active" : ""}`}
+          onClick={()=>setSpeed("standard")}
+        >
+          Standard
+        </button>
+        <button
+          className={`ml-1 speed-pill ${speed==="fast" ? "active" : ""}`}
+          onClick={()=>setSpeed("fast")}
+        >
+          Fast
+        </button>
+        <button
+          className={`ml-1 speed-pill ${speed==="instant" ? "active" : ""}`}
+          onClick={()=>setSpeed("instant")}
+        >
+          Instant
+        </button>
       </div>
 
       <div className="mt-2">
