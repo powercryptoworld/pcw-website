@@ -127,19 +127,19 @@ export default function TokenRow({
           />
           <div className="shrink-0 px-2 py-1 rounded-lg bg-white/10">{token.symbol}</div>
         </div>
-        <div className="ml-4 shrink-0 flex items-center gap-2 w-[210px]">
-          <span className="text-sm opacity-80 relative top-[1px] tabular-nums font-mono">Balance: {balStr}</span>
-          {showMax && (
-            <button
-              onClick={onMaxClick}
-              disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0}
-              title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")}
-              className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 disabled:cursor-not-allowed"
-            >
-              MAX
-            </button>
-          )}
-        </div>
+          <div className="ml-4 shrink-0 flex items-center gap-2 w-[210px]">
+            <span className="text-sm opacity-80 relative top-[1px] tabular-nums font-mono">Balance: {balStr}</span>
+            {showMax && (
+              <button
+                onClick={onMaxClick}
+                disabled={!!readOnlyAmount || balStr === "—" || balNum <= 0}
+                title={(balStr==="—") ? "Connect wallet to use MAX" : (balNum<=0 ? "No balance" : "Set maximum")}
+                className="max-pill text-[10px] px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                MAX
+              </button>
+            )}
+          </div>
       </div>
 
       <div className="mt-1 text-xs opacity-70">{usdLine}</div>
