@@ -667,19 +667,19 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
             }}
           />
           <button
-            className={`ml-1 speed-pill ${slipPreset==="10" ? "active" : ""}`}
+            className={`ml-1 speed-pill slip-pill ${slipPreset==="10" ? "active" : ""}`}
             onClick={()=>{ setSlippageBps(10); setSlipPreset("10"); }}
           >
             0.10%
           </button>
           <button
-            className={`ml-1 speed-pill ${slipPreset==="50" ? "active" : ""}`}
+            className={`ml-1 speed-pill slip-pill ${slipPreset==="50" ? "active" : ""}`}
             onClick={()=>{ setSlippageBps(50); setSlipPreset("50"); }}
           >
             0.50%
           </button>
           <button
-            className={`ml-1 speed-pill ${slipPreset==="100" ? "active" : ""}`}
+            className={`ml-1 speed-pill slip-pill ${slipPreset==="100" ? "active" : ""}`}
             onClick={()=>{ setSlippageBps(100); setSlipPreset("100"); }}
           >
             1.00%
