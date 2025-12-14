@@ -22,10 +22,11 @@ type Props = {
   onComputedBalance?: (v: number)=>void;
   readOnlyAmount?: boolean;
   showMax?: boolean;
+  variant?: "pay" | "receive";
 };
 
 export default function TokenRow({
-  title, token, amount, onAmount, onComputedBalance, readOnlyAmount, showMax
+  title, token, amount, onAmount, onComputedBalance, readOnlyAmount, showMax, variant
 }: Props) {
   const { native, erc20Balance } = useEvmBalances(token);
 
@@ -109,8 +110,10 @@ export default function TokenRow({
     onAmount(balStr === "—" ? "" : balStr);
   }
 
+    const rowClass = (variant === "pay" || title === "You pay") ? "tokenRow tokenRow--pay" : "tokenRow tokenRow--receive";
+
   return (
-    <div className="rounded-2xl p-4 bg-black/20 border border-white/10 shadow-sm">
+    <div className={`${rowClass} rounded-2xl p-4 bg-black/20 border border-white/10 shadow-sm`}>
       <div className="flex items-center justify-between text-sm opacity-80">
         <span>{title}</span>
       </div>

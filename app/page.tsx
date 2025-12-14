@@ -270,35 +270,41 @@ export default function Page() {
             ) : (
               <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
             )}</button><button onClick={()=>setPicker("pay")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Pay token</button></div></div>
-            <div className="flip-wrap">
-          <TokenRow
-            title=""
-            token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
-            amount={payAmount}
-            onAmount={(v: string) => { setMode("pay"); setPayAmount(v); }}
-            onComputedBalance={() => {}}
-            showMax
-          />
-            <button onClick={flip} className="flip-center" title="Flip tokens and amounts">⇄</button>
-            <div className="hidden flex items-center justify-end my-1">
-            <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
-          </div>
 
-          {/* You receive */}
-          <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2 -mt-1"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
-              <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
-            ) : (
-              <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
-            )}</button><button onClick={()=>setPicker("receive")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Receive token</button></div></div>
-          <TokenRow
-            title=""
-            token={{ ...receiveToken, chainId: receiveToken.chainId, symbol: receiveToken.symbol ?? "DST" } as any}
-            amount={receiveAmount}
-            onAmount={(v: string) => { setMode("receive"); setReceiveAmount(v); }}
-            onComputedBalance={() => {}}
-            showMax
-          />
+          <div className="flip-wrap">
+            <TokenRow
+              title=""
+              variant="pay"
+              token={{ ...payToken, chainId: payToken.chainId, symbol: payToken.symbol ?? "SRC" } as any}
+              amount={payAmount}
+              onAmount={(v: string) => { setMode("pay"); setPayAmount(v); }}
+              onComputedBalance={() => {}}
+              showMax
+            />
+
+            <button onClick={flip} className="flip-center" title="Flip tokens and amounts">⇄</button>
+
+            <div className="hidden flex items-center justify-end my-1">
+              <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
             </div>
+
+            {/* You receive */}
+            <div className="flex items-center justify-between mb-1"><div className="flex items-center gap-2 -mt-1"><button className="token-chip-btn chip-icon-only" onClick={()=>setPicker("receive")} title="Choose Receive token">{solReceive ? (
+                <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
+              ) : (
+                <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
+              )}</button><button onClick={()=>setPicker("receive")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Receive token</button></div></div>
+
+            <TokenRow
+              title=""
+              variant="receive"
+              token={{ ...receiveToken, chainId: receiveToken.chainId, symbol: receiveToken.symbol ?? "DST" } as any}
+              amount={receiveAmount}
+              onAmount={(v: string) => { setMode("receive"); setReceiveAmount(v); }}
+              onComputedBalance={() => {}}
+              showMax
+            />
+          </div>
 
           {solNotice}
 
