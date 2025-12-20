@@ -742,7 +742,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
 
         <div className="mt-4 mb-8">
           <button
-            className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60"
+            className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60 swap-primary-btn"
             disabled={!canDoPrimary}
             onClick={
                 canSwap

@@ -1133,3 +1133,101 @@ select.input{ appearance: none; }
 }
 /* ===== END TokenRow paint ===== */
 
+/* ===== Swap primary button paint ===== */
+.swap-primary-btn{
+  color: #ffffff;
+
+  position: relative;
+  overflow: hidden;
+
+  /* keep same layout/typography; only paint */
+  background: rgba(255,255,255,0.10) !important;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.25) inset,
+    0 10px 30px rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+
+  transition: transform 160ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+/* gradient ring */
+.swap-primary-btn::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events:none;
+  opacity: .95;
+
+  background: linear-gradient(90deg,
+    rgba(20,241,149,.95),
+    rgba(0,224,255,.95),
+    rgba(153,69,255,.95),
+    rgba(255,73,193,.85)
+  );
+
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+/* glossy + neon wash */
+.swap-primary-btn::after{
+  content:"";
+  position:absolute;
+  inset:-22px;
+  border-radius: inherit;
+  pointer-events:none;
+  opacity: .90;
+  mix-blend-mode: screen;
+  filter: blur(18px) saturate(140%);
+
+  background:
+    radial-gradient(900px 220px at 18% 22%, rgba(0,224,255,.40), transparent 62%),
+    radial-gradient(900px 220px at 82% 78%, rgba(153,69,255,.40), transparent 62%),
+    radial-gradient(700px 200px at 55% 35%, rgba(255,73,193,.22), transparent 65%),
+    radial-gradient(800px 240px at 40% 80%, rgba(20,241,149,.26), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0) 45%);
+}
+
+/* keep text/content above paint */
+.swap-primary-btn > *{
+  position: relative;
+  z-index: 1;
+}
+
+/* hover highlight (stronger glow, still same button) */
+.swap-primary-btn:hover:not(:disabled){
+  background: rgba(255,255,255,0.12) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10) inset,
+    0 14px 34px rgba(0,0,0,0.42),
+    0 0 26px rgba(0,224,255,0.18),
+    0 0 30px rgba(153,69,255,0.16),
+    0 0 22px rgba(20,241,149,0.12);
+  filter: saturate(1.10);
+}
+
+/* keyboard focus = clean neon ring */
+.swap-primary-btn:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10) inset,
+    0 0 0 2px rgba(0,224,255,0.35),
+    0 0 0 4px rgba(153,69,255,0.18),
+    0 14px 34px rgba(0,0,0,0.42);
+}
+
+/* disabled = powered down (still premium) */
+.swap-primary-btn:disabled{
+  filter: saturate(0.75);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.25) inset,
+    0 10px 30px rgba(0,0,0,0.35);
+}
+/* ===== END Swap primary button paint ===== */
+
