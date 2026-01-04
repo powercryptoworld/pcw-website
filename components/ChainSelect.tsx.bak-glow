@@ -42,7 +42,7 @@ export function ChainSelect({ value, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        style={{ background: "linear-gradient(180deg, rgba(40,220,255,0.35), rgba(180,80,255,0.25), rgba(80,255,180,0.22))" }} className="px-3 py-1.5 min-w-[120px] rounded-full backdrop-blur border border-white/20 text-sm font-semibold flex items-center justify-between gap-2 text-white ring-2 ring-cyan-400/80 ring-offset-2 ring-offset-black/40 transition-all"
+        className="relative px-3 py-1.5 rounded-full bg-black/40 backdrop-blur border border-white/20 text-sm leading-none min-w-[120px] text-left flex items-center justify-between gap-2 transition-all duration-300 before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-r before:from-cyan-400/40 before:via-fuchsia-400/40 before:to-emerald-400/40 before:opacity-60 before:blur-sm before:pointer-events-none hover:before:opacity-100"
         aria-haspopup="listbox"
         aria-expanded={open}
       >

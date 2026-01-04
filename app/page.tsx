@@ -343,7 +343,7 @@ export default function Page() {
                   </div>
                   {family==="evm" && (
                     <div className="flex items-center gap-2">
-                      <ChainSelect value={selectedChainId} onChange={setSelectedChainId} />
+                      <div onMouseEnter={(e)=>{e.currentTarget.style.boxShadow="inset 0 0 0 1px rgba(180,220,255,0.9), inset 0 0 22px rgba(120,200,255,0.9), inset 0 0 40px rgba(160,120,255,0.75), 0 0 18px rgba(120,255,200,0.45), 0 0 36px rgba(120,180,255,0.35)"}} onMouseLeave={(e)=>{e.currentTarget.style.boxShadow="inset 0 0 0 1px rgba(140,180,220,0.6), inset 0 0 12px rgba(120,200,255,0.5)"}} style={{borderRadius:"9999px",background:"linear-gradient(180deg, rgba(40,220,255,0.25), rgba(180,80,255,0.22), rgba(80,255,180,0.2))",boxShadow:"inset 0 0 0 1px rgba(140,180,220,0.6), inset 0 0 12px rgba(120,200,255,0.5)"}} className="p-0.5 rounded-full"><ChainSelect value={selectedChainId} onChange={setSelectedChainId} /></div>
                     </div>
                   )}
                   <div className="ml-auto flex items-center gap-2">
