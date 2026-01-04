@@ -1135,37 +1135,45 @@ select.input{ appearance: none; }
 
 /* ===== Swap primary button paint ===== */
 .swap-primary-btn{
-  color: #ffffff;
-
   position: relative;
   overflow: hidden;
 
-  /* keep same layout/typography; only paint */
-  background: rgba(255,255,255,0.10) !important;
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.25) inset,
-    0 10px 30px rgba(0,0,0,0.35);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(
+    135deg,
+    rgba(0,240,255,0.35),
+    rgba(155,92,255,0.35),
+    rgba(255,79,216,0.35)
+  ) !important;
 
-  transition: transform 160ms ease, box-shadow 180ms ease, filter 180ms ease;
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(14px) saturate(180%);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.08),
+    0 18px 45px rgba(0,0,0,0.45);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 200ms ease,
+    filter 200ms ease;
 }
 
-/* gradient ring */
+/* liquid gradient rim */
 .swap-primary-btn::before{
   content:"";
   position:absolute;
   inset:0;
   border-radius: inherit;
-  padding: 1px;
+  padding:1px;
   pointer-events:none;
-  opacity: .95;
 
-  background: linear-gradient(90deg,
-    rgba(20,241,149,.95),
-    rgba(0,224,255,.95),
-    rgba(153,69,255,.95),
-    rgba(255,73,193,.85)
+  background: linear-gradient(
+    120deg,
+    #00f0ff,
+    #5b7cff,
+    #9b5cff,
+    #ff4fd8,
+    #00ffa3
   );
 
   -webkit-mask:
@@ -1175,59 +1183,59 @@ select.input{ appearance: none; }
           mask-composite: exclude;
 }
 
-/* glossy + neon wash */
+/* soft glossy glow (BEHIND text) */
 .swap-primary-btn::after{
   content:"";
   position:absolute;
-  inset:-22px;
+  inset:-20px;
   border-radius: inherit;
   pointer-events:none;
-  opacity: .90;
-  mix-blend-mode: screen;
-  filter: blur(18px) saturate(140%);
 
   background:
-    radial-gradient(900px 220px at 18% 22%, rgba(0,224,255,.40), transparent 62%),
-    radial-gradient(900px 220px at 82% 78%, rgba(153,69,255,.40), transparent 62%),
-    radial-gradient(700px 200px at 55% 35%, rgba(255,73,193,.22), transparent 65%),
-    radial-gradient(800px 240px at 40% 80%, rgba(20,241,149,.26), transparent 66%),
-    linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0) 45%);
+    radial-gradient(800px 240px at 20% 30%, rgba(0,240,255,.35), transparent 60%),
+    radial-gradient(800px 240px at 80% 70%, rgba(155,92,255,.35), transparent 62%),
+    radial-gradient(600px 200px at 50% 50%, rgba(255,79,216,.22), transparent 65%);
+
+  opacity:.75;
+  filter: blur(22px);
+  z-index:0;
 }
 
-/* keep text/content above paint */
-.swap-primary-btn > *{
-  position: relative;
-  z-index: 1;
+/* FORCE TEXT ABOVE EVERYTHING */
+.swap-primary-btn{
+  color:#ffffff !important;
 }
 
-/* hover highlight (stronger glow, still same button) */
+.swap-primary-btn > *,
+.swap-primary-btn span{
+  position:relative;
+  z-index:2;
+  color:#ffffff !important;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,0.55),
+    0 0 10px rgba(255,255,255,0.25);
+}
+
+/* hover = liquid energy */
 .swap-primary-btn:hover:not(:disabled){
-  background: rgba(255,255,255,0.12) !important;
+  transform: translateY(-1px);
+  filter: brightness(1.08) saturate(125%);
+
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.10) inset,
-    0 14px 34px rgba(0,0,0,0.42),
-    0 0 26px rgba(0,224,255,0.18),
-    0 0 30px rgba(153,69,255,0.16),
-    0 0 22px rgba(20,241,149,0.12);
-  filter: saturate(1.10);
+    inset 0 0 0 1px rgba(255,255,255,0.14),
+    0 24px 60px rgba(0,0,0,0.55),
+    0 0 40px rgba(0,240,255,0.30),
+    0 0 38px rgba(155,92,255,0.26),
+    0 0 30px rgba(255,79,216,0.22);
 }
 
-/* keyboard focus = clean neon ring */
-.swap-primary-btn:focus-visible{
-  outline: none;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.10) inset,
-    0 0 0 2px rgba(0,224,255,0.35),
-    0 0 0 4px rgba(153,69,255,0.18),
-    0 14px 34px rgba(0,0,0,0.42);
-}
-
-/* disabled = powered down (still premium) */
+/* disabled but still premium */
 .swap-primary-btn:disabled{
-  filter: saturate(0.75);
+  filter: saturate(75%) brightness(0.9);
   box-shadow:
-    0 0 0 1px rgba(0,0,0,0.25) inset,
-    0 10px 30px rgba(0,0,0,0.35);
+    inset 0 0 0 1px rgba(0,0,0,0.35),
+    0 16px 40px rgba(0,0,0,0.45);
 }
 /* ===== END Swap primary button paint ===== */
+
 
