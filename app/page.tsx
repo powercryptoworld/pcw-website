@@ -359,7 +359,7 @@ export default function Page() {
                     onChange={(e)=>setSearchText(e.target.value)}
                     onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }}
                   />
-                  <button className="px-4 py-2 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
+                  <button className="search-pill" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
                 </div>
 
                 <div className="mt-3 space-y-2 max-h-72 overflow-auto pr-1">

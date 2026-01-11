@@ -353,7 +353,7 @@ export default function Page() {
                 <div className="mt-2 flex gap-2">
                   <input
                     ref={searchRef}
-                    className="flex-1 border rounded px-3 py-2"
+                    className="flex-1 chain-pill px-3 py-2"
                     placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"}
                     value={searchText}
                     onChange={(e)=>setSearchText(e.target.value)}

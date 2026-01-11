@@ -88,7 +88,7 @@ export default function TokenSearchTest() {
       <div className="flex gap-2">
         <input className="flex-1 border rounded px-3 py-2" placeholder={family==="evm"?"0x… or symbol/name":"mint or symbol/name"}
           value={text} onChange={(e)=>setText(e.target.value)} />
-        <button className="search-pill" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
+        <button className="px-4 py-2 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
       </div>
 
       <div className="space-y-2">
