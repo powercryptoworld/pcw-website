@@ -359,7 +359,7 @@ export default function Page() {
                     onChange={(e)=>setSearchText(e.target.value)}
                     onKeyDown={(e)=>{ if(e.key==="Enter") doSearch(); }}
                   />
-                  <button className="px-4 py-2 border rounded" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
+                  <button className="search-pill" onClick={doSearch} disabled={loading}>{loading?"Searching…":"Search"}</button>
                 </div>
 
                 <div className="mt-3 space-y-2 max-h-72 overflow-auto pr-1">
@@ -368,7 +368,7 @@ export default function Page() {
                     <button
                       key={`${t.address||i}-${t.chainId??selectedChainId}`}
                       onClick={()=>applyEvmSelection(t)}
-                      className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
+                      className="w-full text-left p-3 search-result-pill hover:bg-white/10"
                       title={`Apply to ${picker==="pay"?"Pay":"Receive"}`}
                     >
                       <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function Page() {
                     <button
                       key={`${t.mint||i}`}
                       onClick={()=>applySolPreview(t)}
-                      className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
+                      className="w-full text-left p-3 search-result-pill hover:bg-white/10"
                       title={`Preview on ${picker==="pay"?"Pay":"Receive"}`}
                     >
                       <div className="flex items-center gap-3">

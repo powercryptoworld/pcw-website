@@ -94,7 +94,7 @@ export default function TokenSearchTest() {
       <div className="space-y-2">
         {/* EVM results */}
         {family==="evm" && rows.map((t: any, i: number)=>(
-          <div key={`${t.address||i}-${t.chainId??selectedChainId}`} className="p-3 rounded border border-white/10 bg-white/5">
+          <div key={`${t.address||i}-${t.chainId??selectedChainId}`} className="p-3 search-result-pill">
             <div className="flex items-center gap-3">
               <InlineRowLogoInjector
                 address={t.address}
@@ -120,7 +120,7 @@ export default function TokenSearchTest() {
 
         {/* Solana results */}
         {family==="solana" && rows.map((t: any, i: number)=>(
-          <div key={`${t.mint||i}`} className="p-3 rounded border border-white/10 bg-white/5">
+          <div key={`${t.mint||i}`} className="p-3 search-result-pill">
             <div className="flex items-center gap-3">
               <SolRowLogo uri={t.logoURI} alt={t.symbol || t.name || "token"} mint={t.mint} symbol={t.symbol} name={t.name}
                 logoURI={t.logoURI} />

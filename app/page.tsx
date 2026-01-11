@@ -82,7 +82,7 @@ function TokenChip({
       <span className="text-xs font-medium">{symbol || (family==="sol" ? "SOL" : "TKN")}</span>
       {family === "sol" && <span className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/30">Solana preview</span>}
       {onClear && (
-        <button onClick={onClear} title="Clear" className="text-[10px] px-1 rounded hover:bg-white/10">×</button>
+        <button onClick={onClear} title="Clear" className="text-[10px] px-1 rounded">×</button>
       )}
     </span>
   );
@@ -368,7 +368,7 @@ export default function Page() {
                     <button
                       key={`${t.address||i}-${t.chainId??selectedChainId}`}
                       onClick={()=>applyEvmSelection(t)}
-                      className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
+                      className="w-full text-left p-3 search-result-pill"
                       title={`Apply to ${picker==="pay"?"Pay":"Receive"}`}
                     >
                       <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function Page() {
                     <button
                       key={`${t.mint||i}`}
                       onClick={()=>applySolPreview(t)}
-                      className="w-full text-left p-3 rounded border border-white/10 bg-white/5 hover:bg-white/10"
+                      className="w-full text-left p-3 search-result-pill"
                       title={`Preview on ${picker==="pay"?"Pay":"Receive"}`}
                     >
                       <div className="flex items-center gap-3">
