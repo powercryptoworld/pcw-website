@@ -1376,3 +1376,222 @@ select.input{ appearance: none; }
     0 18px 48px rgba(15,23,42,1),
     0 0 42px rgba(56,189,248,.75);
 }
+
+/* =======================================================
+   INPUT PILL — Neon Hover (Slippage / Amount fields)
+   ======================================================= */
+.input{
+  transition:
+    box-shadow .2s ease,
+    border-color .2s ease,
+    background .2s ease,
+    transform .15s ease;
+}
+
+.input:hover,
+.input:focus-within{
+  border-color: rgba(94,234,212,.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(34,211,238,.18),
+      rgba(168,85,247,.22)
+    );
+
+  box-shadow:
+    0 0 0 1px rgba(94,234,212,.75),
+    0 0 22px rgba(56,189,248,.45),
+    0 0 44px rgba(168,85,247,.35);
+
+  transform: translateY(-1px);
+}
+
+/* =======================================================
+   CRYSTAL INPUT PILL (REAL GLASS + NEON BLOOM)
+   ======================================================= */
+.input input{
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.18),
+      rgba(255,255,255,.06)
+    );
+  border-radius: 10px;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.35),
+    inset 0 0 12px rgba(255,255,255,.15),
+    0 0 0 1px rgba(0,0,0,.25);
+
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+
+  transition:
+    box-shadow .22s ease,
+    background .22s ease,
+    transform .16s ease;
+}
+
+.input input:hover,
+.input input:focus{
+  background:
+    linear-gradient(
+      135deg,
+      rgba(56,189,248,.28),
+      rgba(168,85,247,.32)
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.45),
+    inset 0 0 18px rgba(255,255,255,.25),
+    0 0 14px rgba(56,189,248,.65),
+    0 0 32px rgba(168,85,247,.55),
+    0 0 60px rgba(236,72,153,.35);
+
+  transform: translateY(-1px);
+}
+
+/* =======================================================
+   CRYSTAL GLASS INPUT PILL (THE REAL ONE)
+   ======================================================= */
+.input{
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.22),
+      rgba(255,255,255,.08)
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.45),
+    inset 0 0 14px rgba(255,255,255,.22),
+    0 0 0 1px rgba(0,0,0,.28);
+
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+
+  transition:
+    box-shadow .22s ease,
+    background .22s ease,
+    transform .16s ease;
+}
+
+.input:hover,
+.input:focus-within{
+  background:
+    linear-gradient(
+      135deg,
+      rgba(56,189,248,.30),
+      rgba(168,85,247,.34)
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.55),
+    inset 0 0 22px rgba(255,255,255,.28),
+    0 0 18px rgba(56,189,248,.65),
+    0 0 38px rgba(168,85,247,.55),
+    0 0 70px rgba(236,72,153,.35);
+
+  transform: translateY(-1px);
+}
+
+/* =======================================================
+   FORCE CRYSTAL INPUT PILL (HIGH SPECIFICITY)
+   ======================================================= */
+.row .input{
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.22),
+      rgba(255,255,255,.08)
+    ) !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.45),
+    inset 0 0 14px rgba(255,255,255,.22),
+    0 0 0 1px rgba(0,0,0,.28) !important;
+
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+}
+
+.row .input:hover,
+.row .input:focus-within{
+  background:
+    linear-gradient(
+      135deg,
+      rgba(56,189,248,.32),
+      rgba(168,85,247,.36)
+    ) !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.55),
+    inset 0 0 22px rgba(255,255,255,.28),
+    0 0 18px rgba(56,189,248,.65),
+    0 0 38px rgba(168,85,247,.55),
+    0 0 70px rgba(236,72,153,.35) !important;
+
+  transform: translateY(-1px);
+}
+
+/* === Slippage Input — Crystal Glass Glow (ONLY 0.50% box) === */
+.input.slippage-input{
+  border: 1px solid rgba(148,163,255,.65);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(56,189,248,.35), transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(168,85,247,.35), transparent 55%),
+    rgba(15,23,42,.78);
+
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,.9),
+    0 12px 30px rgba(15,23,42,1),
+    0 0 28px rgba(56,189,248,.55);
+
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+
+  transition:
+    box-shadow .2s ease,
+    border-color .2s ease,
+    background .2s ease,
+    transform .15s ease;
+}
+
+.input.slippage-input:hover{
+  border-color: rgba(94,234,212,1);
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 0 0 1px rgba(94,234,212,1),
+    0 18px 48px rgba(15,23,42,1),
+    0 0 42px rgba(56,189,248,.85);
+}
+
+/* === Slippage Crystal Input (ONLY the 0.50% box) === */
+.slippage-crystal{
+  background:
+    radial-gradient(circle at 20% 20%, rgba(56,189,248,.45), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(168,85,247,.45), transparent 60%),
+    linear-gradient(135deg, rgba(15,23,42,.85), rgba(15,23,42,.65));
+
+  border: 1px solid rgba(94,234,212,.85);
+  color: #eaffff;
+
+  box-shadow:
+    0 0 0 1px rgba(94,234,212,.9),
+    0 0 28px rgba(56,189,248,.75),
+    0 0 48px rgba(168,85,247,.55);
+
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  transition: box-shadow .2s ease, transform .15s ease, border-color .2s ease;
+}
+
+.slippage-crystal:hover{
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(94,234,212,1),
+    0 0 36px rgba(56,189,248,1),
+    0 0 64px rgba(168,85,247,.9);
+}

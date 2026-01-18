@@ -59,7 +59,7 @@ export default function SwapCard() {
           <label className="label" htmlFor="pay">
             You pay
           </label>
-          <div className="input slippage-input">
+          <div className="input">
             <span style={{ marginRight: 12 }}>BNB</span>
             <input
               id="pay"
@@ -96,7 +96,7 @@ export default function SwapCard() {
           <label className="label" htmlFor="receive">
             You receive
           </label>
-          <div className="input slippage-input">
+          <div className="input">
             <span style={{ marginRight: 12 }}>USDC</span>
             <input
               id="receive"

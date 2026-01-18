@@ -655,7 +655,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
           <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Slippage</div>
 
           <input
-            className="ml-2 w-16 rounded bg-white/10 px-1 text-right"
+            className="ml-2 w-16 rounded slippage-crystal px-1 text-right"
             value={(slippageBps / 100).toFixed(2) + "%"}
             onChange={(e)=>{
               const raw = e.target.value.replace(/%/g,"").trim();
