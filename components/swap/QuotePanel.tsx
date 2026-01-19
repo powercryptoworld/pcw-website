@@ -641,6 +641,18 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
     }
   }
 
+  const [slippageDraft, setSlippageDraft] = useState<string | null>(null);
+
+  const commitSlippage = () => {
+    if (slippageDraft == null) return;
+    const raw = slippageDraft.replace(/%/g,"").trim();
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0 && n <= 100) {
+      setSlippageBps(Math.round(n * 100));
+    }
+    setSlippageDraft(null);
+  };
+
   const primaryLabel =
     needsApproval && canDoPrimary
       ? `Approve ${src.symbol ?? "token"}`
@@ -656,8 +668,8 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
 
           <input
             className="ml-2 w-16 rounded slippage-crystal px-1 text-right"
-            value={(slippageBps / 100).toFixed(2) + "%"}
-            onChange={(e)=>{
+            value={slippageDraft ?? ((slippageBps / 100).toFixed(2) + "%")}
+            onChange={(e)=>{ setSlippageDraft(e.target.value);
               const raw = e.target.value.replace(/%/g,"").trim();
               const n = Number(raw);
               if (Number.isFinite(n) && n >= 0 && n <= 100) {
