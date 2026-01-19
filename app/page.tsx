@@ -269,7 +269,7 @@ export default function Page() {
               <TokenChip family="sol" symbol={solPay.symbol} name={solPay.name} mint={solPay.mint} onClear={()=>setSolPay(null)} />
             ) : (
               <TokenChip family="evm" chainId={payToken.chainId} address={payToken.address} symbol={payToken.symbol} name={payToken.name} logoURI={payToken.logoURI} />
-            )}</button><button onClick={()=>setPicker("pay")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Pay token</button></div></div>
+            )}</button><button onClick={()=>setPicker("pay")} className="text-xs px-2 py-1 rounded pay-token-crystal">Pay token</button></div></div>
 
           <div className="flip-wrap">
             <TokenRow
@@ -285,7 +285,7 @@ export default function Page() {
             <button onClick={flip} className="flip-center" title="Flip tokens and amounts">⇄</button>
 
             <div className="hidden flex items-center justify-end my-1">
-              <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
+              <button onClick={() => setMode((m) => (m === "pay" ? "receive" : "pay"))} className="text-xs px-2 py-1 rounded pay-token-crystal" title={mode === "pay" ? "Switch: set output" : "Switch: set input"}>{mode === "pay" ? "⇄ Set output" : "⇄ Set input"}</button>
             </div>
 
             {/* You receive */}
@@ -293,7 +293,7 @@ export default function Page() {
                 <TokenChip family="sol" symbol={solReceive.symbol} name={solReceive.name} mint={solReceive.mint} onClear={()=>setSolReceive(null)} />
               ) : (
                 <TokenChip family="evm" chainId={receiveToken.chainId} address={receiveToken.address} symbol={receiveToken.symbol} name={receiveToken.name} logoURI={receiveToken.logoURI} />
-              )}</button><button onClick={()=>setPicker("receive")} className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20">Receive token</button></div></div>
+              )}</button><button onClick={()=>setPicker("receive")} className="text-xs px-2 py-1 rounded pay-token-crystal">Receive token</button></div></div>
 
             <TokenRow
               title=""

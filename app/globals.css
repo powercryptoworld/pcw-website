@@ -46,7 +46,7 @@ body::before{
   inset: 0;
   z-index:-6;
   background:
-    radial-gradient(1200px 900px at 12% -6%,   rgba(153,69,255,.26), transparent 60%),
+    radial-gradient(1200px 900px at 12% -6%,   rgba(255,59,212,.26), transparent 60%),
     radial-gradient(1200px 900px at 88% 10%,   rgba(0,224,255,.26),  transparent 62%),
     radial-gradient(1400px 1000px at 50% 108%, rgba(20,241,149,.22), transparent 58%),
     linear-gradient(180deg, #0a1016 0%, #06090e 100%);
@@ -100,17 +100,17 @@ html::after{
     /* PURPLE A (lower) */
     linear-gradient(-12deg,
       transparent 58%,
-      rgba(153,69,255,.22) 60%,
-      rgba(153,69,255,.44) 62.5%,
-      rgba(153,69,255,.22) 65%,
+      rgba(255,59,212,.22) 60%,
+      rgba(255,59,212,.44) 62.5%,
+      rgba(255,59,212,.22) 65%,
       transparent 67%
     ),
     /* PURPLE B (offset) */
     linear-gradient(-12deg,
       transparent 58%,
-      rgba(153,69,255,.22) 60%,
-      rgba(153,69,255,.44) 62.5%,
-      rgba(153,69,255,.22) 65%,
+      rgba(255,59,212,.22) 60%,
+      rgba(255,59,212,.44) 62.5%,
+      rgba(255,59,212,.22) 65%,
       transparent 67%
     );
 
@@ -120,7 +120,7 @@ html::after{
 
   box-shadow:
     inset 0 0 80px rgba(0,224,255,.12),
-    inset 0 0 80px rgba(153,69,255,.12);
+    inset 0 0 80px rgba(255,59,212,.12);
 
   filter: blur(8px) saturate(142%);
   mix-blend-mode: screen;
@@ -162,7 +162,7 @@ body::after{
     repeating-linear-gradient( 0deg,  rgba(255,255,255,.05), rgba(255,255,255,.05) 1px, transparent 1px, transparent 24px),
     repeating-linear-gradient(90deg,  rgba(255,255,255,.05), rgba(255,255,255,.05) 1px, transparent 1px, transparent 24px),
     radial-gradient(800px 600px at 70% 70%, rgba(0,224,255,.10), transparent 60%),
-    radial-gradient(900px 700px at 22% 30%, rgba(153,69,255,.10), transparent 60%);
+    radial-gradient(900px 700px at 22% 30%, rgba(255,59,212,.10), transparent 60%);
   background-size: 2px 2px, 24px 24px, 24px 24px, auto, auto;
   mix-blend-mode: overlay;
   opacity: .10;
@@ -205,7 +205,7 @@ body::after{
   -webkit-backdrop-filter: blur(22px) saturate(150%);
   border: 1px solid rgba(200,220,255,.14);
   box-shadow:
-    0 0 0 1px rgba(153,69,255,.10),
+    0 0 0 1px rgba(255,59,212,.10),
     0 22px 70px rgba(0,0,0,.65),
     0 10px 30px rgba(0,0,0,.35) inset;
 }
@@ -224,10 +224,10 @@ body::after{
   pointer-events:none;
   box-shadow:
     0 0 24px rgba(0,224,255,.14),
-    0 0 28px rgba(153,69,255,.12);
+    0 0 28px rgba(255,59,212,.12);
   background:
     radial-gradient(320px 80px at 50% 108%, rgba(0,224,255,.25), transparent 70%),
-    radial-gradient(380px 90px at 50% 112%, rgba(153,69,255,.22), transparent 75%);
+    radial-gradient(380px 90px at 50% 112%, rgba(255,59,212,.22), transparent 75%);
 }
 
 /* =======================================================
@@ -307,7 +307,7 @@ select.input{ appearance: none; }
   background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.10));
   box-shadow:
     0 0 18px rgba(0,224,255,.18),
-    0 0 18px rgba(153,69,255,.16);
+    0 0 18px rgba(255,59,212,.16);
 }
 .btn:active{ transform: translateY(1px); }
 
@@ -318,7 +318,7 @@ select.input{ appearance: none; }
   text-shadow: 0 1px 0 rgba(255,255,255,.38);
   box-shadow:
     0 12px 34px rgba(0,224,255,.18),
-    0 12px 34px rgba(153,69,255,.14);
+    0 12px 34px rgba(255,59,212,.14);
 }
 
 /* Swap bar neon bloom */
@@ -351,7 +351,7 @@ select.input{ appearance: none; }
 .dock a:hover{
   box-shadow:
     0 0 14px rgba(0,224,255,.18),
-    0 0 14px rgba(153,69,255,.16) inset;
+    0 0 14px rgba(255,59,212,.16) inset;
 }
 .dock img, .dock svg{ width:18px; height:18px; display:block; }
 
@@ -423,7 +423,7 @@ select.input{ appearance: none; }
     radial-gradient(60% 100% at 50% 40%,
       rgba(255,255,255,.55),
       rgba(0,224,255,.40) 35%,
-      rgba(153,69,255,.36) 62%,
+      rgba(255,59,212,.36) 62%,
       rgba(0,0,0,0) 78%);
   filter: blur(28px) saturate(145%);
   opacity:.9;
@@ -448,9 +448,9 @@ select.input{ appearance: none; }
   background:
     /* diagonal color arms */
     linear-gradient(135deg, rgba(0,224,255,.22) 0%, rgba(0,224,255,.38) 12%, rgba(0,224,255,0) 22%) left / 50% 100% no-repeat,
-    linear-gradient(225deg, rgba(153,69,255,.22) 0%, rgba(153,69,255,.38) 12%, rgba(153,69,255,0) 22%) right / 50% 100% no-repeat,
+    linear-gradient(225deg, rgba(255,59,212,.22) 0%, rgba(255,59,212,.38) 12%, rgba(255,59,212,0) 22%) right / 50% 100% no-repeat,
     radial-gradient(1200px 500px at 50% 80%, rgba(0,224,255,.18), transparent 70%),
-    radial-gradient(1200px 520px at 50% 20%, rgba(153,69,255,.16), transparent 72%);
+    radial-gradient(1200px 520px at 50% 20%, rgba(255,59,212,.16), transparent 72%);
   filter: blur(.6px) saturate(140%);
 }
 .swap-vfx::after{
@@ -464,7 +464,7 @@ select.input{ appearance: none; }
     radial-gradient(60% 160% at 50% 42%,
       rgba(255,255,255,.65),
       rgba(0,224,255,.48) 35%,
-      rgba(153,69,255,.38) 60%,
+      rgba(255,59,212,.38) 60%,
       rgba(0,0,0,0) 78%);
   filter: blur(24px);
   mix-blend-mode: screen;
@@ -551,7 +551,7 @@ select.input{ appearance: none; }
     radial-gradient(closest-side,
       rgba(255,255,255,.75),
       rgba(0,224,255,.45) 38%,
-      rgba(153,69,255,.35) 62%,
+      rgba(255,59,212,.35) 62%,
       rgba(255,73,193,.28) 78%,
       transparent 82%);
   filter: blur(26px);
@@ -567,7 +567,7 @@ select.input{ appearance: none; }
 .coin-img{
   filter:
     drop-shadow(0 0 14px rgba(0,224,255,.35))
-    drop-shadow(0 0 22px rgba(153,69,255,.28));
+    drop-shadow(0 0 22px rgba(255,59,212,.28));
 }
 
 /* =======================================================
@@ -623,7 +623,7 @@ select.input{ appearance: none; }
   -webkit-backdrop-filter: none !important;
   border-color: rgba(200,220,255,.18) !important;
   box-shadow:
-    0 0 0 1px rgba(153,69,255,.18),
+    0 0 0 1px rgba(255,59,212,.18),
     0 20px 60px rgba(0,0,0,.70),
     0 2px 0 rgba(255,255,255,.04) inset;
 }
@@ -1100,14 +1100,14 @@ select.input{ appearance: none; }
 .tokenRow--pay::before{
   background: linear-gradient(90deg,
     rgba(0,224,255,.85),
-    rgba(153,69,255,.85),
+    rgba(255,59,212,.85),
     rgba(255,73,193,.65)
   );
 }
 .tokenRow--pay::after{
   background:
     radial-gradient(700px 160px at 15% 15%, rgba(0,224,255,.35), transparent 60%),
-    radial-gradient(700px 160px at 85% 85%, rgba(153,69,255,.35), transparent 60%),
+    radial-gradient(700px 160px at 85% 85%, rgba(255,59,212,.35), transparent 60%),
     radial-gradient(520px 140px at 60% 30%, rgba(255,73,193,.20), transparent 60%);
 }
 
@@ -1595,3 +1595,34 @@ select.input{ appearance: none; }
     0 0 36px rgba(56,189,248,1),
     0 0 64px rgba(168,85,247,.9);
 }
+
+/* =======================================================
+   PAY TOKEN — PURPLE CRYSTAL PILL (UI ONLY)
+   ======================================================= */
+.pay-token-crystal {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-radius: 10px;
+  border: 1px solid rgba(255,59,212,0.95);
+
+  color: #f6f0ff;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,120,220,0.55),
+    0 0 10px rgba(255,59,212,0.55),
+    0 0 22px rgba(255,59,212,0.45),
+    0 0 40px rgba(255,59,212,0.35);
+
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.pay-token-crystal:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,150,230,0.75),
+    0 0 14px rgba(255,59,212,0.75),
+    0 0 28px rgba(255,59,212,0.65),
+    0 0 54px rgba(255,59,212,0.55);
+}
+
