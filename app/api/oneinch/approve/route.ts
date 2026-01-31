@@ -27,7 +27,6 @@ export async function GET(req: Request) {
 
     const api = new URL(`${cfg.base}/approve/transaction`);
     api.searchParams.set("tokenAddress", token);
-    api.searchParams.set("amount", "0"); // 0 = infinite allowance (per 1inch)
 
     const r = await fetch(api.toString(), {
       headers: { Authorization: `Bearer ${process.env.ONEINCH_API_KEY}` },

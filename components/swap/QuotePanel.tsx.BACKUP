@@ -495,7 +495,7 @@ export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageB
     !!spender &&
     (allowance.allowanceWei ?? 0n) < amountWeiNeeded;
 
-    const needsApproval = false; // force Uniswap-style flow
+    const needsApproval = !isSrcNative && approvalNeeded;
 
   const canDoPrimary =
     !!wallet &&

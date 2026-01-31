@@ -20,15 +20,15 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const chainId = Number(url.searchParams.get("chainId") || "");
-    const from     = url.searchParams.get("from") || "";
-    const src      = url.searchParams.get("src") || "";
-    const dst      = url.searchParams.get("dst") || "";
-    const amount   = url.searchParams.get("amount") || "0";
-    const srcDec   = Number(url.searchParams.get("srcDecimals") || "18");
+    const from = url.searchParams.get("from") || "";
+    const src = url.searchParams.get("src") || "";
+    const dst = url.searchParams.get("dst") || "";
+    const amount = url.searchParams.get("amount") || "0";
+    const srcDec = Number(url.searchParams.get("srcDecimals") || "18");
     const slippageBps = Number(url.searchParams.get("slippageBps") || "50");
 
     if (!chainId || !from || !src || !dst) {
-      return NextResponse.json({ ok: false, error: "Missing chainId/from/src/dst" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Missing params" }, { status: 400 });
     }
 
     const apiKey = process.env.ONEINCH_API_KEY;
@@ -36,66 +36,53 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing ONEINCH_API_KEY" }, { status: 500 });
     }
 
-    const amountWei = toWei(amount, srcDec);
-    const slippagePct = (slippageBps / 100).toFixed(2); // 50 -> "0.50"
+    // amount can be human (0.0013) OR wei (1300000000000000)
+    const amountWei =
+      amount.includes(".")
+        ? toWei(amount, srcDec)
+        : amount;
+    const slippagePct = (slippageBps / 100).toFixed(2);
 
     const params = new URLSearchParams({
       src,
       dst,
       amount: amountWei,
       from,
-      slippage: slippagePct,           // percent string
+      slippage: slippagePct,
       allowPartialFill: "false",
       disableEstimate: "false",
-      includeProtocols: "true",
-      // You can add other 1inch params here if needed (e.g., referrer, fee, etc.)
     });
 
     const u = `${ONEINCH_BASE}/${chainId}/swap?${params.toString()}`;
     const r = await fetch(u, {
-      headers: { Authorization: `Bearer ${apiKey}`, accept: "application/json" },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        accept: "application/json",
+      },
       cache: "no-store",
     });
-    const j = await r.json().catch(() => ({}));
+
+    const j = await r.json();
 
     if (!r.ok || !j?.tx) {
-      return NextResponse.json(
-        { ok: false, error: j?.description || `HTTP ${r.status}`, raw: j },
-        { status: r.status }
-      );
+      return NextResponse.json({ ok: false, error: j }, { status: 500 });
     }
-
-    // Normalize some fields + a simple route summary
-    const tx = j.tx || {};
-    const dstAmount = j?.dstAmount ?? null;
-    const protocols = j?.protocols ?? null;
-    const routeSummary = Array.isArray(protocols)
-      ? (protocols[0] || [])
-          .map((leg: any) => (Array.isArray(leg) && leg[0]?.name) ? leg[0].name : "")
-          .filter(Boolean)
-          .join(" → ")
-      : null;
 
     return NextResponse.json({
       ok: true,
-      chainId,
-      amountHuman: amount,
-      amountWei,
       tx: {
-        to: tx.to,
-        value: tx.value,
-        gas: tx.gas,
-        gasPrice: tx.gasPrice,
-        dataLen: typeof tx.data === "string" ? tx.data.length : undefined,
+        to: j.tx.to,
+        data: j.tx.data,
+        value: j.tx.value,
+        gas: j.tx.gas,
+        gasPrice: j.tx.gasPrice,
       },
       quote: {
-        dstAmount,
-        protocols,
-        routeSummary,
+        dstAmount: j.dstAmount,
+        protocols: j.protocols,
       },
-      raw: j,
     });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "Unexpected error" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: e?.message }, { status: 500 });
   }
 }
