@@ -1,0 +1,976 @@
+"use client";
+
+import { useEffect, useState , useMemo} from "react";
+import type { Address } from "viem";
+import { useUsdQuote } from "@/hooks/useUsdQuote";
+import { wrappedAddressFor } from "@/hooks/useWrappedMap";
+import { useEvmQuote } from "@/hooks/useEvmQuote";
+import { useAllowance } from "@/hooks/useAllowance";
+import { useAccount } from "wagmi";
+import { getMetaMaskProvider } from "@/lib/evm";
+
+// Minimal token shape from the lab page
+type TokenRef = { address?: `0x${string}`; decimals: number; symbol?: string; name?: string };
+
+type Props = {
+  chainId: number;
+  src: TokenRef;
+  dst: TokenRef;
+  amount: string;                 // human, e.g. "0.005"
+  defaultSlippageBps?: number;    // 50 = 0.50%
+};
+
+type GasTiers = {
+  standardWei?: string;
+  fastWei?: string;
+  instantWei?: string;
+  source?: string;
+};
+
+function formatUsd(v?: number) {
+  if (v == null || !Number.isFinite(v)) return "—";
+  return `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+function fmtUnits(n?: number) {
+  if (!Number.isFinite(n || NaN)) return "—";
+  return Math.round(n!).toLocaleString();
+}
+function parseAmountToWei(amount: string, decimals: number) {
+  const [i, f = ""] = (amount || "0").split(".");
+  const d = Math.max(0, Math.min(36, decimals || 0));
+  const pad = (f + "0".repeat(d)).slice(0, d);
+  try {
+    async function handleApproveClickV2() {
+      try {
+        const meta = getMetaMaskProvider();
+        if (!meta?.request) {
+          alert("No EVM wallet (MetaMask) found.");
+          return;
+        }
+        if (!src.address || !spender || !wallet) {
+          alert("Missing token/spender/wallet for approval.");
+          return;
+        }
+
+        // Try to switch to the correct chain (ignore failures)
+        try {
+          const chainHex = "0x" + Number(chainId).toString(16);
+          await meta.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainHex }],
+          });
+        } catch (err) {
+          console.warn("approve chain switch skipped/failed", err);
+        }
+
+        const u = new URL("/api/oneinch/approve", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("token", String(src.address));
+        u.searchParams.set("wallet", String(wallet));
+
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j?.ok || !j?.tx) {
+          console.error("Approve tx error", j);
+          alert("Approve tx not available");
+          return;
+        }
+
+        const tx = j.tx as { to: string; data: string; value?: string };
+
+        // 1inch gives decimal strings; MetaMask wants hex
+        let valueHex = "0x0";
+        try {
+          const raw = tx.value ?? "0";
+          const bn = BigInt(raw);
+          valueHex = "0x" + bn.toString(16);
+        } catch (e) {
+          console.warn("approve value hex fallback", e);
+        }
+
+        await meta.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: wallet,
+              to: tx.to,
+              data: tx.data,
+              value: valueHex,
+            },
+          ],
+        });
+
+        // soft refresh so allowance updates
+        setTimeout(() => {
+          try {
+            (window as any).location?.reload();
+          } catch {}
+        }, 8000);
+      } catch (err) {
+        console.error("approve send failed", err);
+        alert(
+          "Approve send failed: " +
+            (err instanceof Error ? err.message : String(err))
+        );
+      }
+    }
+
+
+    return (BigInt(i || "0") * (10n ** BigInt(d)) + BigInt(pad || "0"));
+  } catch {
+    return 0n;
+  }
+}
+
+export default function QuotePanel({ chainId, src, dst, amount, defaultSlippageBps = 50 }: Props) {
+  const { address: wallet } = useAccount();
+
+  const [slippageBps, setSlippageBps] = useState<number>(defaultSlippageBps);
+  const [slipPreset, setSlipPreset] = useState<"10" | "50" | "100" | null>(null);
+
+  const [speed, setSpeed] = useState<"standard" | "fast" | "instant">("standard");
+
+    const hasAmount = useMemo(() => {
+      const n = Number(amount);
+      return !!amount && Number.isFinite(n) && n > 0;
+    }, [amount]);
+
+
+  // Quote (read-only)
+  const q = useEvmQuote({
+    chainId,
+    src,
+    dst,
+    amount,
+    slippageBps,
+    includeProtocols: true,
+  });
+
+  // USD prices for price-impact
+  const srcAddr = (src.address as Address | undefined) ?? wrappedAddressFor(chainId);
+  const dstAddr = (dst.address as Address | undefined) ?? wrappedAddressFor(chainId);
+  const srcUsd = useUsdQuote(chainId, srcAddr, src.decimals).priceUsd;
+  const dstUsd = useUsdQuote(chainId, dstAddr, dst.decimals).priceUsd;
+
+  // Native coin USD (for gas $)
+  const nativeAddr = wrappedAddressFor(chainId);
+  const nativeUsd = useUsdQuote(chainId, nativeAddr, 18).priceUsd;
+
+  
+    const hasHumanAmount = useMemo(() => !!amount && Number(amount) > 0, [amount]);
+// Gas tiers from our lab helper
+  const [gas, setGas] = useState<GasTiers>({});
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const u = new URL("/token-search-test/api/gas/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.ok) setGas(j);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [chainId]);
+
+  // Pull dstAmount / gas from either quote.* or raw.* (1inch can differ)
+  const dstAmtStr: string | undefined =
+    (q as any)?.quote?.dstAmount ?? (q as any)?.raw?.dstAmount;
+  const quoteGasStr: string | undefined =
+    (q as any)?.quote?.gas ?? (q as any)?.raw?.gas;
+  const routeSummaryStr: string | undefined =
+    (q as any)?.quote?.routeSummary ?? (q as any)?.raw?.routeSummary;
+
+  // Derive route chips
+  const routeChips = useMemo(() => {
+    if (routeSummaryStr && routeSummaryStr.trim()) {
+      return routeSummaryStr.split("→").map(s => s.trim()).filter(Boolean);
+    }
+    const prot = (q as any)?.quote?.protocols ?? (q as any)?.raw?.protocols;
+    if (!prot) return [];
+    const names: string[] = [];
+    try {
+      const legs = Array.isArray(prot) ? prot[0] : [];
+      if (Array.isArray(legs)) {
+        for (const leg of legs) {
+          const hop = Array.isArray(leg) ? leg[0] : undefined;
+          const name = hop?.name || hop?.protocol || "";
+          if (name) names.push(name);
+        }
+      }
+    } catch {}
+    return names;
+  }, [routeSummaryStr, (q as any)?.quote?.protocols, (q as any)?.raw?.protocols]);
+
+  // Price impact
+  const priceImpact = useMemo(() => {
+    const pay = Number(amount || "0");
+    if (!pay || !dstAmtStr) return { value: undefined as number | undefined, loading: false };
+    if (srcUsd == null || dstUsd == null) return { value: undefined, loading: true };
+    const dstAmountHuman = Number(dstAmtStr) / 10 ** (dst.decimals ?? 18);
+    if (!Number.isFinite(dstAmountHuman) || dstAmountHuman <= 0) return { value: undefined, loading: false };
+    const execPrice_dstPerSrc = dstAmountHuman / pay;
+    const fair_dstPerSrc = srcUsd / dstUsd;
+    if (!Number.isFinite(execPrice_dstPerSrc) || !Number.isFinite(fair_dstPerSrc) || fair_dstPerSrc <= 0) {
+      return { value: undefined, loading: false };
+    }
+    const impact = (fair_dstPerSrc - execPrice_dstPerSrc) / fair_dstPerSrc * 100;
+    const clamped = Math.max(-99.99, Math.min(99.99, impact));
+    return { value: clamped, loading: false };
+  }, [amount, dstAmtStr, srcUsd, dstUsd, dst.decimals]);
+
+  // Min received
+  const minReceived = useMemo(() => {
+    if (!dstAmtStr) return null;
+    const outHuman = Number(dstAmtStr) / 10 ** (dst.decimals ?? 18);
+    if (!Number.isFinite(outHuman) || outHuman <= 0) return null;
+    const minOut = outHuman * (1 - slippageBps / 10_000);
+    const usd = dstUsd != null ? minOut * dstUsd : undefined;
+    return { minOut, minOutUsd: usd };
+  }, [dstAmtStr, dst.decimals, slippageBps, dstUsd]);
+
+  // Gas units
+  const { gasUnits, gasIsEstimated } = useMemo(() => {
+    let units: number | undefined;
+    let est = false;
+    if (quoteGasStr != null && Number(quoteGasStr) > 0) {
+      units = Number(quoteGasStr);
+    } else {
+      units = 140_000;
+      est = true;
+    }
+    return { gasUnits: units, gasIsEstimated: est };
+  }, [quoteGasStr]);
+
+  // Selected tier gas price & USD
+  const selectedGasWei = useMemo(() => {
+    const tiers = { standard: gas.standardWei, fast: gas.fastWei, instant: gas.instantWei };
+    if (speed === "standard") return tiers.standard ?? tiers.fast ?? tiers.instant;
+    if (speed === "fast") return tiers.fast ?? tiers.instant ?? tiers.standard;
+    return tiers.instant ?? tiers.fast ?? tiers.standard;
+  }, [gas.standardWei, gas.fastWei, gas.instantWei, speed]);
+
+  const gasGwei = useMemo(() => {
+    if (!selectedGasWei) return undefined;
+    const g = Number(selectedGasWei) / 1e9;
+    return Number.isFinite(g) ? g : undefined;
+  }, [selectedGasWei]);
+
+  const gasUsd = useMemo(() => {
+    if (!hasHumanAmount || !gasUnits || !selectedGasWei || !nativeUsd || nativeUsd <= 0) return undefined;
+    const native = (Number(selectedGasWei) * gasUnits) / 1e18;
+    const usd = native * nativeUsd;
+    return Number.isFinite(usd) ? usd : undefined;
+  }, [gasUnits, selectedGasWei, nativeUsd]);
+
+  useEffect(() => {
+    try {
+      console.log("gas-debug", {
+        chainId,
+        nativeAddr,
+        nativeUsd,
+        gasUnits,
+        selectedGasWei,
+        gasGwei,
+        gasUsd,
+        quoteGasStr,
+        speed
+      });
+    } catch {}
+  }, [chainId, nativeAddr, nativeUsd, gasUnits, selectedGasWei, gasGwei, gasUsd, quoteGasStr, speed]);
+
+
+  // Spender + allowance (read-only)
+  const [spender, setSpender] = useState<Address | undefined>();
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const u = new URL("/api/oneinch/spender", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.ok && j?.spender) setSpender(j.spender as Address);
+        else setSpender(undefined);
+      } catch { if (alive) setSpender(undefined); }
+    })();
+    return () => { alive = false; };
+  }, [chainId]);
+
+  const isSrcNative = !src.address;
+  const allowance = useAllowance({
+    chainId,
+    token: isSrcNative ? undefined : (src.address as Address),
+    owner: wallet as Address | undefined,
+    spender,
+    decimals: src.decimals,
+  });
+
+  // ===== Swap Tx preview (read-only) =====
+  const [txPreview, setTxPreview] = useState<{
+    to?: string; value?: string; gas?: string; gasPrice?: string; dataLen?: number;
+    routeSummary?: string; dstAmount?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    setTxPreview(null);
+
+    if (!wallet) return;
+    if (!src?.address || !dst?.address) return;
+    if (!amount || Number(amount) <= 0) return;
+
+    (async () => {
+      try {
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(wallet));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!alive) return;
+        if (j?.ok && j?.tx) {
+          setTxPreview({
+            to: j.tx.to, value: j.tx.value, gas: j.tx.gas, gasPrice: j.tx.gasPrice,
+            dataLen: j.tx.dataLen, routeSummary: j?.quote?.routeSummary, dstAmount: j?.quote?.dstAmount
+          });
+        }
+      } catch {}
+    })();
+
+    return () => { alive = false; };
+  }, [chainId, wallet, src?.address, src?.decimals, dst?.address, amount, slippageBps]);
+
+  
+    const canSwap =
+      !!wallet &&
+      !!src?.address &&
+      !!dst?.address &&
+      !!amount &&
+      Number(amount) > 0;
+
+    async function handleSwapClick() {
+      try {
+        if (!wallet) {
+          alert("Connect wallet first");
+          return;
+        }
+        if (!amount || Number(amount) <= 0) {
+          alert("Enter an amount");
+          return;
+        }
+        if (!src?.address || !dst?.address) {
+          alert("Choose tokens");
+          return;
+        }
+
+        const meta = getMetaMaskProvider();
+        if (!meta || !meta.request) {
+          alert("No EVM wallet (MetaMask) found.");
+          return;
+        }
+
+        // Try to switch to the right chain (ok if this fails)
+        try {
+          const chainHex = "0x" + Number(chainId).toString(16);
+          await meta.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainHex }],
+          });
+        } catch (err) {
+          console.warn("chain switch skipped/failed", err);
+        }
+
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(wallet));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j || !j.ok || !j.tx) {
+          console.error("swap tx error", j);
+          alert("Swap tx not available");
+          return;
+        }
+
+        const tx = j.tx;
+        const valueHex =
+          tx.value && tx.value !== "0"
+            ? "0x" + BigInt(tx.value).toString(16)
+            : "0x0";
+
+        await meta.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: wallet,
+              to: tx.to,
+              data: tx.data,
+              value: valueHex,
+            },
+          ],
+        });
+      } catch (err) {
+        console.error("swap send failed", err);
+        alert(
+          "Swap send failed: " +
+            (err instanceof Error ? err.message : String(err))
+        );
+      }
+    }
+
+
+//     const canSwap =
+      !!wallet &&
+      !!src?.address &&
+      !!dst?.address &&
+      !!amount &&
+      Number(amount) > 0;
+
+    async function handleSwapClick() {
+      try {
+        const meta = getMetaMaskProvider();
+        if (!meta?.request) {
+          alert("No EVM wallet (MetaMask) found.");
+          return;
+        }
+
+        const u = new URL("/api/swap/oneinch", window.location.origin);
+        u.searchParams.set("chainId", String(chainId));
+        u.searchParams.set("from", String(wallet ?? ""));
+        u.searchParams.set("src", String(src.address));
+        u.searchParams.set("dst", String(dst.address));
+        u.searchParams.set("amount", String(amount));
+        u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+        u.searchParams.set("slippageBps", String(slippageBps));
+
+        const r = await fetch(u.toString(), { cache: "no-store" });
+        const j = await r.json();
+        if (!j?.ok || !j?.tx) {
+          console.error("Swap tx error", j);
+          alert("Swap quote not available.");
+          return;
+        }
+
+        const tx = j.tx;
+
+        await meta.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: wallet,
+              to: tx.to,
+              data: tx.data,
+              value: tx.value ?? "0x0",
+              gas: tx.gas,
+              gasPrice: tx.gasPrice,
+            },
+          ],
+        });
+      } catch (err) {
+        console.error("swap failed", err);
+      }
+    }
+
+  // Amount needed in wei for approval compare
+  const amountWeiNeeded = useMemo(
+    () => parseAmountToWei(amount, src.decimals ?? 18),
+    [amount, src.decimals]
+  );
+
+  const approvalNeeded =
+    !!src.address &&
+    !!wallet &&
+    !!spender &&
+    (allowance.allowanceWei ?? 0n) < amountWeiNeeded;
+
+    const needsApproval = false; // force Uniswap-style flow
+
+  const canDoPrimary =
+    !!wallet &&
+    !!src?.address &&
+    !!dst?.address &&
+    !!amount &&
+    Number(amount) > 0;
+
+  async function handleApproveClick() {
+    try {
+      const meta = getMetaMaskProvider();
+      if (!meta?.request) {
+        alert("No EVM wallet (MetaMask) found.");
+        return;
+      }
+      if (!src.address || !spender || !wallet) {
+        alert("Missing token/spender/wallet for approval.");
+        return;
+      }
+
+      // Best effort: switch wallet to the correct chain
+      try {
+        const chainHex = "0x" + Number(chainId).toString(16);
+        await meta.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: chainHex }],
+        });
+      } catch (err) {
+        console.warn("approve: chain switch skipped/failed", err);
+      }
+
+      const u = new URL("/api/oneinch/approve", window.location.origin);
+      u.searchParams.set("chainId", String(chainId));
+      u.searchParams.set("token", String(src.address));
+      u.searchParams.set("wallet", String(wallet));
+
+      const r = await fetch(u.toString(), { cache: "no-store" });
+      const j = await r.json();
+      if (!j?.ok || !j?.tx) {
+        console.error("Approve tx error", j);
+        alert("Approve tx not available");
+        return;
+      }
+
+      const tx = j.tx;
+      const valueHex =
+        tx.value && tx.value !== "0"
+          ? "0x" + BigInt(tx.value).toString(16)
+          : "0x0";
+
+      await meta.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: wallet,
+            to: tx.to,
+            data: tx.data,
+            value: valueHex,
+          },
+        ],
+      });
+
+      // give allowance hook time to refresh
+      setTimeout(() => {
+        try {
+          (window as any).location?.reload();
+        } catch {}
+      }, 8000);
+    } catch (err) {
+      console.error("approve send failed", err);
+      alert("Approve send failed");
+    }
+  }
+
+  async function handleSwapClick() {
+    try {
+      const meta = getMetaMaskProvider();
+      if (!meta?.request) {
+        alert("No EVM wallet (MetaMask) found.");
+        return;
+      }
+      if (!wallet) {
+        alert("Connect wallet first");
+        return;
+      }
+      if (!amount || Number(amount) <= 0) {
+        alert("Enter an amount");
+        return;
+      }
+      if (!src?.address || !dst?.address) {
+        alert("Choose tokens");
+        return;
+      }
+
+      // Best effort: switch wallet to the correct chain
+      try {
+        const chainHex = "0x" + Number(chainId).toString(16);
+        await meta.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: chainHex }],
+        });
+      } catch (err) {
+        console.warn("swap: chain switch skipped/failed", err);
+      }
+
+      const u = new URL("/api/swap/oneinch", window.location.origin);
+      u.searchParams.set("chainId", String(chainId));
+      u.searchParams.set("from", String(wallet));
+      u.searchParams.set("src", String(src.address));
+      u.searchParams.set("dst", String(dst.address));
+      u.searchParams.set("amount", String(amount));
+      u.searchParams.set("srcDecimals", String(src.decimals ?? 18));
+      u.searchParams.set("slippageBps", String(slippageBps));
+
+      const r = await fetch(u.toString(), { cache: "no-store" });
+      const j = await r.json();
+      if (!j?.ok || !j?.tx) {
+        console.error("Swap tx error", j);
+        alert("Swap tx not available");
+        return;
+      }
+
+      const tx = j.tx;
+      const valueHex =
+        tx.value && tx.value !== "0"
+          ? "0x" + BigInt(tx.value).toString(16)
+          : "0x0";
+
+      await meta.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: wallet,
+            to: tx.to,
+            data: tx.data,
+            value: valueHex,
+          },
+        ],
+      });
+    } catch (err) {
+      console.error("swap send failed", err);
+      alert("Swap send failed");
+    }
+  }
+
+  const [slippageDraft, setSlippageDraft] = useState<string | null>(null);
+
+  const commitSlippage = () => {
+    if (slippageDraft == null) return;
+    const raw = slippageDraft.replace(/%/g,"").trim();
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0 && n <= 100) {
+      setSlippageBps(Math.round(n * 100));
+    }
+    setSlippageDraft(null);
+  };
+
+  const primaryLabel =
+    needsApproval && canDoPrimary
+      ? `Approve ${src.symbol ?? "token"}`
+      : "Swap";
+
+  const primaryOnClick = needsApproval ? handleApproveClick : handleSwapClick;
+
+  return (
+    <div className="mt-3 rounded-2xl bg-black/25 border border-white/10 p-3 text-sm">
+      <div className="space-y-4">
+
+          <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Slippage</div>
+
+          <input
+            className="ml-2 w-16 rounded slippage-crystal px-1 text-right"
+            value={slippageDraft ?? ((slippageBps / 100).toFixed(2) + "%")}
+            onChange={(e)=>{ setSlippageDraft(e.target.value);
+              const raw = e.target.value.replace(/%/g,"").trim();
+              const n = Number(raw);
+              if (Number.isFinite(n) && n >= 0 && n <= 100) {
+                setSlippageBps(Math.round(n*100));
+                setSlipPreset(null);
+              }
+            }}
+          />
+          <button
+            className={`ml-1 speed-pill slip-pill ${slipPreset==="10" ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(10); setSlipPreset("10"); }}
+          >
+            0.10%
+          </button>
+          <button
+            className={`ml-1 speed-pill slip-pill ${slipPreset==="50" ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(50); setSlipPreset("50"); }}
+          >
+            0.50%
+          </button>
+          <button
+            className={`ml-1 speed-pill slip-pill ${slipPreset==="100" ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(100); setSlipPreset("100"); }}
+          >
+            1.00%
+          </button>
+          <button
+            className={`ml-1 speed-pill reset-pill ${slipPreset===null && slippageBps===defaultSlippageBps ? "active" : ""}`}
+            onClick={()=>{ setSlippageBps(defaultSlippageBps); setSlipPreset(null); }}
+          >
+            Reset
+          </button>
+        <div className="ml-3 opacity-70" style={{marginTop:"16px"}}>Speed</div>
+        <button
+          className={`ml-1 speed-pill ${speed==="standard" ? "active" : ""}`}
+          onClick={()=>setSpeed("standard")}
+        >
+          Standard
+        </button>
+        <button
+          className={`ml-1 speed-pill ${speed==="fast" ? "active" : ""}`}
+          onClick={()=>setSpeed("fast")}
+        >
+          Fast
+        </button>
+        <button
+          className={`ml-1 speed-pill ${speed==="instant" ? "active" : ""}`}
+          onClick={()=>setSpeed("instant")}
+        >
+          Instant
+        </button>
+      </div>
+
+      <div className="mt-2">
+        <div className="mt-6"></div>
+        <div className="opacity-70">Price impact</div>
+        <div className="text-base">
+          {dstAmtStr
+            ? (priceImpact.loading ? "…" : (priceImpact.value == null ? "—" : `${priceImpact.value.toFixed(2)}%`))
+            : "—"}
+        </div>
+      </div>
+
+      <div className="mt-2 hidden">
+        <div className="opacity-70">Min received (after slippage)</div>
+        <div className="text-base">
+          {minReceived
+            ? `${minReceived.minOut.toLocaleString(undefined, { maximumFractionDigits: Math.min(6, dst.decimals ?? 6) })} ${dst.symbol ?? "DST"} • ${formatUsd(minReceived.minOutUsd)}`
+            : "—"}
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <div className="opacity-70">Estimated gas</div>
+        <div className="text-base">
+          {dstAmtStr ? (gasUsd != null ? formatUsd(gasUsd) : "—") : "—"}
+        </div>
+        <div className="hidden mt-1 text-[11px] opacity-60">
+          {(!quoteGasStr) && "Network tier used when quote lacks gasPrice."}
+        </div>
+      </div>
+
+        <div className="mt-4 mb-8">
+          <button
+            className="w-full rounded-xl bg-white/20 py-3 text-base font-semibold hover:bg-white/30 disabled:opacity-60 swap-primary-btn"
+            disabled={!canDoPrimary}
+            onClick={
+                canSwap
+                  ? (!isSrcNative && approvalNeeded
+                      ? handleApproveClick
+                      : handleSwapClick)
+                  : undefined
+              }
+            title={
+                !wallet
+                  ? "Connect wallet to continue"
+                  : !src?.address || !dst?.address
+                  ? "Select tokens to continue"
+                  : (!isSrcNative && approvalNeeded
+                      ? "Approve token first"
+                      : "Execute swap")
+              }
+          >
+            {(!isSrcNative && approvalNeeded) ? `Approve ${src.symbol ?? "token"}` : "SWAP"}
+          </button>
+        </div>
+
+        <div className="mt-6"></div>
+
+      <div className="mt-2 hidden">
+        <div className="opacity-70">Route</div>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {routeChips.length
+            ? routeChips.map((r, i) => (
+                <span key={i} className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{r}</span>
+              ))
+            : "—"}
+        </div>
+      </div>
+
+      {/* Execution (preview) */}
+      <div className="mt-4 border-t border-white/10 pt-3 hidden">
+        <div className="opacity-70">Execution (preview)</div>
+        <div className="mt-3 text-sm">
+          <div className="mb-5">Wallet: {wallet ? `${wallet.slice(0,6)}…${wallet.slice(-4)}` : "—"}</div>
+          <div className="mt-4">
+            Spender: {spender
+              ? <span className="font-mono">{`${(spender as string).slice(0,6)}…${(spender as string).slice(-4)}`}</span>
+              : "—"}
+          </div>
+          <div>
+            Allowance: {isSrcNative
+              ? "N/A (native)"
+              : (allowance.loading ? "…" : (allowance.allowanceHuman ?? "0"))}
+            {(!isSrcNative && wallet && spender) && (
+              approvalNeeded
+                ? <span className="ml-2 text-yellow-300">Approval needed</span>
+                : <span className="ml-2 text-green-400">OK</span>
+            )}
+          </div>
+
+          <div className="mt-2 text-[11px] opacity-60">Swap Tx (read-only preview)</div>
+      {/* swap-lab: approval preview mount (append-only) */}
+      <SwapLabApprovalPreviewInline chainId={chainId} src={src} wallet={wallet} allowance={allowance.allowanceWei} />
+          <div className="text-xs">
+            {txPreview ? (
+              <>
+                <div>to: <span className="font-mono">{txPreview.to}</span></div>
+                <div>value(wei): <span className="font-mono">{txPreview.value ?? "0"}</span></div>
+                <div>gas limit: <span className="font-mono">{txPreview.gas ?? "—"}</span></div>
+                <div>gas price: <span className="font-mono">{txPreview.gasPrice ?? "—"}</span></div>
+                <div>data length: <span className="font-mono">{txPreview.dataLen ?? 0}</span></div>
+                <div>route summary: <span>{txPreview.routeSummary || "—"}</span></div>
+              </>
+            ) : "—"}
+          </div>
+
+          <div className="mt-2">
+            <button
+              className="px-3 py-1 rounded bg-white/10 cursor-not-allowed opacity-60"
+              title={approvalNeeded ? "Approval required first (preview only)" : "Execution disabled in lab"}
+              disabled
+            >
+              Execute (disabled in lab)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   swap-lab: Approval Tx (preview)
+   Appended safely at EOF. This is purely read-only UI that shows the approve()
+   transaction when allowance === 0 and src.address exists (ERC-20).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+type Hex = `0x${string}`;
+
+function shorten(hex: string, left = 10, right = 6) {
+  if (!hex) return "";
+  return hex.length <= left + right ? hex : `${hex.slice(0, left)}…${hex.slice(-right)}`;
+}
+
+function bytesLen(hex: string) {
+  try {
+    const h = (hex || "").startsWith("0x") ? hex.slice(2) : hex;
+    return Math.ceil(h.length / 2);
+  } catch {
+    return 0;
+  }
+}
+
+function isHex(s: unknown): s is Hex {
+  return typeof s === "string" && /^0x[0-9a-fA-F]*$/.test(s);
+}
+
+function isAddressLike(s: unknown): s is Hex {
+  return typeof s === "string" && /^0x[0-9a-fA-F]{40}$/.test(s);
+}
+
+function toChecksummed(addr: string) {
+  // display-helper only; we don't need full EIP-55 here for preview
+  return addr.toLowerCase();
+}
+
+function classBox() {
+  return "mt-2 rounded-2xl p-3 border border-white/10 bg-white/5 text-xs leading-relaxed";
+}
+
+export function SwapLabApprovalPreviewInline(props: {
+  chainId?: number;
+  src?: { address?: string | null } | null;
+  wallet?: string | null;
+  allowance?: bigint | number | null | undefined;
+}) {
+  const { chainId, src, wallet, allowance } = props;
+
+  const isErc20 = !!(src && src.address && isAddressLike(src.address));
+  const needsApprove = isErc20 && (
+    allowance == null ||
+    (typeof allowance === "bigint" ? allowance === 0n : Number(allowance) === 0)
+  );
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tx, setTx] = useState<{ to?: string; data?: string; value?: string } | null>(null);
+
+  // fetch approve preview lazily, only when needed
+  useEffect(() => {
+    let abort = false;
+    setTx(null);
+    setError(null);
+
+    if (!needsApprove) return;
+    if (!chainId || !isErc20 || !wallet) {
+      setError("Approval preview requires chain, token address, and wallet.");
+      return;
+    }
+
+    const url = new URL("/api/oneinch/approve", window.location.origin);
+    url.searchParams.set("chainId", String(chainId));
+    url.searchParams.set("token", String(src!.address));
+    url.searchParams.set("wallet", String(wallet));
+
+    setLoading(true);
+    fetch(url.toString(), { cache: "no-store" })
+      .then(r => r.json())
+      .then(j => {
+        if (abort) return;
+        if (j?.ok && j?.tx) {
+          setTx(j.tx);
+        } else {
+          const msg = j?.error || "Approval preview failed";
+          setError(typeof msg === "string" ? msg : JSON.stringify(msg));
+        }
+      })
+      .catch((e) => {
+        if (!abort) setError(e?.message || "Network error");
+      })
+      .finally(() => {
+        if (!abort) setLoading(false);
+      });
+
+    return () => { abort = true; };
+  }, [chainId, isErc20, needsApprove, src?.address, wallet]);
+
+  if (!needsApprove) {
+    if (!isErc20) {
+  return <div className={classBox()}>Native asset — no approval required.</div>;
+}
+return null; // nothing to show if allowance is already sufficient
+  }
+
+  return (
+    <div className={classBox()}>
+      <div className="opacity-80 mb-1">Approval Tx (preview)</div>
+      {loading && <div>Loading approval transaction…</div>}
+      {!loading && error && (
+        <div className="text-red-300">
+          Couldn’t build approve(): {error}
+        </div>
+      )}
+      {!loading && !error && tx && (
+        <div className="space-y-1">
+          <div><span className="opacity-70">to:</span> {isAddressLike(tx.to) ? toChecksummed(tx.to) : (tx.to || "—")}</div>
+          <div><span className="opacity-70">data:</span> {isHex(tx.data || "") ? `${shorten(tx.data!, 14, 10)} (${bytesLen(tx.data!)} bytes)` : (tx.data || "—")}</div>
+          <div><span className="opacity-70">value:</span> {isHex(tx.value || "") ? tx.value : (tx.value ?? "—")}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* mount helper: a tiny component you can drop in your panel render.
+   Example usage inside QuotePanel’s JSX (right under your Execution/Spender/Allowance rows):
+     <SwapLabApprovalPreviewInline
+       chainId={chainId}
+       src={src}
+       wallet={wallet}
+       allowance={allowance}
+     />
+*/
